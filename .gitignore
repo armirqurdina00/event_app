@@ -1,0 +1,16 @@
+
+frontend/tsconfig.tsbuildinfo
+
+backend/src/AccessToken.tmp
+
+backend/src/helpers/AccessToken.tmp
+
+backend/.env/.prod_env
+
+backend/.env/.dev_env
+
+frontend/.env.local
+
+.DS_Store
+
+node_modules

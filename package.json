@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "scripts": {
+    "start": "docker-compose up --build",
+    "test": "docker-compose up --build -d && ./wait-for-it.sh localhost:3000 -- npm run test --prefix frontend",
+    "test-prod": "TEST_URL=https://karlsruhetanzt.de npm run test --prefix frontend"
+  }
+}

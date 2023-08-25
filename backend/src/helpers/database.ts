@@ -1,0 +1,53 @@
+import {
+  Repository,
+  EntityTarget,
+  DataSource,
+  DataSourceOptions
+} from 'typeorm';
+import { join } from 'path';
+
+// ########################################
+// ########################################
+
+import dotenv from 'dotenv';
+dotenv.config({ path: '../../.env/.dev_env' });
+
+export class Database {
+  static data_source: DataSource;
+  static is_initializing: Promise<DataSource>;
+
+  static default_config: DataSourceOptions = {
+    type: 'postgres',
+    host: process.env.DATABASE_HOST,
+    username: process.env.DATABASE_USERNAME,
+    password: process.env.DATABASE_PASSWORD,
+    database: process.env.DATABASE_NAME,
+    synchronize: true,
+    // dropSchema: process.env.NODE_ENV === 'DEVELOPMENT' ? true : false, // does not work due to lack of permissions
+    entities: [join(__dirname, '..', 'commons', '/typeorm_entities/**/*')],
+    extra: { max: 3 }
+  }
+
+  // ########################################
+  // ########################################
+
+  static async get_repo<Entity>(target: EntityTarget<Entity>): Promise<Repository<Entity>> {
+    await Database.init();
+    return Database.data_source.getRepository(target);
+  }
+
+  static async get_data_source(): Promise<DataSource> {
+    await Database.init();
+    return Database.data_source;
+  }
+
+  static async init() {
+    await Database.is_initializing;
+
+    if (!Database.data_source){
+      Database.data_source = new DataSource(Database.default_config);
+      Database.is_initializing = Database.data_source.initialize();
+      await Database.is_initializing;
+    }
+  }
+}

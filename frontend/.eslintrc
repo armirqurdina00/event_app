@@ -1,0 +1,6 @@
+{
+	"extends": ["next", "next/core-web-vitals", "prettier"],
+	"rules": {
+		"max-len": ["warn", { "code": 120, "ignoreUrls": true }]
+	}
+}

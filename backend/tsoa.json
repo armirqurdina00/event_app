@@ -1,0 +1,30 @@
+{
+    "entryFile": "src/index.ts",
+    "noImplicitAdditionalProperties": "throw-on-extras",
+    "controllerPathGlobs": [
+        "./src/controllers/*Controller.ts"
+    ],
+    "spec": {
+        "outputDirectory": "build",
+        "specVersion": 3,
+        "version": "1.0.0",
+        "name": "Salsa Bachata Event API",
+        "description": "[Here](/api/docs/oas) is the oas in json format.\n\n Oauth2 client id for authorization via this swagger ui: ```ZS50MWMZFKeTVfTWROblT2JT28aPOwgc```",
+        "contact": {
+            "email": "mai@magnus-goedde.de"
+        },
+        "license": "General Public License (GPL)",
+        "securityDefinitions": {
+            "auth0": {
+                "type": "oauth2",
+                "authorizationUrl": "https://karlsruhetanzt.eu.auth0.com/authorize?audience=salsa-bachata-event-app",
+                "flow": "implicit",
+                "scopes": {}
+            }
+        }
+    },
+    "routes": {
+        "routesDir": "build",
+        "authenticationModule": "src/helpers/authentication.ts"
+    }
+}

@@ -1,0 +1,23 @@
+{
+	"name": "Karlsruhe tanzt",
+	"short_name": "Karlsruhe tanzt",
+	"description": "Alles rund um Salsa, Bachata und Kizomba in Karlsruhe.",
+	"icons": [
+		{
+			"src": "/images/icon-192.png",
+			"type": "image/png",
+			"sizes": "192x192"
+		},
+		{
+			"src": "/images/icon-512.png",
+			"type": "image/png",
+			"sizes": "512x512"
+		}
+	],
+	"start_url": "/?source=pwa",
+	"background_color": "#1d2020",
+	"orientation": "portrait",
+	"display": "standalone",
+	"scope": "/",
+	"theme_color": "#1d2020"
+}

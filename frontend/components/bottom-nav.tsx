@@ -11,10 +11,10 @@ const BottomNav = () => {
 	return (
 		<div className=''>
 			<nav className='fixed z-30 bottom-0 w-full border-t bg-zinc-100 pb-safe'>
-				<div className='mx-auto flex h-16 max-w-md items-center justify-around px-6'>
+				<div className='mx-auto flex h-14 max-w-md items-center justify-between px-6'>
 					{links.map(({ href, label, icon }) => (
 						<Button
-							className='flex h-full w-full flex-col items-center justify-center'
+							className='flex h-full w-[40%] flex-col items-center justify-center' 
 							key={label}
 							onClick={() => handle(href)}
 						>

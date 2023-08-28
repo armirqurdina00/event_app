@@ -17,7 +17,7 @@ const PAGE_SIZE = 10
 const StyledFab = styled(Fab)({
 	position: 'fixed',
 	zIndex: 40,
-	bottom: 36,
+	bottom: 8,
 	left: 0,
 	right: 0,
 	margin: '0 auto',
@@ -158,6 +158,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 				</InfiniteScroll>
 				<ButtonBase onClick={login} component='div'>
 					<StyledFab
+						size='small'
 						color='primary'
 						className='bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 '
 						aria-label='add'

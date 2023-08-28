@@ -42,10 +42,10 @@ function ResponsiveAppBar() {
 	}
 
 	return (
-		<AppBar className='bg-zinc-100 text-zinc-600' position='static'>
+		<AppBar className='bg-zinc-100 text-zinc-600 =' position='static'>
 			<Container maxWidth='xs'>
-				<Toolbar disableGutters className='flex justify-between'>
-					<div className='flex flex-grow items-center text-2xl'>
+				<Toolbar disableGutters className='flex justify-between' variant='dense'>
+					<div className='flex flex-grow items-center text-xl'>
 						<LocationOnIcon />
 						<p className='ml-2 mr-2'>{'Karlsruhe'}</p>
 					</div>
@@ -57,7 +57,7 @@ function ResponsiveAppBar() {
 							aria-expanded={open ? 'true' : undefined}
 							onClick={handleClick}
 						>
-							<Avatar src={user?.picture} />
+							<Avatar src={user?.picture} sx={{ width: 36, height: 36 }} />
 						</IconButton>
 
 						<Menu

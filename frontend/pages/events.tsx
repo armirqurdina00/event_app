@@ -14,7 +14,7 @@ import axios, { AxiosResponse } from 'axios'
 const StyledFab = styled(Fab)({
 	position: 'fixed',
 	zIndex: 40,
-	bottom: 36,
+	bottom: 8,
 	left: 0,
 	right: 0,
 	margin: '0 auto',
@@ -114,6 +114,7 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const onTouchMove = (e) => (touchEndRef.current = e.targetTouches[0].clientX)
 
 	const onTouchEnd = () => {
+		console.log("onTouchEnd", onTouchEnd)
 		if (!touchStartRef.current || !touchEndRef.current) return
 
 		const distance = touchStartRef.current - touchEndRef.current
@@ -157,6 +158,7 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 				</InfiniteScroll>
 				<ButtonBase onClick={login} component='div'>
 					<StyledFab
+						size='small'
 						color='primary'
 						className='bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 '
 						aria-label='add'

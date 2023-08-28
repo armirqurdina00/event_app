@@ -1,15 +1,18 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: `${__dirname}/../../.env/.dev_env` });
 import { expect } from 'chai';
-import { BackendClient, EventRes, EventReqBody, EventPatchReqBody, ImageRes, RecurringPattern } from '../helpers-for-tests/backend_client';
-import { get_access_token } from '../helpers-for-tests/auth';
+import { BackendClient, EventRes, EventReqBody, EventPatchReqBody, ImageRes, RecurringPattern, ApiError } from '../helpers-for-tests/backend_client';
+import { get_access_token, get_user } from '../helpers-for-tests/auth';
 import axios, { AxiosResponse } from 'axios';
 import path from 'path';
 import FormData from 'form-data';
 import fs from 'fs';
 import moment from 'moment';
+import { HttpStatusCode } from '../commons/enums';
 
 let backend_client: BackendClient;
+const event_ids = [];
+let user;
 
 describe('Tests for events endpoints.', function() {
 
@@ -25,6 +28,8 @@ describe('Tests for events endpoints.', function() {
       BASE: process.env.BU_API_URL,
       TOKEN: get_access_token
     });
+
+    user = await get_user();
   });
 
   it('POST /v1/events', async function() {
@@ -39,7 +44,8 @@ describe('Tests for events endpoints.', function() {
       recurring_pattern: RecurringPattern.WEEKLY,
     };
 
-    const response: EventRes = await backend_client.events.postEvents(body);
+    const response: EventRes = await backend_client.events.postEvents(user, body);
+    event_ids.push(response.event_id);
 
     expect(response.unix_time).to.equal(body.unix_time);
     expect(response.title).to.equal(body.title);
@@ -59,21 +65,20 @@ describe('Tests for events endpoints.', function() {
       link: 'https://example.com/dance-party',
     };
 
-    const response1: EventRes = await backend_client.events.postEvents(body);
+    const response1: EventRes = await backend_client.events.postEvents(user, body);
+    event_ids.push(response1.event_id);
 
     const patch: EventPatchReqBody = {
       title: 'Street Salsa 2',
     };
 
-    const response2: EventRes = await backend_client.events.patchEvent(response1.event_id, patch);
+    const response2: EventRes = await backend_client.events.patchEvent(user, response1.event_id, patch);
 
     expect(response2.title).to.equal(patch.title);
   });
 
   it('GET /v1/events/{event_id} and GET /v1/events', async function() {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
-
-    const event_ids = [];
 
     const body: EventReqBody = {
       unix_time: moment().add(1, 'week').toDate().getTime(),
@@ -85,7 +90,7 @@ describe('Tests for events endpoints.', function() {
     const number_of_items = 3;
 
     for (let i = 0; i < number_of_items; i++) {
-      const { event_id } = await backend_client.events.postEvents(body);
+      const { event_id } = await backend_client.events.postEvents(user, body);
       event_ids.push(event_id);
     }
 
@@ -124,9 +129,19 @@ describe('Tests for events endpoints.', function() {
       link: 'https://example.com/dance-party',
     };
 
-    const response: EventRes = await backend_client.events.postEvents(body);
+    const { event_id }: EventRes = await backend_client.events.postEvents(user, body);
 
-    backend_client.events.deleteEvent(response.event_id);
+    await backend_client.events.postUpvotes(user, event_id);
+
+    await backend_client.events.deleteEvent(user, event_id);
+
+    try {
+      await backend_client.events.getEvent(event_id);
+      throw new Error('Event was not deleted');
+    } catch (err: any | ApiError) {
+      expect(err instanceof ApiError);
+      expect(err.status).to.equal(HttpStatusCode.NOT_FOUND);
+    }
   });
 
   it('POST /v1/events/{event_id}/images', async function() {
@@ -142,7 +157,8 @@ describe('Tests for events endpoints.', function() {
       recurring_pattern: RecurringPattern.NONE
     };
 
-    const { event_id } = await backend_client.events.postEvents(body);
+    const { event_id } = await backend_client.events.postEvents(user, body);
+    event_ids.push(event_id);
 
     const filePath = __dirname + '/sample_data/sample.jpg';
 
@@ -175,38 +191,38 @@ describe('Tests for events endpoints.', function() {
       link: 'https://example.com/dance-party',
     };
 
-    const { event_id } = await backend_client.events.postEvents(body);
+    const { event_id } = await backend_client.events.postEvents(user, body);
+    event_ids.push(event_id);
 
-    await backend_client.events.postUpvotes(event_id);
+    await backend_client.events.postUpvotes(user, event_id);
     let res = await backend_client.events.getEvent(event_id);
     expect(res.upvotes_sum).to.equal(1);
     expect(res.downvotes_sum).to.equal(0);
     expect(res.votes_diff).to.equal(1);
 
     try {
-      await backend_client.events.postUpvotes(event_id);
+      await backend_client.events.postUpvotes(user, event_id);
       throw new Error('postUpvotes should fail');
     } catch(err: any) {
       expect(err?.status === 400);
     }
 
-    await backend_client.events.deleteUpvotes(event_id);
+    await backend_client.events.deleteUpvotes(user, event_id);
     res = await backend_client.events.getEvent(event_id);
     expect(res.upvotes_sum).to.equal(0);
     expect(res.downvotes_sum).to.equal(0);
     expect(res.votes_diff).to.equal(0);
 
-    await backend_client.events.postDownvotes(event_id);
+    await backend_client.events.postDownvotes(user, event_id);
     res = await backend_client.events.getEvent(event_id);
     expect(res.upvotes_sum).to.equal(0);
     expect(res.downvotes_sum).to.equal(1);
     expect(res.votes_diff).to.equal(-1);
 
-    await backend_client.events.deleteDownvotes(event_id);
-    await backend_client.events.deleteEvent(event_id);
+    await backend_client.events.deleteDownvotes(user, event_id);
   });
 
-  it('GET /v1/events/{event_id}/upvotes and GET /v1/events/{event_id}/downvotes', async function() {
+  it('GET /v1/users/events/upvotes and GET /v1/users/events/downvotes', async function() {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: EventReqBody = {
@@ -216,22 +232,24 @@ describe('Tests for events endpoints.', function() {
       link: 'https://example.com/dance-party',
     };
 
-    const { event_id } = await backend_client.events.postEvents(body);
+    const { event_id } = await backend_client.events.postEvents(user, body);
+    event_ids.push(event_id);
 
-    await backend_client.events.postUpvotes(event_id);
-    let res = await backend_client.events.getUpvotes(event_id);
-    expect(res[0].event_id).to.equal(event_id);
-    expect(res[0].user_id).to.be.a('string');
-    res = await backend_client.events.getDownvotes(event_id);
-    expect(res.length).to.equal(0);
+    await backend_client.events.postUpvotes(user, event_id);
+    let res = await backend_client.events.getUpvotes(user);
+    expect(res.includes(event_id));
 
-    await backend_client.events.deleteUpvotes(event_id);
+    await backend_client.events.deleteUpvotes(user, event_id);
 
-    await backend_client.events.postDownvotes(event_id);
-    res = await backend_client.events.getDownvotes(event_id);
-    expect(res[0].event_id).to.equal(event_id);
-    expect(res[0].user_id).to.be.a('string');
-    res = await backend_client.events.getUpvotes(event_id);
-    expect(res.length).to.equal(0);
+    await backend_client.events.postDownvotes(user, event_id);
+    res = await backend_client.events.getDownvotes(user);
+    expect(res.includes(event_id));
+  });
+
+  after(async function () {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+    for (let i = 0; i < event_ids.length; i++) {
+      await backend_client.events.deleteEvent(user, event_ids[i]);
+    }
   });
 });

@@ -1,7 +1,8 @@
 {
+	"id": "https://karlsruhetanzt.de/?source=pwa",
 	"name": "Karlsruhe tanzt",
 	"short_name": "Karlsruhe tanzt",
-	"description": "Alles rund um Salsa, Bachata und Kizomba in Karlsruhe.",
+	"description": "Entdecke mit uns die lebendige Welt von Salsa, Bachata und Kizomba Events in Karlsruhe.",
 	"icons": [
 		{
 			"src": "/images/icon-192.png",
@@ -12,6 +13,12 @@
 			"src": "/images/icon-512.png",
 			"type": "image/png",
 			"sizes": "512x512"
+		},
+		{
+			"src": "/images/maskable-icon-192.png",
+			"type": "image/png",
+			"sizes": "192x192",
+			"purpose": "any maskable"
 		}
 	],
 	"start_url": "/?source=pwa",

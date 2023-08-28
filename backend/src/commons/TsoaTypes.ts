@@ -131,3 +131,11 @@ export type Page = number;
  * @format int32
  */
 export type PerPage = number;
+
+export type GroupIds = GroupId[];
+
+export type GroupId = string;
+
+export type EventIds = EventId[];
+
+export type EventId = string;

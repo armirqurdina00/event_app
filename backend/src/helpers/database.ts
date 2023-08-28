@@ -25,7 +25,7 @@ export class Database {
     synchronize: true,
     // dropSchema: process.env.NODE_ENV === 'DEVELOPMENT' ? true : false, // does not work due to lack of permissions
     entities: [join(__dirname, '..', 'commons', '/typeorm_entities/**/*')],
-    extra: { max: 3 }
+    extra: { max: Number(process.env.NUMBER_OF_DB_CONNECTIONS) }
   }
 
   // ########################################

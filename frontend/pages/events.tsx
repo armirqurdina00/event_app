@@ -1,18 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Page from '@/components/page'
-import GroupCard from '@/components/group-card'
-import { GroupIds, GroupRes, GroupsRes } from '../utils/backend_client'
+import EventCard from '@/components/event-card'
+import { BackendClient, EventsRes, EventRes, EventIds } from '../utils/backend_client'
 import Fab from '@mui/material/Fab'
 import { styled } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
-import { ButtonBase } from '@mui/material'
 import { useRouter } from 'next/router'
 import { useUser } from '@auth0/nextjs-auth0/client'
-import { BackendClient } from '../utils/backend_client'
+import { ButtonBase } from '@mui/material'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import axios, { AxiosResponse } from 'axios'
-
-const PAGE_SIZE = 10
 
 const StyledFab = styled(Fab)({
 	position: 'fixed',
@@ -24,30 +21,32 @@ const StyledFab = styled(Fab)({
 	backgroundColor: 'none',
 })
 
+const PAGE_SIZE = 10
+
 export const getServerSideProps = async () => {
 	const backendClient = new BackendClient({
 		BASE: process.env.BACKEND_URL,
 	})
 
-	const { items: initialGroups } = await backendClient.groups.getGroups(
+	const { items: initialEvents } = await backendClient.events.getEvents(
 		1,
 		PAGE_SIZE
 	)
 
 	return {
-		props: { initialGroups },
+		props: { initialEvents },
 	}
 }
 
-const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
+const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const router = useRouter()
 	const { user } = useUser()
 	const [page, setPage] = useState(2)
 	const [loading, setLoading] = useState(false)
-	const [hasMore, setHasMore] = useState(initialGroups.length == PAGE_SIZE)
-	const [groups, setGroups] = useState<GroupRes[]>(initialGroups)
-	const [userUpvotes, setUserUpvotes] = useState<GroupIds>([])
-	const [userDownvotes, setUserDownvotes] = useState<GroupIds>([])
+	const [hasMore, setHasMore] = useState(initialEvents.length == PAGE_SIZE)
+	const [events, setEvents] = useState(initialEvents)
+	const [userUpvotes, setUserUpvotes] = useState<EventIds>([])
+	const [userDownvotes, setUserDownvotes] = useState<EventIds>([])
 
 	useEffect(() => {
 		if (user?.sub) loadUserVotes()
@@ -55,19 +54,19 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 
 	const loadUserVotes = async function () {
 		const upvotes: AxiosResponse<string[]> = await axios.get(
-			`/api/users/${user.sub}/groups/upvotes`
+			`/api/users/${user.sub}/events/upvotes`
 		)
 		setUserUpvotes(upvotes.data)
 
 		const downvotes: AxiosResponse<string[]> = await axios.get(
-			`/api/users/${user.sub}/groups/downvotes`
+			`/api/users/${user.sub}/events/downvotes`
 		)
 		setUserDownvotes(downvotes.data)
 	}
 
 	const login = () => {
 		if (!user) router.push('/api/auth/login')
-		router.push('/groups/new')
+		router.push('/events/new')
 	}
 
 	const loadMore = async () => {
@@ -77,26 +76,26 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 
 		try {
 			const response = await fetch(
-				`/api/groups?page=${page}&per_page=${PAGE_SIZE}`
+				`/api/events?page=${page}&per_page=${PAGE_SIZE}`
 			)
 
-			const data: GroupsRes = await response.json()
+			const data: EventsRes = await response.json()
 
-			const newGroups = data.items
+			const newEvents = data.items
 
-			if (newGroups.length < PAGE_SIZE) {
+			if (newEvents.length < PAGE_SIZE) {
 				setHasMore(false)
 			}
 
-			if (newGroups.length === 0) {
+			if (newEvents.length === 0) {
 				setLoading(false)
 				return
 			}
 
 			setPage((page) => page + 1)
-			setGroups((prevGroups) => [...prevGroups, ...newGroups])
+			setEvents((prevEvents) => [...prevEvents, ...newEvents])
 		} catch (error) {
-			console.error('Error loading more groups:', error)
+			console.error('Error loading more events:', error)
 		} finally {
 			setLoading(false)
 		}
@@ -118,10 +117,10 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 		if (!touchStartRef.current || !touchEndRef.current) return
 
 		const distance = touchStartRef.current - touchEndRef.current
-		const isRightSwipe = distance < -minSwipeDistance
+		const isLeftSwipe = distance > minSwipeDistance
 
-		if (isRightSwipe) {
-			router.push('/events')
+		if (isLeftSwipe) {
+			router.push('/groups')
 		}
 
 		touchStartRef.current = null
@@ -136,7 +135,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 		>
 			<Page>
 				<InfiniteScroll
-					dataLength={groups.length}
+					dataLength={events.length}
 					next={loadMore}
 					hasMore={hasMore}
 					className='pb-50 flex flex-wrap items-center justify-center gap-3 pt-4'
@@ -147,12 +146,12 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 						</div>
 					}
 				>
-					{groups.map((group, index) => (
-						<GroupCard
+					{events.map((event, index) => (
+						<EventCard
 							key={index}
-							group={group}
-							upvoted={userUpvotes.indexOf(group.group_id) !== -1}
-							downvoted={userDownvotes.indexOf(group.group_id) !== -1}
+							event={event}
+							upvoted={userUpvotes.indexOf(event.event_id) !== -1}
+							downvoted={userDownvotes.indexOf(event.event_id) !== -1}
 						/>
 					))}
 				</InfiniteScroll>
@@ -170,4 +169,4 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 	)
 }
 
-export default Groups
+export default Events

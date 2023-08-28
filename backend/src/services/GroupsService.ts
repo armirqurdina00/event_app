@@ -1,7 +1,10 @@
-import { GroupRes, GroupsRes, GroupReqBody, GroupPatchReqBody } from '../commons/TsoaTypes';
-import { GroupE } from '../commons/typeorm_entities';
+import { GroupRes, GroupsRes, GroupReqBody, GroupPatchReqBody, GroupIds } from '../commons/TsoaTypes';
+import { GroupDownvoteE, GroupE, GroupUpvoteE } from '../commons/typeorm_entities';
 import { Database, OperationError } from '../helpers';
-import { HttpStatusCode } from '../commons/enums';
+import { HttpStatusCode, Votes } from '../commons/enums';
+import { GroupVoteRes } from 'src/helpers-for-tests/backend_client';
+
+// Groups
 
 export async function get_group(group_id: string): Promise<GroupRes> {
   const group = await find_group(group_id);
@@ -32,7 +35,88 @@ export async function patch_group(user: string, group_id: string, req_body: Grou
   return as_group_response(group);
 }
 
-// Private functions
+export async function delete_group(user: string, group_id: string): Promise<GroupRes> {
+
+  const group = await find_group_by_user(user, group_id);
+
+  if (!group)
+    raise_group_not_found(group_id);
+
+  await remove_group_and_votes(group_id);
+
+  return;
+}
+
+// Votes
+
+export async function post_upvote(group_id: string, user_id: string): Promise<GroupVoteRes> {
+  const existing_downvote = await find_vote(group_id, user_id, Votes.DOWN);
+  if (existing_downvote)
+    raise_vote_already_exists();
+
+  const existing_upvote = await find_vote(group_id, user_id, Votes.UP);
+  if (existing_upvote)
+    raise_vote_already_exists();
+
+  await save_vote(group_id, user_id, Votes.UP);
+
+  return {
+    user_id,
+    group_id
+  };
+}
+
+export async function get_user_upvotes(user_id: string): Promise<GroupIds> {
+  const userUpvotes = await find_user_votes(user_id, Votes.UP);
+  return userUpvotes.map(v => v.group_id);
+}
+
+export async function get_user_downvotes(user_id: string): Promise<GroupIds> {
+  const userDownvotes = await find_user_votes(user_id, Votes.DOWN);
+  return userDownvotes.map(v => v.group_id);
+}
+
+export async function delete_upvote(group_id: string, user_id: string): Promise<void> {
+
+  const vote = await find_vote(group_id,user_id, Votes.UP);
+
+  if (!vote)
+    raise_vote_not_found();
+
+  await delete_vote(group_id, user_id, Votes.UP);
+}
+
+export async function post_downvote(group_id: string, user_id: string): Promise<GroupVoteRes> {
+
+  const existing_downvote = await find_vote(group_id, user_id, Votes.DOWN);
+  if (existing_downvote)
+    raise_vote_already_exists();
+
+  const existing_upvote = await find_vote(group_id, user_id, Votes.UP);
+  if (existing_upvote)
+    raise_vote_already_exists();
+
+  await save_vote(group_id, user_id, Votes.DOWN);
+
+  return {
+    user_id,
+    group_id
+  };
+}
+
+export async function delete_downvote(group_id: string, user_id: string): Promise<void> {
+
+  const vote = await find_vote(group_id,user_id, Votes.DOWN);
+
+  if (!vote)
+    raise_vote_not_found();
+
+  await delete_vote(group_id, user_id, Votes.DOWN);
+
+  return;
+}
+
+// Private functions for Groups
 
 async function save_group(user: string, req_body: GroupReqBody | GroupPatchReqBody, group: GroupE = null): Promise<GroupE> {
   group ||= new GroupE();
@@ -46,6 +130,30 @@ async function save_group(user: string, req_body: GroupReqBody | GroupPatchReqBo
   group = await groupRepo.save(group);
 
   return group;
+}
+
+async function remove_group_and_votes(group_id: string): Promise<void> {
+  const data_source = await Database.get_data_source();
+
+  await data_source.manager.transaction(async tx_manager => {
+    await tx_manager.createQueryBuilder()
+      .where('group_id = :group_id', { group_id })
+      .delete()
+      .from(GroupDownvoteE)
+      .execute();
+
+    await tx_manager.createQueryBuilder()
+      .where('group_id = :group_id', { group_id })
+      .delete()
+      .from(GroupUpvoteE)
+      .execute();
+
+    await tx_manager.createQueryBuilder()
+      .where('group_id = :group_id', { group_id })
+      .delete()
+      .from(GroupE)
+      .execute();
+  });
 }
 
 async function find_group(group_id: string): Promise<GroupE> {
@@ -74,6 +182,7 @@ async function find_groups(page: number, per_page: number): Promise<GroupE[]> {
   const groups = group_repo.createQueryBuilder('group')
     .limit(limit)
     .offset(offset)
+    .orderBy('votes_diff', 'DESC')
     .getMany();
 
   return groups;
@@ -103,7 +212,7 @@ async function as_groups_response(groups_e: GroupE[], page: number, per_page: nu
     per_page,
     total_number_of_items: await get_number_of_groups(),
     items: groups_e.map(g => as_group_response(g))
-  }
+  };
 }
 
 async function get_number_of_groups(): Promise<number> {
@@ -118,4 +227,122 @@ async function get_number_of_groups(): Promise<number> {
 
 function raise_group_not_found(group_id) {
   throw new OperationError(`Group with id '${group_id}' not found.`, HttpStatusCode.NOT_FOUND);
+}
+
+// Private functions for Votes
+
+async function find_vote(group_id: string, user_id: string, vote_type: Votes): Promise<GroupVoteRes> {
+  let VoteRepo;
+
+  if (vote_type === Votes.UP) {
+    VoteRepo = await Database.get_repo(GroupUpvoteE);
+  } else {
+    VoteRepo = await Database.get_repo(GroupDownvoteE);
+  }
+
+  const vote = await VoteRepo.findOne({
+    where: { group_id, user_id }
+  });
+  return vote;
+}
+
+async function find_user_votes(user_id: string, vote_type: Votes): Promise<GroupVoteRes[]> {
+  let VoteRepo;
+
+  if (vote_type === Votes.UP) {
+    VoteRepo = await Database.get_repo(GroupUpvoteE);
+  } else {
+    VoteRepo = await Database.get_repo(GroupDownvoteE);
+  }
+
+  const votes = await VoteRepo.find({
+    where: { user_id }
+  });
+  return votes;
+}
+
+async function save_vote(group_id: string, user_id: string, vote_type: Votes): Promise<void> {
+  let VoteRepo;
+
+  if (vote_type === Votes.UP) {
+    VoteRepo = await Database.get_repo(GroupUpvoteE);
+  } else {
+    VoteRepo = await Database.get_repo(GroupDownvoteE);
+  }
+
+  await VoteRepo.save({
+    group_id,
+    user_id
+  });
+
+  const data_source = await Database.get_data_source();
+
+  if (vote_type === Votes.UP) {
+    await data_source
+      .createQueryBuilder()
+      .update(GroupE)
+      .set({
+        upvotes_sum: () => 'upvotes_sum + 1',
+        votes_diff: () => 'votes_diff + 1',
+      })
+      .where('group_id = :group_id', { group_id })
+      .execute();
+  } else {
+    await data_source
+      .createQueryBuilder()
+      .update(GroupE)
+      .set({
+        downvotes_sum: () => 'downvotes_sum + 1',
+        votes_diff: () => 'votes_diff - 1',
+      })
+      .where('group_id = :group_id', { group_id })
+      .execute();
+  }
+}
+
+async function delete_vote(group_id: string, user_id: string, vote_type: Votes): Promise<void> {
+  let VoteRepo;
+
+  if (vote_type === Votes.UP) {
+    VoteRepo = await Database.get_repo(GroupUpvoteE);
+  } else {
+    VoteRepo = await Database.get_repo(GroupDownvoteE);
+  }
+
+  await VoteRepo.delete({
+    group_id,
+    user_id
+  });
+
+  const data_source = await Database.get_data_source();
+
+  if (vote_type === Votes.UP) {
+    await data_source
+      .createQueryBuilder()
+      .update(GroupE)
+      .set({
+        upvotes_sum: () => 'upvotes_sum - 1',
+        votes_diff: () => 'votes_diff - 1',
+      })
+      .where('group_id = :group_id', { group_id })
+      .execute();
+  } else {
+    await data_source
+      .createQueryBuilder()
+      .update(GroupE)
+      .set({
+        downvotes_sum: () => 'downvotes_sum - 1',
+        votes_diff: () => 'votes_diff + 1',
+      })
+      .where('group_id = :group_id', { group_id })
+      .execute();
+  }
+}
+
+function raise_vote_not_found() {
+  throw new OperationError('Vote not found.', HttpStatusCode.NOT_FOUND);
+}
+
+function raise_vote_already_exists() {
+  throw new OperationError('Vote already exists.', HttpStatusCode.BAD_REQUEST);
 }

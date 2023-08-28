@@ -5,6 +5,7 @@ import '@/styles/globals.css'
 import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { StyledEngineProvider } from '@mui/material/styles'
 import Script from 'next/script'
+import CookieConsent from '@/components/cookie-consent'
 
 const App = ({ Component, pageProps }: AppProps) => {
 	return (
@@ -30,6 +31,7 @@ const App = ({ Component, pageProps }: AppProps) => {
 					</ThemeProvider>
 				</StyledEngineProvider>
 			</UserProvider>
+			<CookieConsent />
 		</>
 	)
 }

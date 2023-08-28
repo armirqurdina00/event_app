@@ -23,6 +23,12 @@ export async function get_access_token() {
   return access_token;
 }
 
+export async function get_user() {
+  const access_token = await get_access_token();
+  const jwt_decoded: any = jwt_decode(access_token);
+  return jwt_decoded.sub;
+}
+
 function is_not_expired(jwt) {
   const jwt_decoded: any = jwt_decode(jwt);
   return jwt_decoded.exp >= Date.now() / 1000 + 2 * 60;

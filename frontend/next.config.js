@@ -1,21 +1,20 @@
 const withPWA = require('next-pwa')
-const withPlugins = require('next-compose-plugins')
 const runtimeCaching = require('next-pwa/cache')
 
-const nextConfig = {
-	output: 'standalone'
-}
+const withMyPWA = withPWA({
+	dest: 'public',
+	runtimeCaching,
+	disable: process.env.NODE_ENV === 'development'
+})
 
-module.exports = withPlugins(
-	[
-		[
-			withPWA,
+module.exports = withMyPWA({
+	output: 'standalone',
+	async rewrites() {
+		return [
 			{
-				dest: 'public',
-				runtimeCaching,
-				disable: process.env.NODE_ENV === 'development'
+				source: '/',
+				destination: '/events'
 			}
 		]
-	],
-	nextConfig
-)
+	}
+})

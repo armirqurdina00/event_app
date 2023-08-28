@@ -8,17 +8,7 @@ export default async function postEvents(
 	res: NextApiResponse
 ) {
 	try {
-		if (req.method === 'POST') {
-			const { accessToken: access_token } = await getAccessToken(req, res)
-
-			const backend_client = new BackendClient({
-				BASE: process.env.BACKEND_URL,
-				TOKEN: access_token,
-			})
-
-			const response = await backend_client.events.postEvents(req.body)
-			res.status(200).json(response)
-		} else if (req.method === 'GET') {
+		if (req.method === 'GET') {
 			const backend_client = new BackendClient({
 				BASE: process.env.BACKEND_URL,
 			})

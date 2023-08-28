@@ -19,11 +19,11 @@ const Error = ({ setError }) => {
 			<div
 				className='flex cursor-pointer items-center'
 				onClick={() =>
-					router.push('https://api.whatsapp.com/send?phone=004917641952181')
+					router.push('https://api.whatsapp.com/send?phone=+4917641952181')
 				}
 			>
+				<span className='mr-2'>Contact me!</span>
 				<WhatsAppIcon style={{ color: '#25d366', fontSize: '20px' }} />
-				<span className='ml-2'>Contact me!</span>
 			</div>
 
 			<span className='absolute bottom-0 right-0 top-0 px-4 py-3'>

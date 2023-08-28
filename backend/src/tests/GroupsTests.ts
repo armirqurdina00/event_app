@@ -1,10 +1,13 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: `${__dirname}/../../.env/.dev_env` });
 import { expect } from 'chai';
-import { BackendClient, GroupRes, GroupReqBody, GroupPatchReqBody } from '../helpers-for-tests/backend_client';
-import { get_access_token } from '../helpers-for-tests/auth';
+import { BackendClient, GroupRes, GroupReqBody, GroupPatchReqBody, ApiError } from '../helpers-for-tests/backend_client';
+import { get_access_token, get_user } from '../helpers-for-tests/auth';
+import { HttpStatusCode } from '../commons/enums';
 
 let backend_client: BackendClient;
+const group_ids = [];
+let user;
 
 describe('Tests for groups endpoints.', function() {
 
@@ -20,6 +23,8 @@ describe('Tests for groups endpoints.', function() {
       BASE: process.env.BU_API_URL,
       TOKEN: get_access_token
     });
+
+    user = await get_user();
   });
 
   it('POST /v1/groups', async function() {
@@ -31,7 +36,8 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/whatsapp-group'
     };
 
-    const response: GroupRes = await backend_client.groups.postGroups(body);
+    const response: GroupRes = await backend_client.groups.postGroups(user, body);
+    group_ids.push(response.group_id);
 
     expect(response.title).to.equal(body.title);
     expect(response.description).to.equal(body.description);
@@ -47,21 +53,20 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
     };
 
-    const response1: GroupRes = await backend_client.groups.postGroups(body);
+    const response1: GroupRes = await backend_client.groups.postGroups(user, body);
+    group_ids.push(response1.group_id);
 
     const patch: GroupPatchReqBody = {
       title: 'Street Salsa 2',
     };
 
-    const response2: GroupRes = await backend_client.groups.patchGroup(response1.group_id, patch);
+    const response2: GroupRes = await backend_client.groups.patchGroup(user, response1.group_id, patch);
 
     expect(response2.title).to.equal(patch.title);
   });
 
   it('GET /v1/groups/{group_id} and GET /v1/groups', async function() {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
-
-    const group_ids = [];
 
     const body: GroupReqBody = {
       title: 'Street Salsa',
@@ -72,7 +77,7 @@ describe('Tests for groups endpoints.', function() {
     const number_of_items = 3;
 
     for (let i = 0; i < number_of_items; i++) {
-      const { group_id } = await backend_client.groups.postGroups(body);
+      const { group_id } = await backend_client.groups.postGroups(user, body);
       group_ids.push(group_id);
     }
 
@@ -110,8 +115,88 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
     };
 
-    const response: GroupRes = await backend_client.groups.postGroups(body);
+    const { group_id }: GroupRes = await backend_client.groups.postGroups(user, body);
 
-    backend_client.groups.deleteGroup(response.group_id);
+    await backend_client.groups.postUpvotes(user, group_id);
+
+    await backend_client.groups.deleteGroup(user, group_id);
+
+    try {
+      await backend_client.groups.getGroup(group_id);
+      throw new Error('Group was not deleted');
+    } catch (err: any | ApiError) {
+      expect(err instanceof ApiError);
+      expect(err.status).to.equal(HttpStatusCode.NOT_FOUND);
+    }
+  });
+
+  it('POST /v1/groups/{group_id}/upvotes and POST /v1/groups/{group_id}/downvotes', async function() {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+
+    const body: GroupReqBody = {
+      title: 'Street Salsa',
+      description: 'City Park',
+      link: 'https://example.com/dance-party',
+    };
+
+    const { group_id } = await backend_client.groups.postGroups(user, body);
+    group_ids.push(group_id);
+
+    await backend_client.groups.postUpvotes(user, group_id);
+    let res = await backend_client.groups.getGroup(group_id);
+    expect(res.upvotes_sum).to.equal(1);
+    expect(res.downvotes_sum).to.equal(0);
+    expect(res.votes_diff).to.equal(1);
+
+    try {
+      await backend_client.groups.postUpvotes(user, group_id);
+      throw new Error('postUpvotes should fail');
+    } catch(err: any) {
+      expect(err?.status === 400);
+    }
+
+    await backend_client.groups.deleteUpvotes(user, group_id);
+    res = await backend_client.groups.getGroup(group_id);
+    expect(res.upvotes_sum).to.equal(0);
+    expect(res.downvotes_sum).to.equal(0);
+    expect(res.votes_diff).to.equal(0);
+
+    await backend_client.groups.postDownvotes(user, group_id);
+    res = await backend_client.groups.getGroup(group_id);
+    expect(res.upvotes_sum).to.equal(0);
+    expect(res.downvotes_sum).to.equal(1);
+    expect(res.votes_diff).to.equal(-1);
+
+    await backend_client.groups.deleteDownvotes(user, group_id);
+  });
+
+  it('GET /v1/users/groups/upvotes and GET /v1/users/groups/downvotes', async function() {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+
+    const body: GroupReqBody = {
+      title: 'Street Salsa',
+      description: 'City Park',
+      link: 'https://example.com/dance-party',
+    };
+
+    const { group_id } = await backend_client.groups.postGroups(user, body);
+    group_ids.push(group_id);
+
+    await backend_client.groups.postUpvotes(user, group_id);
+    let res = await backend_client.groups.getUpvotes(user);
+    expect(res.includes(group_id));
+
+    await backend_client.groups.deleteUpvotes(user, group_id);
+
+    await backend_client.groups.postDownvotes(user, group_id);
+    res = await backend_client.groups.getDownvotes(user);
+    expect(res.includes(group_id));
+  });
+
+  after(async function () {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+    for (let i = 0; i < group_ids.length; i++) {
+      await backend_client.groups.deleteGroup(user, group_ids[i]);
+    }
   });
 });

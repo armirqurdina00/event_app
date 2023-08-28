@@ -13,10 +13,12 @@ import Spinner from '@/components/spinner'
 import { GroupReqBody } from '@/utils/backend_client'
 import axios from 'axios'
 import Error from '@/components/error'
+import { useUser } from '@auth0/nextjs-auth0/client'
 
 export const getServerSideProps = withPageAuthRequired()
 
-const CreateGroup = ({ user }) => {
+const CreateGroup = () => {
+	const { user } = useUser()
 	const router = useRouter()
 	const [is_loading, setIsLoading] = useState<boolean>(false)
 
@@ -54,7 +56,7 @@ const CreateGroup = ({ user }) => {
 			}
 			if (link.trim()) body.link = link
 			setIsLoading(true)
-			const response = await axios.post('/api/groups', body)
+			const response = await axios.post(`/api/users/${user.sub}/groups`, body)
 			const group_id = response.data.group_id
 			router.push('/groups')
 		}
@@ -66,9 +68,9 @@ const CreateGroup = ({ user }) => {
 				<TextField
 					error={title_error}
 					value={title}
-					onChange={(event) => setTitle(event.target.value)}
+					onChange={(group) => setTitle(group.target.value)}
 					id='outlined-basic'
-					name='event-title'
+					name='group-title'
 					label='Titel'
 					variant='outlined'
 					fullWidth
@@ -77,9 +79,9 @@ const CreateGroup = ({ user }) => {
 				<TextField
 					error={description_error}
 					value={description}
-					onChange={(event) => setDescription(event.target.value)}
+					onChange={(group) => setDescription(group.target.value)}
 					id='outlined-basic'
-					name='event-description'
+					name='group-description'
 					label='Beschreibung'
 					variant='outlined'
 					fullWidth
@@ -87,9 +89,9 @@ const CreateGroup = ({ user }) => {
 				/>
 				<TextField
 					value={link}
-					onChange={(event) => setLink(event.target.value)}
+					onChange={(group) => setLink(group.target.value)}
 					id='outlined-basic'
-					name='event-link'
+					name='group-link'
 					label='Link'
 					variant='outlined'
 					fullWidth
@@ -109,6 +111,7 @@ const CreateGroup = ({ user }) => {
 						endIcon={<SendIcon />}
 						onClick={handle_submit}
 						disabled={is_loading}
+						data-testid='submit'
 					>
 						Senden
 					</Button>

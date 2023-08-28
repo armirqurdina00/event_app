@@ -9,16 +9,7 @@ interface Props {
 const Page = ({ children }: Props) => (
 	<>
 		<TopNav />
-		<main
-			/**
-			 * Padding top = `appbar` height
-			 * Padding bottom = `bottom-nav` height
-			 */
-			className='mx-auto max-w-screen-md pb-40 px-safe'
-		>
-			{children}
-		</main>
-
+		<main className='mx-auto max-w-screen-md min-h-screen pb-28 px-safe'>{children}</main>
 		<BottomNav />
 	</>
 )

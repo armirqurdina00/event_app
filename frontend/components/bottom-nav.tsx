@@ -1,11 +1,40 @@
 import { useRouter } from 'next/router'
 import Button from '@mui/material/Button'
+import Fab from '@mui/material/Fab'
+import { styled } from '@mui/material/styles'
+import AddIcon from '@mui/icons-material/Add'
+import { ButtonBase } from '@mui/material'
+import { useUser } from '@auth0/nextjs-auth0/client'
+import { useState } from 'react'
+
+const StyledFab = styled(Fab)({
+	position: 'fixed',
+	zIndex: 40,
+	bottom: 8,
+	left: 0,
+	right: 0,
+	margin: '0 auto',
+	backgroundColor: 'none',
+})
 
 const BottomNav = () => {
 	const router = useRouter()
+	const [icon, setIcon] = useState(router.pathname == '/groups' || router.pathname == '/events' ? true : false)
+
+	const { user } = useUser()
 
 	function handle(href) {
 		router.push(href)
+	}
+
+	const login = () => {
+		if (!user) router.push('/api/auth/login')
+		if (router.pathname == '/groups') {
+			router.push('/groups/new')
+		}
+		else if (router.pathname == '/events') {
+			router.push('/events/new')
+		}
 	}
 
 	return (
@@ -24,6 +53,18 @@ const BottomNav = () => {
 					))}
 				</div>
 			</nav>
+			{icon && (
+			<ButtonBase onClick={login} component='div'>
+					<StyledFab
+						size='small'
+						color='primary'
+						className='bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 '
+						aria-label='add'
+					>
+						<AddIcon />
+					</StyledFab>
+			</ButtonBase>
+			)}
 		</div>
 	)
 }

@@ -14,16 +14,6 @@ import axios, { AxiosResponse } from 'axios'
 
 const PAGE_SIZE = 10
 
-const StyledFab = styled(Fab)({
-	position: 'fixed',
-	zIndex: 40,
-	bottom: 8,
-	left: 0,
-	right: 0,
-	margin: '0 auto',
-	backgroundColor: 'none',
-})
-
 export const getServerSideProps = async () => {
 	const backendClient = new BackendClient({
 		BASE: process.env.BACKEND_URL,
@@ -63,11 +53,6 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 			`/api/users/${user.sub}/groups/downvotes`
 		)
 		setUserDownvotes(downvotes.data)
-	}
-
-	const login = () => {
-		if (!user) router.push('/api/auth/login')
-		router.push('/groups/new')
 	}
 
 	const loadMore = async () => {
@@ -156,16 +141,6 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 						/>
 					))}
 				</InfiniteScroll>
-				<ButtonBase onClick={login} component='div'>
-					<StyledFab
-						size='small'
-						color='primary'
-						className='bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 '
-						aria-label='add'
-					>
-						<AddIcon />
-					</StyledFab>
-				</ButtonBase>
 			</Page>
 		</div>
 	)

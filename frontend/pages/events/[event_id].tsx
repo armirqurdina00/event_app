@@ -49,6 +49,15 @@ const EditEvent = ({ event }) => {
 	const inputRef = useRef(null)
 	const router = useRouter()
 
+	const autoCompleteRef = useRef(null);
+	const locInputRef = useRef(null);
+
+	const options = {
+		componentRestrictions: { country: "de" },
+		fields: ["geometry", "name"],
+		types: ["locality"]
+	}
+
 	const [is_loading, setIsLoading] = useState(false)
 
 	const [date, setDate] = useState(moment(event.unix_time))
@@ -62,6 +71,8 @@ const EditEvent = ({ event }) => {
 
 	const [location, setLocation] = useState(event.location)
 	const [location_error, setLocationError] = useState<boolean>(false)
+
+	const [coordinates, setCoordinates] = useState<number[]>(event.coordinates)
 
 	const [link, setLink] = useState(event.link)
 	const [link_error, setLinkError] = useState(false)
@@ -90,6 +101,20 @@ const EditEvent = ({ event }) => {
 		}
 	}, [])
 
+	useEffect(() => {
+		autoCompleteRef.current = new window.google.maps.places.Autocomplete(
+			locInputRef.current,
+			options
+		);
+		autoCompleteRef.current.addListener("place_changed", async function () {
+			const place = await autoCompleteRef.current.getPlace();
+			setLocation(place.name)
+			const lat = place.geometry.location.lat()
+			const lng = place.geometry.location.lng()
+			setCoordinates([lat, lng])
+		});
+	}, []);
+
 	const handleRecurringPatternChange = (
 		event: React.MouseEvent<HTMLElement>,
 		new_recurring_pattern: RecurringPattern
@@ -100,6 +125,8 @@ const EditEvent = ({ event }) => {
 	const validate_inputs = () => {
 		const titleError = !title.trim()
 		const locationError = !location.trim()
+
+		const coordinatesError = coordinates.length < 1 ? true : false
 
 		const now = moment()
 		const selectedDateTime = moment(
@@ -117,7 +144,7 @@ const EditEvent = ({ event }) => {
 		setLinkError(linkError)
 
 		return (
-			!dateError && !timeError && !titleError && !locationError && !linkError
+			!dateError && !timeError && !titleError && !locationError && !coordinatesError && !linkError
 		)
 	}
 
@@ -145,6 +172,7 @@ const EditEvent = ({ event }) => {
 					unix_time: unix_timestamp,
 					title: title,
 					location: location,
+					coordinates: coordinates,
 					link: link,
 					recurring_pattern: recurring_pattern,
 				}
@@ -289,6 +317,7 @@ const EditEvent = ({ event }) => {
 						variant='outlined'
 						fullWidth
 						required
+						inputRef={locInputRef}
 					/>
 					<TextField
 						value={link}

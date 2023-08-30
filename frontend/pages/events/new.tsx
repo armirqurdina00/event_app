@@ -29,6 +29,15 @@ const CreateEvent = ({ user }) => {
 	const inputRef = useRef(null)
 	const router = useRouter()
 
+	const autoCompleteRef = useRef(null);
+	const locInputRef = useRef(null);
+
+	const options = {
+		componentRestrictions: { country: "de" },
+		fields: ["geometry", "name"],
+		types: ["locality"]
+	}
+
 	const [is_loading, setIsLoading] = useState(false)
 
 	const get_default_time = () => {
@@ -56,6 +65,8 @@ const CreateEvent = ({ user }) => {
 
 	const [location, setLocation] = useState('')
 	const [location_error, setLocationError] = useState<boolean>(false)
+
+	const [coordinates, setCoordinates] = useState<number[]>([])
 
 	const [link, setLink] = useState('')
 	const [link_error, setLinkError] = useState(false)
@@ -86,6 +97,21 @@ const CreateEvent = ({ user }) => {
 		}
 	}, [])
 
+	useEffect(() => {
+		autoCompleteRef.current = new window.google.maps.places.Autocomplete(
+			locInputRef.current,
+			options
+		);
+		autoCompleteRef.current.addListener("place_changed", async function () {
+			const place = await autoCompleteRef.current.getPlace();
+			setLocation(place.name)
+			const lat = place.geometry.location.lat()
+			const lng = place.geometry.location.lng()
+			setCoordinates([lat, lng])
+		});
+	}, []);
+
+
 	const handleRecurringPatternChange = (
 		event: React.MouseEvent<HTMLElement>,
 		new_recurring_pattern: RecurringPattern
@@ -96,6 +122,8 @@ const CreateEvent = ({ user }) => {
 	const validateInputs = () => {
 		const titleError = !title.trim()
 		const locationError = !location.trim()
+		
+		const coordinatesError = coordinates.length < 1 ? true : false
 
 		const now = moment()
 		const selectedDateTime = moment(
@@ -113,7 +141,7 @@ const CreateEvent = ({ user }) => {
 		setLinkError(linkError)
 
 		return (
-			!dateError && !timeError && !titleError && !locationError && !linkError
+			!dateError && !timeError && !titleError && !locationError && !coordinatesError && !linkError
 		)
 	}
 
@@ -132,6 +160,7 @@ const CreateEvent = ({ user }) => {
 					unix_time: unix_timestamp,
 					title: title,
 					location: location,
+					coordinates: coordinates,
 				}
 
 				if (link.trim()) body.link = link
@@ -280,6 +309,7 @@ const CreateEvent = ({ user }) => {
 						variant='outlined'
 						fullWidth
 						required
+						inputRef={locInputRef}
 					/>
 					<TextField
 						value={link}

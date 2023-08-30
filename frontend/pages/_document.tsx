@@ -13,8 +13,10 @@ class MyDocument extends Document {
 						rel='stylesheet'
 						href='https://fonts.googleapis.com/icon?family=Material+Icons'
 					/>
+					
 				</Head>
 				<body>
+					<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhsdF_6d5cWmjGlvW0VjnnzumqnJuCXno&libraries=places"async />
 					<Main />
 					<NextScript />
 				</body>

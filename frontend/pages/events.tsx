@@ -43,6 +43,31 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const [userUpvotes, setUserUpvotes] = useState<EventIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<EventIds>([])
 	const [isSwiped, setIsSwiped] = useState(false)
+	const [userLocation, setUserLocation] = useState(null)
+
+	const handleUserLocation = function () {
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(success, error)
+		}
+		else {
+			console.log("Geolocation not supported")
+		}
+	}
+
+	const success = function (position) {
+		const latitude = position.coords.latitude
+		const longitude = position.coords.longitude
+		console.log(`Latitude: ${latitude}, Longitude: ${longitude}`)
+		setUserLocation({ latitude, longitude })
+	}
+
+	const error = function () {
+		console.log("Unable to retrieve your location")
+	}
+
+	useEffect(() => {
+		user && handleUserLocation()	
+	}, [user])
 
 	useEffect(() => {
 		if (user?.sub) loadUserVotes()

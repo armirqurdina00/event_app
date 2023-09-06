@@ -20,24 +20,24 @@ export async function get_groups(page: number, per_page: number): Promise<Groups
   return await as_groups_response(groups_e, page, per_page);
 }
 
-export async function post_group(user: string, req_body: GroupReqBody): Promise<GroupRes> {
-  const group = await save_group(user, req_body);
+export async function post_group(user_id: string, req_body: GroupReqBody): Promise<GroupRes> {
+  const group = await save_group(user_id, req_body);
   return as_group_response(group);
 }
 
-export async function patch_group(user: string, group_id: string, req_body: GroupPatchReqBody): Promise<GroupRes> {
-  let group = await find_group_by_user(user, group_id);
+export async function patch_group(user_id: string, group_id: string, req_body: GroupPatchReqBody): Promise<GroupRes> {
+  let group = await find_group_by_user(user_id, group_id);
 
   if (!group)
     raise_group_not_found(group_id);
 
-  group = await save_group(user, req_body, group);
+  group = await save_group(user_id, req_body, group);
   return as_group_response(group);
 }
 
-export async function delete_group(user: string, group_id: string): Promise<GroupRes> {
+export async function delete_group(user_id: string, group_id: string): Promise<GroupRes> {
 
-  const group = await find_group_by_user(user, group_id);
+  const group = await find_group_by_user(user_id, group_id);
 
   if (!group)
     raise_group_not_found(group_id);
@@ -118,13 +118,21 @@ export async function delete_downvote(group_id: string, user_id: string): Promis
 
 // Private functions for Groups
 
-async function save_group(user: string, req_body: GroupReqBody | GroupPatchReqBody, group: GroupE = null): Promise<GroupE> {
+async function save_group(user_id: string, req_body: GroupReqBody | GroupPatchReqBody, group: GroupE = null): Promise<GroupE> {
   group ||= new GroupE();
 
-  if (user) group.created_by = user;
+  if (user_id) group.created_by = user_id;
   if (req_body.title) group.title = req_body.title;
   if (req_body.description) group.description = req_body.description;
   if (req_body.link !== undefined) group.link = req_body.link;
+  if (req_body.location) group.location = req_body.location;
+  if (req_body.locationUrl) group.locationUrl = req_body.locationUrl;
+  if (req_body.coordinates) {
+    group.location_point = {
+      type: 'Point',
+      coordinates: req_body.coordinates,
+    };
+  }
 
   const groupRepo = await Database.get_repo(GroupE);
   group = await groupRepo.save(group);
@@ -164,10 +172,10 @@ async function find_group(group_id: string): Promise<GroupE> {
   return group;
 }
 
-async function find_group_by_user(user: string, group_id: string): Promise<GroupE> {
+async function find_group_by_user(user_id: string, group_id: string): Promise<GroupE> {
   const groupRepo = await Database.get_repo(GroupE);
   const group = await groupRepo.findOne({
-    where: { group_id, created_by: user }
+    where: { group_id, created_by: user_id }
   });
 
   return group;
@@ -195,6 +203,11 @@ function as_group_response(group_e: GroupE): GroupRes {
   result.title = group_e.title;
   result.description = group_e.description;
   result.link = group_e.link;
+  result.location = group_e.location;
+  result.locationUrl = group_e.locationUrl;
+  result.location = group_e.location;
+  result.locationUrl = group_e.locationUrl;
+  result.coordinates = group_e.location_point.coordinates;
   result.upvotes_sum = group_e.upvotes_sum;
   result.downvotes_sum = group_e.downvotes_sum;
   result.votes_diff = group_e.votes_diff;

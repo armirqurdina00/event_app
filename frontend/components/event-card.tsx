@@ -1,23 +1,18 @@
 import moment from 'moment'
 import React, { useState, useEffect, useRef } from 'react'
-import LocationOnIcon from '@mui/icons-material/LocationOn'
-import {
-	EventRes,
-	RecurringPattern,
-	EventVoteRes,
-} from '../utils/backend_client'
+import { EventRes } from '../utils/backend_client'
 import 'moment/locale/de'
 import EditIcon from '@mui/icons-material/Edit'
 import { useRouter } from 'next/router'
-import { Chip } from '@mui/material'
+import { Button, Typography } from '@mui/material'
 import { useUser } from '@auth0/nextjs-auth0/client'
-import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp'
-import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown'
-import ArrowCircleUpTwoToneIcon from '@mui/icons-material/ArrowCircleUpTwoTone'
-import ArrowCircleDownTwoToneIcon from '@mui/icons-material/ArrowCircleDownTwoTone'
-import axios, { AxiosResponse } from 'axios'
-import LinkIcon from '@mui/icons-material/Link'
-import LinkOffIcon from '@mui/icons-material/LinkOff'
+import axios from 'axios'
+import StarBorderIcon from '@mui/icons-material/StarBorder'
+import StarIcon from '@mui/icons-material/Star'
+import Image from 'next/image'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import Link from 'next/link'
+import LocationOnIcon from '@mui/icons-material/LocationOn'
 
 const EventCard = ({
 	event,
@@ -28,14 +23,13 @@ const EventCard = ({
 	upvoted: boolean
 	downvoted: boolean
 }) => {
-	const cardRef = useRef(null)
 	const { user } = useUser()
 	const router = useRouter()
 	const [votesDiff, setVotesDiff] = useState(event.votes_diff)
 	const [upvoteClicked, setUpvoteClicked] = useState(upvoted)
-	const [downvoteClicked, setDownvoteClicked] = useState(downvoted)
-	const [clicked, setClicked] = useState(false)
 	const [processing, setProcessing] = useState(false)
+	const [showDescription, setShowDescription] = useState(false)
+	const [isFullscreen, setIsFullscreen] = useState(false)
 
 	useEffect(() => {
 		setUpvoteClicked(upvoted)
@@ -44,41 +38,15 @@ const EventCard = ({
 		setUpvoteClicked(downvoted)
 	}, [downvoted])
 
-	useEffect(() => {
-		function handleClickOutside(event) {
-			if (cardRef.current && !cardRef.current.contains(event.target)) {
-				setClicked(false)
-			}
-		}
-
-		document.addEventListener('mousedown', handleClickOutside)
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
-		}
-	}, [user])
+	// Handle Events
 
 	function handle_edit() {
 		router.push(`/events/${event.event_id}`)
 	}
 
-	const handle_event_link = (href) => {
-		if (!href) return
-		router.push(href)
-	}
-
-	const get_day = (unix_time): string => {
-		const eventMoment = moment(unix_time)
-		const now = moment()
-
-		if (eventMoment.isSame(now, 'day')) {
-			return 'Heute'
-		} else if (eventMoment.isSame(now.add(1, 'day'), 'day')) {
-			return 'Morgen'
-		} else if (eventMoment.isSame(now, 'week')) {
-			return `Diesen ${eventMoment.format('dddd')}`
-		} else {
-			return eventMoment.format('dddd')
-		}
+	const handle_location_link = () => {
+		if (!event.locationUrl) return
+		router.push(event.locationUrl)
 	}
 
 	async function handle_upvotes() {
@@ -97,12 +65,6 @@ const EventCard = ({
 					`/api/users/${user.sub}/events/${event.event_id}/upvotes`
 				)
 				setVotesDiff((preValue) => preValue - 1)
-			} else if (downvoteClicked) {
-				setDownvoteClicked(false)
-				await axios.delete(
-					`/api/users/${user.sub}/events/${event.event_id}/downvotes`
-				)
-				setVotesDiff((preValue) => preValue + 1)
 			} else {
 				setUpvoteClicked(true)
 				await axios.post(
@@ -117,158 +79,268 @@ const EventCard = ({
 		}
 	}
 
-	async function handle_downvotes() {
-		if (processing) return
-		setProcessing(true)
+	const handle_fullscreen = () => {
+		setIsFullscreen(!isFullscreen)
+	}
 
-		if (!user) {
-			router.push('/api/auth/login')
-			return
-		}
-		try {
-			if (upvoteClicked) {
-				setUpvoteClicked(false)
-				await axios.delete(
-					`/api/users/${user.sub}/events/${event.event_id}/upvotes`
-				)
-				setVotesDiff((preValue) => preValue - 1)
-			} else if (downvoteClicked) {
-				setDownvoteClicked(false)
-				await axios.delete(
-					`/api/users/${user.sub}/events/${event.event_id}/downvotes`
-				)
-				setVotesDiff((preValue) => preValue + 1)
-			} else {
-				setDownvoteClicked(true)
-				await axios.post(
-					`/api/users/${user.sub}/events/${event.event_id}/downvotes`
-				)
-				setVotesDiff((preValue) => preValue - 1)
-			}
-		} catch (err) {
-			throw err
-		} finally {
-			setProcessing(false)
+	// Render
+
+	const get_day = (unix_time) => {
+		const eventMoment = moment(unix_time)
+		const now = moment()
+		const currentWeekNumber = moment().week()
+		const eventWeekNumber = eventMoment.week()
+
+		if (eventMoment.isSame(now, 'day')) {
+			return (
+				<div className='text-md flex items-baseline justify-between gap-2'>
+					<span className='text-md font-medium '>
+						<span className='text-red-500'>Heute</span> &middot;{' '}
+						{`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
+					</span>
+					<p className='text-sm'>
+						{moment(event.unix_time).format('HH:mm ')}Uhr
+					</p>
+				</div>
+			)
+		} else if (eventMoment.isSame(now.add(1, 'day'), 'day')) {
+			return (
+				<div className='text-md flex items-baseline justify-between gap-2'>
+					<span className='text-md font-medium '>
+						<span className='text-red-500'>Morgen</span> &middot;{' '}
+						{`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
+					</span>
+
+					<p className='text-sm'>
+						{moment(event.unix_time).format('HH:mm ')}Uhr
+					</p>
+				</div>
+			)
+		} else if (eventWeekNumber === currentWeekNumber) {
+			return (
+				<div className='text-md flex items-baseline justify-between gap-2'>
+					<span className='text-md font-medium '>
+						Diesen{' '}
+						{`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
+					</span>
+					<p className='text-sm'>
+						{moment(event.unix_time).format('HH:mm ')}Uhr
+					</p>
+				</div>
+			)
+		} else if (eventWeekNumber === currentWeekNumber + 1) {
+			return (
+				<div className='text-md flex items-baseline justify-between gap-2'>
+					<span className='text-md font-medium '>
+						Nächste Woche &middot;{' '}
+						{`${eventMoment.format('dd')}, ${eventMoment.format('DD.MM')}`}
+					</span>
+					<p className='text-sm'>
+						{moment(event.unix_time).format('HH:mm ')}Uhr
+					</p>
+				</div>
+			)
+		} else if (eventWeekNumber === currentWeekNumber + 2) {
+			return (
+				<div className='text-md flex items-baseline justify-between gap-2'>
+					<span className='text-md font-medium '>
+						In zwei Wochen &middot;{' '}
+						{`${eventMoment.format('dd')}, ${eventMoment.format('DD.MM')}`}
+					</span>
+					<p className='text-sm'>
+						{moment(event.unix_time).format('HH:mm ')}Uhr
+					</p>
+				</div>
+			)
+		} else if (eventWeekNumber === currentWeekNumber + 3) {
+			return (
+				<div className='text-md flex items-baseline justify-between gap-2'>
+					<span className='text-md font-medium '>
+						In drei Wochen &middot;{' '}
+						{`${eventMoment.format('dd')}, ${eventMoment.format('DD.MM')}`}
+					</span>
+					<p className='text-sm'>
+						{moment(event.unix_time).format('HH:mm ')}Uhr
+					</p>
+				</div>
+			)
+		} else {
+			return (
+				<div className='text-md flex items-baseline justify-between gap-2'>
+					<span className='text-md font-medium '>
+						<span>
+							{`${eventMoment.format('dd')}`},{' '}
+							{moment(event.unix_time).format('DD.MM')}
+						</span>
+					</span>
+
+					<p className='text-sm'>
+						{moment(event.unix_time).format('HH:mm ')}Uhr
+					</p>
+				</div>
+			)
 		}
 	}
 
-	return (
-		<div
-			className='relative mx-3 w-96 rounded-xl border border-gray-200 bg-white shadow'
-			ref={cardRef}
-		>
-			{clicked && (
-				<div
-					className='absolute bottom-0 left-0 right-0 top-0 z-10 h-full w-full overflow-hidden rounded-xl bg-black bg-fixed opacity-40 transition duration-300 ease-in-out'
-					onClick={() => setClicked(!clicked)}
-				></div>
-			)}
+	const formatTextForDisplay = (inputText) => {
+		if (!inputText) return
 
-			<div className='relative' onClick={() => setClicked(!clicked)}>
-				<img
-					className={`event-img-16-9 rounded-t-xl bg-black object-cover ${
-						event.link || event.created_by === user?.sub ? 'cursor-pointer' : ''
-					}`}
+		const urlPattern = /https?:\/\/[^\s]+/g
+
+		const convertStrToLinks = (str) => {
+			let lastIndex = 0
+			const result = []
+
+			str.replace(urlPattern, (match, offset) => {
+				// Add plain text before the match
+				if (offset > lastIndex) {
+					result.push(str.substring(lastIndex, offset))
+				}
+
+				// Add the link
+				result.push(
+					<Link className='break-words text-blue-500' href={match} key={match}>
+						{match}
+					</Link>
+				)
+
+				// Update the last index past this match
+				lastIndex = offset + match.length
+			})
+
+			// Add any remaining plain text
+			if (lastIndex < str.length) {
+				result.push(str.substring(lastIndex))
+			}
+
+			return result
+		}
+
+		return inputText.split('\n').map((str, index, array) => (
+			<React.Fragment key={index}>
+				{convertStrToLinks(str)}
+				{index === array.length - 1 ? null : <br />}
+			</React.Fragment>
+		))
+	}
+
+	return (
+		<div className='relative mx-2 rounded-xl border border-gray-200 bg-white shadow'>
+			<div className='relative w-full'>
+				<Image
+					className={`event-img-16-9 rounded-t-xl object-cover`}
 					src={event.image_url}
 					alt='Event Picture'
+					layout='responsive'
+					width={16}
+					height={9}
+					objectFit='cover'
+					quality={100}
 					data-testid='event-picture'
+					unoptimized={true}
+					onClick={handle_fullscreen}
 				/>
-
-				{clicked && (
-					<div className='absolute left-0 top-0 flex h-full w-full cursor-pointer justify-between p-2'>
-						<div />
-						{event.link ? (
-							<LinkIcon
-								color='primary'
-								onClick={() => handle_event_link(event.link)}
-								className='z-30 cursor-pointer text-4xl'
-							/>
-						) : (
-							<LinkOffIcon color='primary' className='z-30 text-4xl' />
-						)}
+				{isFullscreen && (
+					<div
+						className='fixed left-0 top-0 z-50 flex h-screen w-screen items-center justify-center overflow-y-auto bg-black bg-opacity-70'
+						onClick={handle_fullscreen}
+					>
+						<img src={event.image_url} alt='Description' />
 					</div>
 				)}
-				{clicked && event.created_by === user?.sub && (
-					<div className='absolute left-0 top-0 flex h-full w-full cursor-pointer items-end justify-between p-2'>
-						<div />
-						<EditIcon
-							color='primary'
-							onClick={handle_edit}
-							className='z-20 cursor-pointer text-4xl'
-							data-testid='edit-test-id'
-						/>
-					</div>
-				)}
-			</div>
-			<div className='flex px-2 py-1'>
-				<div
-					className={`flex-grow ${
-						event.link || event.created_by === user?.sub ? 'cursor-pointer' : ''
-					}`}
-					onClick={() => setClicked(!clicked)}
-				>
-					<div className='flex justify-between'>
-						<div className='text-md flex items-baseline justify-between gap-2'>
-							<span className='text-xl font-bold text-red-500'>
-								{get_day(event.unix_time)}
-							</span>
-							{moment(event.unix_time).format('DD.MM')}
-							<p>{moment(event.unix_time).format('HH:mm ')}Uhr</p>
-						</div>
-					</div>
-					<div className='mb-2 mt-1 flex justify-between'>
-						<h4 className='mr-2 text-2xl font-semibold tracking-tight text-gray-900'>
-							{event.title}
-						</h4>
-					</div>
-					<div className='mb-2 flex justify-between'>
-						<div className='flex'>
-							<LocationOnIcon />
-							<p className='ml-2'>{event.location}</p>
-						</div>
-
-						{event.recurring_pattern === RecurringPattern.WEEKLY && (
-							<Chip
-								variant='outlined'
-								label={RecurringPattern.WEEKLY.toLowerCase()}
-								size='small'
-							/>
-						)}
-						<div />
-					</div>
-				</div>
-				<div className='flex items-center'>
-					<div className='flex flex-col'>
-						{upvoteClicked ? (
-							<ArrowCircleUpTwoToneIcon
-								onClick={handle_upvotes}
-								color='primary'
-								className='cursor-pointer'
-							/>
-						) : (
-							<ArrowCircleUpIcon
-								onClick={handle_upvotes}
-								color='primary'
-								className='cursor-pointer'
-							/>
-						)}
-						<p className='text-center'>{votesDiff}</p>
-						{downvoteClicked ? (
-							<ArrowCircleDownTwoToneIcon
-								onClick={handle_downvotes}
-								color='primary'
-								className='cursor-pointer'
-							/>
-						) : (
-							<ArrowCircleDownIcon
-								onClick={handle_downvotes}
-								color='primary'
-								className='cursor-pointer'
-							/>
+				<div className='absolute left-0 top-0 flex w-full cursor-pointer justify-between p-2'>
+					<div />
+					<div className='flex gap-3'>
+						{event.created_by === user?.sub && (
+							<button
+								className='rounded-full bg-black bg-opacity-40 p-1'
+								onClick={handle_edit}
+								data-testid='edit-test-id'
+							>
+								<EditIcon color='primary' className='z-20 text-3xl' />
+							</button>
 						)}
 					</div>
 				</div>
 			</div>
+			<div className='px-3 py-2'>
+				<div className='-my-0.5 flex items-center justify-between'>
+					{get_day(event.unix_time)}
+					<div />
+				</div>
+				<div className='-my-0.5 flex  justify-between'>
+					<h4 className='text-xl font-semibold tracking-tight'>
+						{event.title}
+					</h4>
+				</div>
+				<div className='text-md -my-0.5 flex justify-between font-medium text-gray-500'>
+					<div
+						className='flex cursor-pointer items-center gap-1'
+						onClick={handle_location_link}
+					>
+						<LocationOnIcon className='text-sm ' />
+						<p>{event.location}</p>
+					</div>
+					<div />
+				</div>
+				<div className='w-full text-gray-500'>
+					<span className='text-sm'>{votesDiff} sind interessiert</span>
+					<div className='flex gap-3'>
+						<div className='flex-grow'>
+							{upvoteClicked ? (
+								<Button
+									className='mt-1 w-full !bg-blue-100 text-blue-600'
+									onClick={handle_upvotes}
+								>
+									<div className='flex items-center gap-2'>
+										<StarIcon color='primary' />{' '}
+										<span className='font-bold'> Interessiert</span>
+									</div>
+								</Button>
+							) : (
+								<Button
+									className='mt-1 w-full !bg-gray-300 text-black'
+									onClick={handle_upvotes}
+								>
+									<div className='flex items-center gap-2'>
+										<StarBorderIcon /> <span> Interessiert</span>
+									</div>
+								</Button>
+							)}
+						</div>
+						{event.description && (
+							<div>
+								{showDescription ? (
+									<Button
+										className='mt-1 w-full !bg-blue-100 text-blue-600'
+										onClick={() => setShowDescription(!showDescription)}
+									>
+										<div className='flex items-center gap-2'>
+											<ExpandMoreIcon color='primary' />
+										</div>
+									</Button>
+								) : (
+									<Button
+										className='mt-1 w-full !bg-gray-300 text-black'
+										onClick={() => setShowDescription(!showDescription)}
+									>
+										<div className='flex items-center gap-2'>
+											<ExpandMoreIcon />
+										</div>
+									</Button>
+								)}
+							</div>
+						)}
+					</div>
+				</div>
+			</div>
+			{showDescription && event.description && (
+				<div>
+					<Typography variant='body1' className='mx-3 mb-3 mt-3 select-text'>
+						{formatTextForDisplay(event.description)}
+					</Typography>
+				</div>
+			)}
 		</div>
 	)
 }

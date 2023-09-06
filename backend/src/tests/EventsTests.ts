@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: `${__dirname}/../../.env/.dev_env` });
 import { expect } from 'chai';
 import { BackendClient, EventRes, EventReqBody, EventPatchReqBody, ImageRes, RecurringPattern, ApiError } from '../helpers-for-tests/backend_client';
-import { get_access_token, get_user } from '../helpers-for-tests/auth';
+import { get_access_token, get_user_id } from '../helpers-for-tests/auth';
 import axios, { AxiosResponse } from 'axios';
 import path from 'path';
 import FormData from 'form-data';
@@ -12,7 +12,7 @@ import { HttpStatusCode } from '../commons/enums';
 
 let backend_client: BackendClient;
 const event_ids = [];
-let user;
+let user_id;
 
 describe('Tests for events endpoints.', function() {
 
@@ -29,7 +29,7 @@ describe('Tests for events endpoints.', function() {
       TOKEN: get_access_token
     });
 
-    user = await get_user();
+    user_id = await get_user_id();
   });
 
   it('POST /v1/events', async function() {
@@ -39,18 +39,18 @@ describe('Tests for events endpoints.', function() {
       unix_time: moment().add(1, 'week').toDate().getTime(),
       title: 'Street Salsa',
       location: 'City Park',
-      link: 'https://example.com/dance-party',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
       image_url: 'http://res.cloudinary.com/dqolsfqjt/image/upload/v1691513488/vt97k2aqwhhf85njpucg.jpg',
       recurring_pattern: RecurringPattern.WEEKLY,
+      coordinates: [49.0069, 8.4037]
     };
 
-    const response: EventRes = await backend_client.events.postEvents(user, body);
+    const response: EventRes = await backend_client.events.postEvents(user_id, body);
     event_ids.push(response.event_id);
 
     expect(response.unix_time).to.equal(body.unix_time);
     expect(response.title).to.equal(body.title);
     expect(response.location).to.equal(body.location);
-    expect(response.link).to.equal(body.link);
     expect(response.image_url).to.equal(body.image_url);
     expect(response.recurring_pattern).to.equal(body.recurring_pattern);
   });
@@ -62,17 +62,18 @@ describe('Tests for events endpoints.', function() {
       unix_time: moment().add(1, 'week').toDate().getTime(),
       title: 'Street Salsa',
       location: 'City Park',
-      link: 'https://example.com/dance-party',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const response1: EventRes = await backend_client.events.postEvents(user, body);
+    const response1: EventRes = await backend_client.events.postEvents(user_id, body);
     event_ids.push(response1.event_id);
 
     const patch: EventPatchReqBody = {
       title: 'Street Salsa 2',
     };
 
-    const response2: EventRes = await backend_client.events.patchEvent(user, response1.event_id, patch);
+    const response2: EventRes = await backend_client.events.patchEvent(user_id, response1.event_id, patch);
 
     expect(response2.title).to.equal(patch.title);
   });
@@ -84,13 +85,14 @@ describe('Tests for events endpoints.', function() {
       unix_time: moment().add(1, 'week').toDate().getTime(),
       title: 'Street Salsa',
       location: 'City Park',
-      link: 'https://example.com/dance-party',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
     const number_of_items = 3;
 
     for (let i = 0; i < number_of_items; i++) {
-      const { event_id } = await backend_client.events.postEvents(user, body);
+      const { event_id } = await backend_client.events.postEvents(user_id, body);
       event_ids.push(event_id);
     }
 
@@ -126,14 +128,15 @@ describe('Tests for events endpoints.', function() {
       unix_time: moment().add(1, 'week').toDate().getTime(),
       title: 'Street Salsa',
       location: 'City Park',
-      link: 'https://example.com/dance-party',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const { event_id }: EventRes = await backend_client.events.postEvents(user, body);
+    const { event_id }: EventRes = await backend_client.events.postEvents(user_id, body);
 
-    await backend_client.events.postUpvotes(user, event_id);
+    await backend_client.events.postUpvotes(user_id, event_id);
 
-    await backend_client.events.deleteEvent(user, event_id);
+    await backend_client.events.deleteEvent(user_id, event_id);
 
     try {
       await backend_client.events.getEvent(event_id);
@@ -153,11 +156,12 @@ describe('Tests for events endpoints.', function() {
       unix_time: moment().add(1, 'week').toDate().getTime(),
       title: 'Street Salsa',
       location: 'City Park',
-      link: 'https://example.com/dance-party',
-      recurring_pattern: RecurringPattern.NONE
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      recurring_pattern: RecurringPattern.NONE,
+      coordinates: [49.0069, 8.4037]
     };
 
-    const { event_id } = await backend_client.events.postEvents(user, body);
+    const { event_id } = await backend_client.events.postEvents(user_id, body);
     event_ids.push(event_id);
 
     const filePath = __dirname + '/sample_data/sample.jpg';
@@ -174,7 +178,7 @@ describe('Tests for events endpoints.', function() {
       ...formData.getHeaders(), // Include the Content-Type header for multipart/form-data
     };
 
-    const response2: AxiosResponse<ImageRes> = await axios.post(`http://localhost:8080/v1/events/${event_id}/images`, formData, {
+    const response2: AxiosResponse<ImageRes> = await axios.post(`http://localhost:8080/v1/users/${user_id}/events/${event_id}/images`, formData, {
       headers: headers,
     });
 
@@ -188,38 +192,39 @@ describe('Tests for events endpoints.', function() {
       unix_time: moment().add(1, 'week').toDate().getTime(),
       title: 'Street Salsa',
       location: 'City Park',
-      link: 'https://example.com/dance-party',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const { event_id } = await backend_client.events.postEvents(user, body);
+    const { event_id } = await backend_client.events.postEvents(user_id, body);
     event_ids.push(event_id);
 
-    await backend_client.events.postUpvotes(user, event_id);
+    await backend_client.events.postUpvotes(user_id, event_id);
     let res = await backend_client.events.getEvent(event_id);
     expect(res.upvotes_sum).to.equal(1);
     expect(res.downvotes_sum).to.equal(0);
     expect(res.votes_diff).to.equal(1);
 
     try {
-      await backend_client.events.postUpvotes(user, event_id);
+      await backend_client.events.postUpvotes(user_id, event_id);
       throw new Error('postUpvotes should fail');
     } catch(err: any) {
       expect(err?.status === 400);
     }
 
-    await backend_client.events.deleteUpvotes(user, event_id);
+    await backend_client.events.deleteUpvotes(user_id, event_id);
     res = await backend_client.events.getEvent(event_id);
     expect(res.upvotes_sum).to.equal(0);
     expect(res.downvotes_sum).to.equal(0);
     expect(res.votes_diff).to.equal(0);
 
-    await backend_client.events.postDownvotes(user, event_id);
+    await backend_client.events.postDownvotes(user_id, event_id);
     res = await backend_client.events.getEvent(event_id);
     expect(res.upvotes_sum).to.equal(0);
     expect(res.downvotes_sum).to.equal(1);
     expect(res.votes_diff).to.equal(-1);
 
-    await backend_client.events.deleteDownvotes(user, event_id);
+    await backend_client.events.deleteDownvotes(user_id, event_id);
   });
 
   it('GET /v1/users/events/upvotes and GET /v1/users/events/downvotes', async function() {
@@ -229,27 +234,28 @@ describe('Tests for events endpoints.', function() {
       unix_time: moment().add(1, 'week').toDate().getTime(),
       title: 'Street Salsa',
       location: 'City Park',
-      link: 'https://example.com/dance-party',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const { event_id } = await backend_client.events.postEvents(user, body);
+    const { event_id } = await backend_client.events.postEvents(user_id, body);
     event_ids.push(event_id);
 
-    await backend_client.events.postUpvotes(user, event_id);
-    let res = await backend_client.events.getUpvotes(user);
+    await backend_client.events.postUpvotes(user_id, event_id);
+    let res = await backend_client.events.getUpvotes(user_id);
     expect(res.includes(event_id));
 
-    await backend_client.events.deleteUpvotes(user, event_id);
+    await backend_client.events.deleteUpvotes(user_id, event_id);
 
-    await backend_client.events.postDownvotes(user, event_id);
-    res = await backend_client.events.getDownvotes(user);
+    await backend_client.events.postDownvotes(user_id, event_id);
+    res = await backend_client.events.getDownvotes(user_id);
     expect(res.includes(event_id));
   });
 
   after(async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
     for (let i = 0; i < event_ids.length; i++) {
-      await backend_client.events.deleteEvent(user, event_ids[i]);
+      await backend_client.events.deleteEvent(user_id, event_ids[i]);
     }
   });
 });

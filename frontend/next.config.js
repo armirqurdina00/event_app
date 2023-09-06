@@ -9,6 +9,9 @@ const withMyPWA = withPWA({
 
 module.exports = withMyPWA({
 	output: 'standalone',
+	images: {
+		domains: ['res.cloudinary.com']
+	},
 	async rewrites() {
 		return [
 			{

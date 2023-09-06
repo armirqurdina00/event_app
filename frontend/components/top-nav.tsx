@@ -42,7 +42,7 @@ function ResponsiveAppBar() {
 	}
 
 	return (
-		<AppBar className='bg-zinc-100 text-zinc-600 =' position='static'>
+		<AppBar className='bg-zinc-100 text-zinc-600' position='static'>
 			<Container maxWidth='xs'>
 				<Toolbar disableGutters className='flex justify-between' variant='dense'>
 					<div className='flex flex-grow items-center text-xl'>

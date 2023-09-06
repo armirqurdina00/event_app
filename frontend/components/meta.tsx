@@ -2,7 +2,7 @@ import Head from 'next/head'
 
 const Meta = () => (
 	<Head>
-		<title>Karlsruhe tanzt</title>
+		<title>SaBaKi</title>
 		<meta charSet='utf-8' />
 		<meta name='mobile-web-app-capable' content='yes' />
 		<meta name='apple-mobile-web-app-capable' content='yes' />
@@ -10,8 +10,8 @@ const Meta = () => (
 			name='apple-mobile-web-app-status-bar-style'
 			content='black-translucent'
 		/>
-		<meta name='apple-mobile-web-app-title' content='Karlsruhe tanzt' />
-		<meta name='application-name' content='Karlsruhe tanzt' />
+		<meta name='apple-mobile-web-app-title' content='SaBaKi' />
+		<meta name='application-name' content='SaBaKi' />
 		<meta name='description' content='Embrace the Dance: Discover Thrilling Events in Your City' />
 		<meta
 			name='theme-color'

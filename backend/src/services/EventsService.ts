@@ -22,24 +22,24 @@ export async function get_events(page: number, per_page: number): Promise<Events
   return await as_events_response(events_e, page, per_page);
 }
 
-export async function post_event(user: string, req_body: EventPatchReqBody): Promise<EventRes> {
-  const event = await save_event(null, user, req_body);
+export async function post_event(user_id: string, req_body: EventPatchReqBody): Promise<EventRes> {
+  const event = await save_event(null, user_id, req_body);
   return as_event_response(event);
 }
 
-export async function patch_event(user: string, event_id: string, req_body: EventPatchReqBody): Promise<EventRes> {
-  let event = await find_event_by_user(user, event_id);
+export async function patch_event(user_id: string, event_id: string, req_body: EventPatchReqBody): Promise<EventRes> {
+  let event = await find_event_by_user(user_id, event_id);
 
   if (!event)
     raise_event_not_found(event_id);
 
-  event = await save_event(event_id, user, req_body);
+  event = await save_event(event_id, user_id, req_body);
   return as_event_response(event);
 }
 
-export async function delete_event(user: string, event_id: string): Promise<EventRes> {
+export async function delete_event(user_id: string, event_id: string): Promise<EventRes> {
 
-  const event = await find_event_by_user(user, event_id);
+  const event = await find_event_by_user(user_id, event_id);
 
   if (!event)
     raise_event_not_found(event_id);
@@ -131,10 +131,15 @@ export async function delete_downvote(event_id: string, user_id: string): Promis
 
 // Images
 
-export async function post_image(event_id: string, file: Express.Multer.File): Promise<ImageRes> {
+export async function post_image(user_id: string, event_id: string, file: Express.Multer.File): Promise<ImageRes> {
   cloudinary.config({
     secure: true
   });
+
+  const event = await find_event_by_user(user_id, event_id);
+
+  if (!event)
+    raise_event_not_found(event_id);
 
   const b64 = Buffer.from(file.buffer).toString('base64');
   const dataURI = 'data:' + file.mimetype + ';base64,' + b64;
@@ -159,10 +164,10 @@ async function find_event(event_id: string): Promise<EventE> {
   return event;
 }
 
-async function find_event_by_user(user: string, event_id: string): Promise<EventE> {
+async function find_event_by_user(user_id: string, event_id: string): Promise<EventE> {
   const event_repo = await Database.get_repo(EventE);
   const event = await event_repo.findOne({
-    where: { event_id, created_by: user }
+    where: { event_id, created_by: user_id }
   });
   return event;
 }
@@ -176,7 +181,7 @@ async function find_events(page: number, per_page: number): Promise<EventE[]> {
   const events = event_repo.createQueryBuilder('event')
     .limit(limit)
     .offset(offset)
-    .where('event.unix_time > :before_6_hours', { before_6_hours: moment().subtract(6, 'hours').toDate().getTime() })
+    .where('event.unix_time > :before_2_hours', { before_2_hours: moment().subtract(2, 'hours').toDate().getTime() })
     .orderBy('unix_time', 'ASC')
     .getMany();
 
@@ -184,15 +189,21 @@ async function find_events(page: number, per_page: number): Promise<EventE[]> {
 }
 
 // todo für patch und save eigene funktionen, damit link null gesetzt werden kann
-async function save_event(event_id: string, user: string, req_body: EventReqBody | EventPatchReqBody): Promise<EventE> {
-
+async function save_event(event_id: string, user_id: string, req_body: EventReqBody | EventPatchReqBody): Promise<EventE> {
   let event = new EventE();
   if (event_id) event.event_id = event_id;
-  if (user) event.created_by = user;
+  if (user_id) event.created_by = user_id;
   if (req_body.unix_time) event.unix_time = req_body.unix_time;
   if (req_body.title) event.title = req_body.title;
+  if (req_body.description) event.description = req_body.description;
   if (req_body.location) event.location = req_body.location;
-  if (req_body.link !== undefined) event.link = req_body.link;
+  if (req_body.locationUrl) event.locationUrl = req_body.locationUrl;
+  if (req_body.coordinates) {
+    event.location_point = {
+      type: 'Point',
+      coordinates: req_body.coordinates,
+    };
+  }
   if (req_body.image_url !== undefined) event.image_url = req_body.image_url;
   if (req_body.recurring_pattern !== undefined) event.recurring_pattern = req_body.recurring_pattern;
 
@@ -234,9 +245,12 @@ function as_event_response(event_e: EventE): EventRes {
   if (event_e.recurring_pattern)
     result.recurring_pattern = event_e.recurring_pattern;
   result.title = event_e.title;
+  if (event_e.description)
+    result.description = event_e.description;
   result.location = event_e.location;
-  if (event_e.link)
-    result.link = event_e.link;
+  result.locationUrl = event_e.locationUrl;
+  if(event_e.location_point)
+    result.coordinates = event_e.location_point.coordinates;
   if (event_e.image_url)
     result.image_url = event_e.image_url;
   result.upvotes_sum = event_e.upvotes_sum;

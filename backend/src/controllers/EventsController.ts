@@ -221,14 +221,16 @@ public async post_downvotes(@Path() user_id: string, @Path() event_id: string, @
   @Response<HttpError>('403', 'Forbidden')
   @Response<HttpError>('500', 'Internal Server Error')
   @Security('auth0')
-  @Post('/events/{event_id}/images')
-  public async uploadFile(@Path() event_id: string, @UploadedFile() file: Express.Multer.File): Promise<ImageRes> {
+  @Post('/users/{user_id}/events/{event_id}/images')
+  public async uploadFile(@Request() request: any, @UploadedFile() file: Express.Multer.File, @Path() user_id: string, @Path() event_id: string): Promise<ImageRes> {
     try {
-      return await post_image(event_id, file);
-    } catch (error) {
-      console.error('Upload failed:', error);
-      this.setStatus(500);
-      throw new Error('Upload failed.');
+      if (request.user.sub !== user_id)
+        raise_forbidden();
+
+      return await post_image(user_id, event_id, file);
+    } catch (err) {
+      log_error(err);
+      throw err;
     }
   }
 }

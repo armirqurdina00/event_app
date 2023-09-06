@@ -1,8 +1,8 @@
 {
 	"id": "https://karlsruhetanzt.de/?source=pwa",
-	"name": "Karlsruhe tanzt",
-	"short_name": "Karlsruhe tanzt",
-	"description": "Entdecke mit uns die lebendige Welt von Salsa, Bachata und Kizomba Events in Karlsruhe.",
+	"name": "Salsa Bachata Kizomba",
+	"short_name": "SaBaKi",
+	"description": "Entdecke mit uns die lebendige Welt von Salsa, Bachata und Kizomba Events in deiner Stadt.",
 	"icons": [
 		{
 			"src": "/images/icon-192.png",

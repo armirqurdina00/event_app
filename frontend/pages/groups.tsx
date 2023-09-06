@@ -38,6 +38,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 	const [groups, setGroups] = useState<GroupRes[]>(initialGroups)
 	const [userUpvotes, setUserUpvotes] = useState<GroupIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<GroupIds>([])
+	const [isSwiped, setIsSwiped] = useState(false)
 
 	useEffect(() => {
 		if (user?.sub) loadUserVotes()
@@ -106,6 +107,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 		const isRightSwipe = distance < -minSwipeDistance
 
 		if (isRightSwipe) {
+			setIsSwiped(!isSwiped)
 			router.push('/events')
 		}
 
@@ -120,27 +122,29 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 			onTouchEnd={onTouchEnd}
 		>
 			<Page>
-				<InfiniteScroll
-					dataLength={groups.length}
-					next={loadMore}
-					hasMore={hasMore}
-					className='pb-50 flex flex-wrap items-center justify-center gap-3 pt-4'
-					style={{ overflow: 'hidden' }}
-					loader={
-						<div className='basis-full'>
-							<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
-						</div>
-					}
-				>
-					{groups.map((group, index) => (
-						<GroupCard
-							key={index}
-							group={group}
-							upvoted={userUpvotes.indexOf(group.group_id) !== -1}
-							downvoted={userDownvotes.indexOf(group.group_id) !== -1}
-						/>
-					))}
-				</InfiniteScroll>
+				<div className={`${isSwiped && 'slideOutToRightAnimation'}`}>
+					<InfiniteScroll
+						dataLength={groups.length}
+						next={loadMore}
+						hasMore={hasMore}
+						className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-3 pt-4'
+						style={{ overflow: 'hidden' }}
+						loader={
+							<div className='basis-full'>
+								<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
+							</div>
+						}
+					>
+						{groups.map((group, index) => (
+							<GroupCard
+								key={index}
+								group={group}
+								upvoted={userUpvotes.indexOf(group.group_id) !== -1}
+								downvoted={userDownvotes.indexOf(group.group_id) !== -1}
+							/>
+						))}
+					</InfiniteScroll>
+				</div>
 			</Page>
 		</div>
 	)

@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Page from '@/components/page'
 import EventCard from '@/components/event-card'
-import { BackendClient, EventsRes, EventRes, EventIds } from '../utils/backend_client'
+import {
+	BackendClient,
+	EventsRes,
+	EventRes,
+	EventIds,
+} from '../utils/backend_client'
 import Fab from '@mui/material/Fab'
 import { styled } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
@@ -37,6 +42,7 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const [events, setEvents] = useState(initialEvents)
 	const [userUpvotes, setUserUpvotes] = useState<EventIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<EventIds>([])
+	const [isSwiped, setIsSwiped] = useState(false)
 
 	useEffect(() => {
 		if (user?.sub) loadUserVotes()
@@ -99,13 +105,13 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const onTouchMove = (e) => (touchEndRef.current = e.targetTouches[0].clientX)
 
 	const onTouchEnd = () => {
-		console.log("onTouchEnd", onTouchEnd)
 		if (!touchStartRef.current || !touchEndRef.current) return
 
 		const distance = touchStartRef.current - touchEndRef.current
 		const isLeftSwipe = distance > minSwipeDistance
 
 		if (isLeftSwipe) {
+			setIsSwiped(!isSwiped)
 			router.push('/groups')
 		}
 
@@ -120,27 +126,29 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 			onTouchEnd={onTouchEnd}
 		>
 			<Page>
-				<InfiniteScroll
-					dataLength={events.length}
-					next={loadMore}
-					hasMore={hasMore}
-					className='pb-50 flex flex-wrap items-center justify-center gap-3 pt-4'
-					style={{ overflow: 'hidden' }}
-					loader={
-						<div className='basis-full'>
-							<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
-						</div>
-					}
-				>
-					{events.map((event, index) => (
-						<EventCard
-							key={index}
-							event={event}
-							upvoted={userUpvotes.indexOf(event.event_id) !== -1}
-							downvoted={userDownvotes.indexOf(event.event_id) !== -1}
-						/>
-					))}
-				</InfiniteScroll>
+				<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
+					<InfiniteScroll
+						dataLength={events.length}
+						next={loadMore}
+						hasMore={hasMore}
+						className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-3 pt-4'
+						style={{ overflow: 'hidden' }}
+						loader={
+							<div className='basis-full'>
+								<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
+							</div>
+						}
+					>
+						{events.map((event, index) => (
+							<EventCard
+								key={index}
+								event={event}
+								upvoted={userUpvotes.indexOf(event.event_id) !== -1}
+								downvoted={userDownvotes.indexOf(event.event_id) !== -1}
+							/>
+						))}
+					</InfiniteScroll>
+				</div>
 			</Page>
 		</div>
 	)

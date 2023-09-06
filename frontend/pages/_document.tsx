@@ -1,4 +1,5 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document'
+import Script from 'next/script'
 
 class MyDocument extends Document {
 	render() {
@@ -13,12 +14,14 @@ class MyDocument extends Document {
 						rel='stylesheet'
 						href='https://fonts.googleapis.com/icon?family=Material+Icons'
 					/>
-					
 				</Head>
 				<body>
-					<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDhsdF_6d5cWmjGlvW0VjnnzumqnJuCXno&libraries=places"async />
 					<Main />
 					<NextScript />
+					<Script
+						src={`https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY}&libraries=places`}
+						strategy="beforeInteractive"
+					/>
 				</body>
 			</Html>
 		)

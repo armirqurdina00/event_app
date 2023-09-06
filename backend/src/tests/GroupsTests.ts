@@ -2,12 +2,12 @@ import dotenv from 'dotenv';
 dotenv.config({ path: `${__dirname}/../../.env/.dev_env` });
 import { expect } from 'chai';
 import { BackendClient, GroupRes, GroupReqBody, GroupPatchReqBody, ApiError } from '../helpers-for-tests/backend_client';
-import { get_access_token, get_user } from '../helpers-for-tests/auth';
+import { get_access_token, get_user_id } from '../helpers-for-tests/auth';
 import { HttpStatusCode } from '../commons/enums';
 
 let backend_client: BackendClient;
 const group_ids = [];
-let user;
+let user_id;
 
 describe('Tests for groups endpoints.', function() {
 
@@ -24,7 +24,7 @@ describe('Tests for groups endpoints.', function() {
       TOKEN: get_access_token
     });
 
-    user = await get_user();
+    user_id = await get_user_id();
   });
 
   it('POST /v1/groups', async function() {
@@ -33,10 +33,13 @@ describe('Tests for groups endpoints.', function() {
     const body: GroupReqBody = {
       title: 'Street Salsa',
       description: 'City Park',
-      link: 'https://example.com/whatsapp-group'
+      link: 'https://example.com/whatsapp-group',
+      location: 'City Park',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const response: GroupRes = await backend_client.groups.postGroups(user, body);
+    const response: GroupRes = await backend_client.groups.postGroups(user_id, body);
     group_ids.push(response.group_id);
 
     expect(response.title).to.equal(body.title);
@@ -51,16 +54,19 @@ describe('Tests for groups endpoints.', function() {
       title: 'Street Salsa',
       description: 'City Park',
       link: 'https://example.com/dance-party',
+      location: 'City Park',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const response1: GroupRes = await backend_client.groups.postGroups(user, body);
+    const response1: GroupRes = await backend_client.groups.postGroups(user_id, body);
     group_ids.push(response1.group_id);
 
     const patch: GroupPatchReqBody = {
       title: 'Street Salsa 2',
     };
 
-    const response2: GroupRes = await backend_client.groups.patchGroup(user, response1.group_id, patch);
+    const response2: GroupRes = await backend_client.groups.patchGroup(user_id, response1.group_id, patch);
 
     expect(response2.title).to.equal(patch.title);
   });
@@ -72,12 +78,15 @@ describe('Tests for groups endpoints.', function() {
       title: 'Street Salsa',
       description: 'City Park',
       link: 'https://example.com/dance-party',
+      location: 'City Park',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
     const number_of_items = 3;
 
     for (let i = 0; i < number_of_items; i++) {
-      const { group_id } = await backend_client.groups.postGroups(user, body);
+      const { group_id } = await backend_client.groups.postGroups(user_id, body);
       group_ids.push(group_id);
     }
 
@@ -113,13 +122,16 @@ describe('Tests for groups endpoints.', function() {
       title: 'Street Salsa',
       description: 'City Park',
       link: 'https://example.com/dance-party',
+      location: 'City Park',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const { group_id }: GroupRes = await backend_client.groups.postGroups(user, body);
+    const { group_id }: GroupRes = await backend_client.groups.postGroups(user_id, body);
 
-    await backend_client.groups.postUpvotes(user, group_id);
+    await backend_client.groups.postUpvotes(user_id, group_id);
 
-    await backend_client.groups.deleteGroup(user, group_id);
+    await backend_client.groups.deleteGroup(user_id, group_id);
 
     try {
       await backend_client.groups.getGroup(group_id);
@@ -137,37 +149,40 @@ describe('Tests for groups endpoints.', function() {
       title: 'Street Salsa',
       description: 'City Park',
       link: 'https://example.com/dance-party',
+      location: 'City Park',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const { group_id } = await backend_client.groups.postGroups(user, body);
+    const { group_id } = await backend_client.groups.postGroups(user_id, body);
     group_ids.push(group_id);
 
-    await backend_client.groups.postUpvotes(user, group_id);
+    await backend_client.groups.postUpvotes(user_id, group_id);
     let res = await backend_client.groups.getGroup(group_id);
     expect(res.upvotes_sum).to.equal(1);
     expect(res.downvotes_sum).to.equal(0);
     expect(res.votes_diff).to.equal(1);
 
     try {
-      await backend_client.groups.postUpvotes(user, group_id);
+      await backend_client.groups.postUpvotes(user_id, group_id);
       throw new Error('postUpvotes should fail');
     } catch(err: any) {
       expect(err?.status === 400);
     }
 
-    await backend_client.groups.deleteUpvotes(user, group_id);
+    await backend_client.groups.deleteUpvotes(user_id, group_id);
     res = await backend_client.groups.getGroup(group_id);
     expect(res.upvotes_sum).to.equal(0);
     expect(res.downvotes_sum).to.equal(0);
     expect(res.votes_diff).to.equal(0);
 
-    await backend_client.groups.postDownvotes(user, group_id);
+    await backend_client.groups.postDownvotes(user_id, group_id);
     res = await backend_client.groups.getGroup(group_id);
     expect(res.upvotes_sum).to.equal(0);
     expect(res.downvotes_sum).to.equal(1);
     expect(res.votes_diff).to.equal(-1);
 
-    await backend_client.groups.deleteDownvotes(user, group_id);
+    await backend_client.groups.deleteDownvotes(user_id, group_id);
   });
 
   it('GET /v1/users/groups/upvotes and GET /v1/users/groups/downvotes', async function() {
@@ -177,26 +192,29 @@ describe('Tests for groups endpoints.', function() {
       title: 'Street Salsa',
       description: 'City Park',
       link: 'https://example.com/dance-party',
+      location: 'City Park',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: [49.0069, 8.4037]
     };
 
-    const { group_id } = await backend_client.groups.postGroups(user, body);
+    const { group_id } = await backend_client.groups.postGroups(user_id, body);
     group_ids.push(group_id);
 
-    await backend_client.groups.postUpvotes(user, group_id);
-    let res = await backend_client.groups.getUpvotes(user);
+    await backend_client.groups.postUpvotes(user_id, group_id);
+    let res = await backend_client.groups.getUpvotes(user_id);
     expect(res.includes(group_id));
 
-    await backend_client.groups.deleteUpvotes(user, group_id);
+    await backend_client.groups.deleteUpvotes(user_id, group_id);
 
-    await backend_client.groups.postDownvotes(user, group_id);
-    res = await backend_client.groups.getDownvotes(user);
+    await backend_client.groups.postDownvotes(user_id, group_id);
+    res = await backend_client.groups.getDownvotes(user_id);
     expect(res.includes(group_id));
   });
 
   after(async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
     for (let i = 0; i < group_ids.length; i++) {
-      await backend_client.groups.deleteGroup(user, group_ids[i]);
+      await backend_client.groups.deleteGroup(user_id, group_ids[i]);
     }
   });
 });

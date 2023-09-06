@@ -51,20 +51,37 @@ async function delete_old_events() {
 
 async function update_recurrent_weekly_events() {
   try {
-    const event_repo = await Database.get_repo(EventE);
 
-    const events = await event_repo.createQueryBuilder('event')
+    const data_source = await Database.get_data_source();
+
+    const events = await data_source.getRepository(EventE).createQueryBuilder('event')
       .where('event.recurring_pattern = :recurring_pattern', { recurring_pattern: 'WEEKLY' })
       .andWhere('event.unix_time < :before_6_hours', { before_6_hours: moment().subtract(6, 'hours').toDate().getTime() })
       .getMany();
 
-    const updatedEvents = events.map((event) => {
+    const updatedEvents = [];
+
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i];
+
+      await data_source.createQueryBuilder()
+        .where('event_id = :event_id', { event_id: event.event_id })
+        .delete()
+        .from(EventDownvoteE)
+        .execute();
+
+      await data_source.createQueryBuilder()
+        .where('event_id = :event_id', { event_id: event.event_id })
+        .delete()
+        .from(EventUpvoteE)
+        .execute();
+
       const newDate = moment(Number(event.unix_time)).add(1, 'week').toDate();
       event.unix_time = newDate.getTime();
-      return event;
-    });
+      updatedEvents.push(event);
+    }
 
-    await event_repo.save(updatedEvents);
+    await data_source.getRepository(EventE).save(updatedEvents);
 
   } catch (error) {
     console.error('Error updating recurring events:', error);

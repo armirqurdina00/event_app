@@ -9,9 +9,9 @@ import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown'
 import ArrowCircleUpTwoToneIcon from '@mui/icons-material/ArrowCircleUpTwoTone'
 import ArrowCircleDownTwoToneIcon from '@mui/icons-material/ArrowCircleDownTwoTone'
 import axios from 'axios'
-import LaunchIcon from '@mui/icons-material/Launch'
 import EditIcon from '@mui/icons-material/Edit'
 import { useUser } from '@auth0/nextjs-auth0/client'
+import LocationOnIcon from '@mui/icons-material/LocationOn'
 
 const GroupCard = ({
 	group,
@@ -22,13 +22,11 @@ const GroupCard = ({
 	upvoted: boolean
 	downvoted: boolean
 }) => {
-	const cardRef = useRef(null)
 	const router = useRouter()
 	const { user } = useUser()
 	const [votesDiff, setVotesDiff] = useState(group.votes_diff)
 	const [upvoteClicked, setUpvoteClicked] = useState(upvoted)
 	const [downvoteClicked, setDownvoteClicked] = useState(downvoted)
-	const [clicked, setClicked] = useState(false)
 	const [processing, setProcessing] = useState(false)
 
 	useEffect(() => {
@@ -38,35 +36,19 @@ const GroupCard = ({
 		setUpvoteClicked(downvoted)
 	}, [downvoted])
 
-	useEffect(() => {
-		function handleClickOutside(event) {
-			if (cardRef.current && !cardRef.current.contains(event.target)) {
-				setClicked(false)
-			}
-		}
-
-		document.addEventListener('mousedown', handleClickOutside)
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
-		}
-	}, [user])
+	// Handle Events
 
 	function handle_link_click() {
 		router.push(group.link)
 	}
 
-	function handle_edit_click() {
+	function handle_edit() {
 		router.push(`/groups/${group.group_id}`)
 	}
 
-	function getLinkIcon(link: string) {
-		if (link.includes('https://t.me')) {
-			return <TelegramIcon style={{ color: '#0088cc', fontSize: '40px' }} />
-		} else if (link.includes('whatsapp')) {
-			return <WhatsAppIcon style={{ color: '#25d366', fontSize: '40px' }} />
-		} else {
-			return <GroupsIcon style={{ color: '#0088cc', fontSize: '40px' }} />
-		}
+	const handle_location_link = () => {
+		if (!group.locationUrl) return
+		router.push(group.locationUrl)
 	}
 
 	async function handle_upvotes() {
@@ -140,88 +122,108 @@ const GroupCard = ({
 		}
 	}
 
+	// Render
+
+	function getGroupIcon(link: string) {
+		if (link.includes('https://t.me')) {
+			return <TelegramIcon style={{ color: '#0088cc', fontSize: '40px' }} />
+		} else if (link.includes('whatsapp')) {
+			return <WhatsAppIcon style={{ color: '#25d366', fontSize: '40px' }} />
+		} else {
+			return <GroupsIcon style={{ color: '#0088cc', fontSize: '40px' }} />
+		}
+	}
+
 	return (
-		<div className='mx-3 w-96 rounded-xl border border-gray-200 bg-white shadow'>
+		<div className='mx-3 rounded-xl border border-gray-200 bg-white shadow h-full'>
 			<div
 				className='relative'
 				data-te-ripple-init
 				data-te-ripple-color='light'
-				ref={cardRef}
 			>
-				{clicked && (
-					<div
-						className='absolute bottom-0 left-0 right-0 top-0 z-10 h-full w-full overflow-hidden rounded-xl bg-black bg-fixed opacity-40 transition duration-300 ease-in-out'
-						onClick={() => setClicked(!clicked)}
-					></div>
-				)}
-				{clicked && group.created_by === user?.sub && (
-					<div className='absolute left-0 top-0 flex h-full w-full items-center justify-around p-2'>
-						<LaunchIcon
-							color='primary'
-							onClick={handle_link_click}
-							className='z-20 cursor-pointer text-4xl'
-						/>
-						<EditIcon
-							color='primary'
-							onClick={handle_edit_click}
-							className='z-20 cursor-pointer text-4xl'
-							data-testid='edit-test-id'
-						/>
+				<div className='absolute left-0 top-0 flex w-full cursor-pointer justify-between p-2'>
+					<div />
+					<div className='flex gap-3'>
+						{group.created_by === user?.sub && (
+							<button
+								className='rounded-full bg-black bg-opacity-40 p-1  '
+								onClick={handle_edit}
+								data-testid='edit-test-id'
+							>
+								<EditIcon color='primary' className='z-20 text-3xl' />
+							</button>
+						)}
 					</div>
-				)}
-				{clicked && group.created_by !== user?.sub && (
-					<div className='absolute left-0 top-0 flex h-full w-full items-center justify-center p-2'>
-						<LaunchIcon
-							color='primary'
+				</div>
+				<div className='px-4 py-2'>
+					{group.created_by === user?.sub && (
+						<div
+							className='flex cursor-pointer items-center gap-4'
 							onClick={handle_link_click}
-							className='z-20 cursor-pointer text-4xl'
-						/>
-					</div>
-				)}
-				<div className='flex px-4 py-2'>
-					<div
-						className='flex-grow cursor-pointer'
-						onClick={() => setClicked(!clicked)}
-					>
-						<div className='flex items-center gap-4'>
-							{getLinkIcon(group.link)}
+						>
+							{getGroupIcon(group.link)}
 							<h5 className='text-2xl font-semibold tracking-tight text-gray-900'>
 								{group.title}
 							</h5>
 						</div>
-						<div className='mb-2 mt-2 flex items-center justify-between'>
-							<p className='font-normal text-gray-500'>{group.description}</p>
+					)}
+					<div className='flex justify-between gap-4'>
+						<div className='flex-grow'>
+							{group.created_by != user?.sub && (
+								<div
+									className='flex cursor-pointer items-center gap-4'
+									onClick={handle_link_click}
+								>
+									{getGroupIcon(group.link)}
+									<h5 className='text-2xl font-semibold tracking-tight text-gray-900'>
+										{group.title}
+									</h5>
+								</div>
+							)}
+							<div
+								className='mb-2 mt-2 flex cursor-pointer items-center justify-between'
+								onClick={handle_link_click}
+							>
+								<p className='font-normal text-gray-500'>{group.description}</p>
+							</div>
+							<div
+								className='flex cursor-pointer items-center gap-1 font-medium text-gray-500'
+								onClick={handle_location_link}
+							>
+								<LocationOnIcon className='text-sm' />
+								<p>{group.location}</p>
+							</div>
 						</div>
-					</div>
-					<div className='flex items-center'>
-						<div className='flex flex-col'>
-							{upvoteClicked ? (
-								<ArrowCircleUpTwoToneIcon
-									onClick={handle_upvotes}
-									color='primary'
-									className='cursor-pointer'
-								/>
-							) : (
-								<ArrowCircleUpIcon
-									onClick={handle_upvotes}
-									color='primary'
-									className='cursor-pointer'
-								/>
-							)}
-							<p className='text-center'>{votesDiff}</p>
-							{downvoteClicked ? (
-								<ArrowCircleDownTwoToneIcon
-									onClick={handle_downvotes}
-									color='primary'
-									className='cursor-pointer'
-								/>
-							) : (
-								<ArrowCircleDownIcon
-									onClick={handle_downvotes}
-									color='primary'
-									className='cursor-pointer'
-								/>
-							)}
+						<div className='flex items-center'>
+							<div className='flex flex-col'>
+								{upvoteClicked ? (
+									<ArrowCircleUpTwoToneIcon
+										onClick={handle_upvotes}
+										color='primary'
+										className='cursor-pointer'
+									/>
+								) : (
+									<ArrowCircleUpIcon
+										onClick={handle_upvotes}
+										color='primary'
+										className='cursor-pointer'
+									/>
+								)}
+								<p className='text-center'>{votesDiff}</p>
+								{downvoteClicked ? (
+									<ArrowCircleDownTwoToneIcon
+										onClick={handle_downvotes}
+										color='primary'
+										className='cursor-pointer'
+									/>
+								) : (
+									<ArrowCircleDownIcon
+										onClick={handle_downvotes}
+										color='primary'
+										className='cursor-pointer'
+									/>
+								)}
+							</div>
 						</div>
 					</div>
 				</div>

@@ -1,4 +1,5 @@
 import { FieldErrors } from 'tsoa';
+import { Point } from 'typeorm';
 
 export type GroupUpvoteRes = GroupVoteRes
 
@@ -28,12 +29,18 @@ export interface GroupReqBody {
   title: string;
   description: string;
   link?: string;
+  location: string;
+  locationUrl: string;
+  coordinates: Array<number>;
 }
 
 export interface GroupPatchReqBody {
   title?: string;
   description?: string;
   link?: string;
+  location?: string;
+  locationUrl?: string;
+  coordinates?: Array<number>;
 }
 
 export class GroupRes {
@@ -41,6 +48,9 @@ export class GroupRes {
   title: string;
   description: string;
   link: string;
+  location: string;
+  locationUrl: string;
+  coordinates: Array<number>;
   upvotes_sum: number;
   downvotes_sum: number;
   votes_diff: number;
@@ -64,8 +74,10 @@ export interface EventReqBody {
   unix_time: number;
   recurring_pattern?: RecurringPattern;
   title: string;
+  description?: string;
   location: string;
-  link?: string;
+  locationUrl: string;
+  coordinates: Array<number>;
   image_url?: string;
 }
 
@@ -73,9 +85,11 @@ export interface EventPatchReqBody {
   unix_time?: number;
   recurring_pattern?: RecurringPattern;
   title?: string;
+  description?: string;
   location?: string;
-  link?: string | null;
+  locationUrl?: string;
   image_url?: string | null;
+  coordinates?: Array<number>;
 }
 
 export class EventRes {
@@ -83,8 +97,10 @@ export class EventRes {
   unix_time: number;
   recurring_pattern: RecurringPattern;
   title: string;
+  description?: string;
   location: string;
-  link?: string | null;
+  locationUrl: string;
+  coordinates: Array<number>;
   image_url?: string | null;
   upvotes_sum: number;
   downvotes_sum: number;

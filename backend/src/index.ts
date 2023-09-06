@@ -20,7 +20,7 @@ if (process.env.NODE_ENV==='DEVELOPMENT') { // for testing
   assert(process.env.BU_API_URL, 'Environment variable \'BU_API_URL\' undefined');
 }
 
-import { error_handler, not_found_handler, swagger_ui_handler, log, start_managing_events } from './helpers';
+import { error_handler, not_found_handler, swagger_ui_handler, log, start_managing_events, Database } from './helpers';
 import express, { Application } from 'express';
 import morgan from 'morgan';
 import swagger_ui from 'swagger-ui-express';
@@ -60,6 +60,8 @@ app.use(error_handler);
 // ########################################
 
 export default (async () => {
+  await Database.init();
+
   start_managing_events();
 
   await app.listen(process.env.PORT);

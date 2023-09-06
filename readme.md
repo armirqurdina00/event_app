@@ -7,9 +7,9 @@
 
 Salsa City Guide - Discover local salsa, bachata, kizomba dance events and connect with Telegram and WhatsApp groups.
 
-Web App: https://karlsruhetanzt.de/
+Web App: https://sabaki.dance/
 
-API: https://backend.karlsruhetanzt.de/api/docs
+API: https://backend.sabaki.dance/api/docs
 
 ## Table of Contents
 

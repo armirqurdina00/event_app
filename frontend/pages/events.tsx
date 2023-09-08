@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Page from '@/components/page'
 import EventCard from '@/components/event-card'
-import {
-	BackendClient,
-	EventsRes,
-	EventRes,
-	EventIds,
-} from '../utils/backend_client'
+import { BackendClient, EventsRes, EventRes, EventIds } from '../utils/backend_client'
 import Fab from '@mui/material/Fab'
 import { styled } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
@@ -15,10 +10,11 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import { ButtonBase } from '@mui/material'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import axios, { AxiosResponse } from 'axios'
+import { hasCookie, getCookie, setCookie } from "cookies-next";
 
 const PAGE_SIZE = 10
 
-export const getServerSideProps = async () => {
+export const getServerSideProps = async (context) => {
 	const backendClient = new BackendClient({
 		BASE: process.env.BACKEND_URL,
 	})
@@ -27,6 +23,16 @@ export const getServerSideProps = async () => {
 		1,
 		PAGE_SIZE
 	)
+
+	const cookieExists = context.req.cookies['coords']
+
+	console.log(cookieExists)
+
+	if (!cookieExists) {
+		return {
+			props: {},
+		}
+	}
 
 	return {
 		props: { initialEvents },
@@ -38,7 +44,7 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const { user } = useUser()
 	const [page, setPage] = useState(2)
 	const [loading, setLoading] = useState(false)
-	const [hasMore, setHasMore] = useState(initialEvents.length == PAGE_SIZE)
+	const [hasMore, setHasMore] = useState(null)
 	const [events, setEvents] = useState(initialEvents)
 	const [userUpvotes, setUserUpvotes] = useState<EventIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<EventIds>([])
@@ -57,7 +63,7 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const success = function (position) {
 		const latitude = position.coords.latitude
 		const longitude = position.coords.longitude
-		console.log(`Latitude: ${latitude}, Longitude: ${longitude}`)
+		setCookie('coords', JSON.stringify({ latitude, longitude }))
 		setUserLocation({ latitude, longitude })
 	}
 
@@ -65,8 +71,29 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 		console.log("Unable to retrieve your location")
 	}
 
+	function getEvents() {
+		fetch(`https://backend.sabaki.dance/v1/events?page=1&per_page=${PAGE_SIZE}`)
+			.then(response => {
+				return response.json()
+			})
+			.then(data => setEvents(data.items))
+	}
+
 	useEffect(() => {
-		user && handleUserLocation()	
+		if (user) {
+			const cookieExists = hasCookie('coords')
+			if (!cookieExists) {
+				handleUserLocation()
+				getEvents()
+				console.log("Client side rendering")
+			}
+			else {
+				const coords = getCookie('coords')
+				setUserLocation(coords)
+				console.log(coords)
+				console.log("Server side rendering")
+			}
+		}
 	}, [user])
 
 	useEffect(() => {
@@ -145,37 +172,41 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	}
 
 	return (
-		<div
-			onTouchStart={onTouchStart}
-			onTouchMove={onTouchMove}
-			onTouchEnd={onTouchEnd}
-		>
-			<Page>
-				<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
-					<InfiniteScroll
-						dataLength={events.length}
-						next={loadMore}
-						hasMore={hasMore}
-						className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-3 pt-4'
-						style={{ overflow: 'hidden' }}
-						loader={
-							<div className='basis-full'>
-								<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
-							</div>
-						}
-					>
-						{events.map((event, index) => (
-							<EventCard
-								key={index}
-								event={event}
-								upvoted={userUpvotes.indexOf(event.event_id) !== -1}
-								downvoted={userDownvotes.indexOf(event.event_id) !== -1}
-							/>
-						))}
-					</InfiniteScroll>
+		<>
+			{events && (
+				<div
+					onTouchStart={onTouchStart}
+					onTouchMove={onTouchMove}
+					onTouchEnd={onTouchEnd}
+				>
+					<Page>
+						<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
+							<InfiniteScroll
+								dataLength={events.length}
+								next={loadMore}
+								hasMore={hasMore}
+								className='pb-50 flex flex-wrap items-start justify-center gap-3 pt-4'
+								style={{ overflow: 'hidden' }}
+								loader={
+									<div className='basis-full'>
+										<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
+									</div>
+								}
+							>
+								{events && events.map((event, index) => (
+									<EventCard
+										key={index}
+										event={event}
+										upvoted={userUpvotes.indexOf(event.event_id) !== -1}
+										downvoted={userDownvotes.indexOf(event.event_id) !== -1}
+									/>
+								))}
+							</InfiniteScroll>
+						</div>
+					</Page>
 				</div>
-			</Page>
-		</div>
+			)}
+		</>
 	)
 }
 

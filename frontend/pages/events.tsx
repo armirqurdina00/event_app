@@ -16,9 +16,11 @@ import { ButtonBase } from '@mui/material'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import axios, { AxiosResponse } from 'axios'
 import { hasCookie, setCookie } from 'cookies-next'
+import SelectDistance from '@/components/select-distance'
 
 const PAGE_SIZE = 10
 const USER_LOCATION = "user_location"
+const YEARS_TO_MILLISECONDS = 3155695200000
 
 export const getServerSideProps = async (context) => {
 	let initialEvents = []
@@ -53,15 +55,21 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	const [userUpvotes, setUserUpvotes] = useState<EventIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<EventIds>([])
 	const [isSwiped, setIsSwiped] = useState(false)
+	const [distance, setDistance] = useState("5")
+
 
 	useEffect(() => {
 		const getUserLocationAndLoadEvents = function () {
 			if (navigator.geolocation) {
+				const date_today = new Date();
+				const expire_date = new Date();
+				expire_date.setTime(date_today.getTime() + YEARS_TO_MILLISECONDS)
+
 				navigator.geolocation.getCurrentPosition(
 					(position) => {
 						const latitude = position.coords.latitude
 						const longitude = position.coords.longitude
-						setCookie(USER_LOCATION, `${latitude},${longitude}`);
+						setCookie(USER_LOCATION, `${latitude},${longitude}`, { expires: expire_date });
 						loadMore();
 					},
 					() => console.log("Unable to retrieve your location")
@@ -160,6 +168,7 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 			onTouchEnd={onTouchEnd}
 		>
 			<Page>
+				<SelectDistance distance={distance} setDistance={setDistance} />
 				<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
 					<InfiniteScroll
 						dataLength={events.length}

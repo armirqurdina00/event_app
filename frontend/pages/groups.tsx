@@ -12,6 +12,7 @@ import { BackendClient } from '../utils/backend_client'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import axios, { AxiosResponse } from 'axios'
 import LocationContext from '../utils/location-context'
+import SelectDistance from '@/components/select-distance'
 
 const PAGE_SIZE = 10
 
@@ -52,6 +53,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 	const [userUpvotes, setUserUpvotes] = useState<GroupIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<GroupIds>([])
 	const [isSwiped, setIsSwiped] = useState(false)
+	const [distance, setDistance] = useState("5")
 
 	useEffect(() => {
 		if (initialGroups.length === 0) loadMore()
@@ -139,6 +141,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 			onTouchEnd={onTouchEnd}
 		>
 			<Page>
+				<SelectDistance distance={distance} setDistance={setDistance} />
 				<div className={`${isSwiped && 'slideOutToRightAnimation'}`}>
 					<InfiniteScroll
 						dataLength={groups.length}

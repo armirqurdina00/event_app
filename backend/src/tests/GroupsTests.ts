@@ -36,7 +36,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/whatsapp-group',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const response: GroupRes = await backend_client.groups.postGroups(user_id, body);
@@ -56,7 +56,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const response1: GroupRes = await backend_client.groups.postGroups(user_id, body);
@@ -80,7 +80,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const number_of_items = 3;
@@ -115,6 +115,53 @@ describe('Tests for groups endpoints.', function() {
     expect(response_2.total_number_of_items).to.be.above(number_of_items - 1);
   });
 
+  it('GET /v1/groups ordered by user_location', async function() {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+
+    const COORDINATES = [
+      [49.0069, 8.4037],
+      [49.007, 8.4038],
+      [49.0071, 8.4039],
+      [49.0072, 8.404],
+      [49.0073, 8.4041],
+      [49.0074, 8.4042],
+      [49.0075, 8.4043],
+      [49.0076, 8.4044],
+      [49.0077, 8.4045],
+      [49.0078, 8.4046]
+    ];
+
+    const createGroupWithRandomCoordinates = async () => {
+      const requestBody: GroupReqBody = {
+        title: 'Street Salsa',
+        description: 'City Park',
+        link: 'https://example.com/dance-party',
+        location: 'City Park',
+        locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+        coordinates: COORDINATES[Math.floor(Math.random() * COORDINATES.length)]
+      };
+
+      const response = await backend_client.groups.postGroups(user_id, requestBody);
+      group_ids.push(response.group_id);
+    };
+
+    for (let i = 0; i < COORDINATES.length; i++) {
+      await createGroupWithRandomCoordinates();
+    }
+
+    const PAGE = 1;
+    const ITEMS_PER_PAGE = 2;
+    const response = await backend_client.groups.getGroups(PAGE, ITEMS_PER_PAGE, COORDINATES[0][0], COORDINATES[0][1]);
+
+    // Check if the returned items are in order of increasing distance from COORDINATES[0]
+    let previousDistance = 0;
+    response.items.forEach(item => {
+      const currentDistance = getDistanceBetweenPoints(COORDINATES[0], item.coordinates); // Implement the getDistanceBetweenPoints function
+      expect(currentDistance).to.be.at.least(previousDistance);
+      previousDistance = currentDistance;
+    });
+  });
+
   it('DELETE /v1/groups/{group_id}', async function() {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
@@ -124,7 +171,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const { group_id }: GroupRes = await backend_client.groups.postGroups(user_id, body);
@@ -151,7 +198,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const { group_id } = await backend_client.groups.postGroups(user_id, body);
@@ -194,7 +241,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const { group_id } = await backend_client.groups.postGroups(user_id, body);
@@ -218,3 +265,23 @@ describe('Tests for groups endpoints.', function() {
     }
   });
 });
+
+function getDistanceBetweenPoints(point1, point2) {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = degToRad(point2[0] - point1[0]); // Difference in latitudes
+  const dLon = degToRad(point2[1] - point1[1]); // Difference in longitudes
+
+  const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(degToRad(point1[0])) * Math.cos(degToRad(point2[0])) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in kilometers
+
+  return distance;
+}
+
+function degToRad(deg) {
+  return deg * (Math.PI / 180);
+}

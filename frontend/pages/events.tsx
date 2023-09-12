@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Page from '@/components/page'
 import EventCard from '@/components/event-card'
-import { BackendClient, EventsRes, EventRes, EventIds } from '../utils/backend_client'
+import {
+	BackendClient,
+	EventsRes,
+	EventRes,
+	EventIds,
+} from '../utils/backend_client'
 import Fab from '@mui/material/Fab'
 import { styled } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
@@ -10,28 +15,25 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import { ButtonBase } from '@mui/material'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import axios, { AxiosResponse } from 'axios'
-import { hasCookie, getCookie, setCookie } from "cookies-next";
+import { hasCookie, setCookie } from 'cookies-next'
 
 const PAGE_SIZE = 10
+const USER_LOCATION = "user_location"
 
 export const getServerSideProps = async (context) => {
-	const backendClient = new BackendClient({
-		BASE: process.env.BACKEND_URL,
-	})
+	let initialEvents = []
 
-	const { items: initialEvents } = await backendClient.events.getEvents(
-		1,
-		PAGE_SIZE
-	)
+	const userLocation: string = context.req.cookies[USER_LOCATION];
+	if (userLocation) {
+		const backendClient = new BackendClient({
+			BASE: process.env.BACKEND_URL,
+		})
 
-	const cookieExists = context.req.cookies['coords']
-
-	console.log(cookieExists)
-
-	if (!cookieExists) {
-		return {
-			props: {},
-		}
+		initialEvents = (await backendClient.events.getEvents(
+			1,
+			PAGE_SIZE,
+			userLocation
+		)).items;
 	}
 
 	return {
@@ -40,61 +42,41 @@ export const getServerSideProps = async (context) => {
 }
 
 const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
+	const clientSideLoading = initialEvents.length == 0;
+
 	const router = useRouter()
 	const { user } = useUser()
-	const [page, setPage] = useState(2)
+	const [page, setPage] = useState(clientSideLoading ? 1 : 2)
 	const [loading, setLoading] = useState(false)
-	const [hasMore, setHasMore] = useState(null)
+	const [hasMore, setHasMore] = useState(clientSideLoading || initialEvents.length == PAGE_SIZE)
 	const [events, setEvents] = useState(initialEvents)
 	const [userUpvotes, setUserUpvotes] = useState<EventIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<EventIds>([])
 	const [isSwiped, setIsSwiped] = useState(false)
-	const [userLocation, setUserLocation] = useState(null)
-
-	const handleUserLocation = function () {
-		if (navigator.geolocation) {
-			navigator.geolocation.getCurrentPosition(success, error)
-		}
-		else {
-			console.log("Geolocation not supported")
-		}
-	}
-
-	const success = function (position) {
-		const latitude = position.coords.latitude
-		const longitude = position.coords.longitude
-		setCookie('coords', JSON.stringify({ latitude, longitude }))
-		setUserLocation({ latitude, longitude })
-	}
-
-	const error = function () {
-		console.log("Unable to retrieve your location")
-	}
-
-	function getEvents() {
-		fetch(`https://backend.sabaki.dance/v1/events?page=1&per_page=${PAGE_SIZE}`)
-			.then(response => {
-				return response.json()
-			})
-			.then(data => setEvents(data.items))
-	}
 
 	useEffect(() => {
-		if (user) {
-			const cookieExists = hasCookie('coords')
-			if (!cookieExists) {
-				handleUserLocation()
-				getEvents()
-				console.log("Client side rendering")
+		const getUserLocationAndLoadEvents = function () {
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					(position) => {
+						const latitude = position.coords.latitude
+						const longitude = position.coords.longitude
+						setCookie(USER_LOCATION, `${latitude},${longitude}`);
+						loadMore();
+					},
+					() => console.log("Unable to retrieve your location")
+				)
 			}
 			else {
-				const coords = getCookie('coords')
-				setUserLocation(coords)
-				console.log(coords)
-				console.log("Server side rendering")
+				console.log("Geolocation not supported")
 			}
 		}
-	}, [user])
+
+		const cookieExists = hasCookie(USER_LOCATION)
+		if (!cookieExists) {
+			getUserLocationAndLoadEvents();
+		}
+	}, [])
 
 	useEffect(() => {
 		if (user?.sub) loadUserVotes()
@@ -172,41 +154,37 @@ const Events: React.FC<{ initialEvents: EventRes[] }> = ({ initialEvents }) => {
 	}
 
 	return (
-		<>
-			{events && (
-				<div
-					onTouchStart={onTouchStart}
-					onTouchMove={onTouchMove}
-					onTouchEnd={onTouchEnd}
-				>
-					<Page>
-						<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
-							<InfiniteScroll
-								dataLength={events.length}
-								next={loadMore}
-								hasMore={hasMore}
-								className='pb-50 flex flex-wrap items-start justify-center gap-3 pt-4'
-								style={{ overflow: 'hidden' }}
-								loader={
-									<div className='basis-full'>
-										<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
-									</div>
-								}
-							>
-								{events && events.map((event, index) => (
-									<EventCard
-										key={index}
-										event={event}
-										upvoted={userUpvotes.indexOf(event.event_id) !== -1}
-										downvoted={userDownvotes.indexOf(event.event_id) !== -1}
-									/>
-								))}
-							</InfiniteScroll>
-						</div>
-					</Page>
+		<div
+			onTouchStart={onTouchStart}
+			onTouchMove={onTouchMove}
+			onTouchEnd={onTouchEnd}
+		>
+			<Page>
+				<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
+					<InfiniteScroll
+						dataLength={events.length}
+						next={loadMore}
+						hasMore={hasMore}
+						className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-3 pt-4'
+						style={{ overflow: 'hidden' }}
+						loader={
+							<div className='basis-full'>
+								<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
+							</div>
+						}
+					>
+						{events.map((event, index) => (
+							<EventCard
+								key={index}
+								event={event}
+								upvoted={userUpvotes.indexOf(event.event_id) !== -1}
+								downvoted={userDownvotes.indexOf(event.event_id) !== -1}
+							/>
+						))}
+					</InfiniteScroll>
 				</div>
-			)}
-		</>
+			</Page>
+		</div>
 	)
 }
 

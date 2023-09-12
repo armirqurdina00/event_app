@@ -42,7 +42,7 @@ describe('Tests for events endpoints.', function() {
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
       image_url: 'http://res.cloudinary.com/dqolsfqjt/image/upload/v1691513488/vt97k2aqwhhf85njpucg.jpg',
       recurring_pattern: RecurringPattern.WEEKLY,
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const response: EventRes = await backend_client.events.postEvents(user_id, body);
@@ -63,7 +63,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const response1: EventRes = await backend_client.events.postEvents(user_id, body);
@@ -86,7 +86,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const number_of_items = 3;
@@ -109,7 +109,7 @@ describe('Tests for events endpoints.', function() {
     const page = 1;
     const per_page = 2;
 
-    const response_2 = await backend_client.events.getEvents(page, per_page);
+    const response_2 = await backend_client.events.getEvents(page, per_page, '');
 
     expect(response_2.page).to.be.a('number');
     expect(response_2.per_page).to.be.a('number');
@@ -129,7 +129,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const { event_id }: EventRes = await backend_client.events.postEvents(user_id, body);
@@ -158,7 +158,7 @@ describe('Tests for events endpoints.', function() {
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
       recurring_pattern: RecurringPattern.NONE,
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const { event_id } = await backend_client.events.postEvents(user_id, body);
@@ -193,7 +193,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates: [8.4037, 49.0069]
     };
 
     const { event_id } = await backend_client.events.postEvents(user_id, body);
@@ -235,7 +235,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [49.0069, 8.4037]
+      coordinates:  [8.4037, 49.0069]
     };
 
     const { event_id } = await backend_client.events.postEvents(user_id, body);

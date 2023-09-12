@@ -15,8 +15,12 @@ export async function get_group(group_id: string): Promise<GroupRes> {
   return as_group_response(group);
 }
 
-export async function get_groups(page: number, per_page: number): Promise<GroupsRes> {
-  const groups_e = await find_groups(page, per_page);
+export async function get_groups(page: number, per_page: number, latitude?: number, longitude?: number): Promise<GroupsRes> {
+
+  if ((latitude && !longitude) || (longitude && !latitude))
+    raise_bad_request();
+
+  const groups_e = await find_groups(page, per_page, latitude, longitude);
   return await as_groups_response(groups_e, page, per_page);
 }
 
@@ -181,20 +185,43 @@ async function find_group_by_user(user_id: string, group_id: string): Promise<Gr
   return group;
 }
 
-async function find_groups(page: number, per_page: number): Promise<GroupE[]> {
-  const offset = Math.max(per_page * (page - 1), 0);
-  const limit = per_page;
+/**
+ * Finds groups based on pagination and ordering by location and votes.
+ *
+ * @param page - The page number to retrieve.
+ * @param per_page - Number of groups per page.
+ * @param latitude - Optional latitude to order by location.
+ * @param longitude - Optional longitude to order by location.
+ *
+ * @returns A Promise that resolves with an array of GroupE.
+ */
+async function find_groups(
+  page: number,
+  perPage: number,
+  latitude?: number,
+  longitude?: number
+): Promise<GroupE[]> {
+  const offset = Math.max(perPage * (page - 1), 0);
 
-  const group_repo = await Database.get_repo(GroupE);
+  const groupRepository = await Database.get_repo(GroupE);
 
-  const groups = group_repo.createQueryBuilder('group')
-    .limit(limit)
+  let query = groupRepository.createQueryBuilder('group');
+
+  // If both latitude and longitude are provided, order by location.
+  if (latitude !== undefined && longitude !== undefined) {
+    query = query.orderBy(`location_point <-> 'SRID=4326;POINT(${longitude} ${latitude})'`);
+  }
+
+  const groups = await query
+    .limit(perPage)
     .offset(offset)
-    .orderBy('votes_diff', 'DESC')
+    .addOrderBy('votes_diff', 'DESC')
     .getMany();
 
   return groups;
 }
+
+
 
 function as_group_response(group_e: GroupE): GroupRes {
   const result = new GroupRes();
@@ -358,4 +385,8 @@ function raise_vote_not_found() {
 
 function raise_vote_already_exists() {
   throw new OperationError('Vote already exists.', HttpStatusCode.BAD_REQUEST);
+}
+
+function raise_bad_request() {
+  throw new OperationError('Bad request.', HttpStatusCode.BAD_REQUEST);
 }

@@ -17,8 +17,8 @@ export async function get_event(event_id: string): Promise<EventRes> {
   return as_event_response(event);
 }
 
-export async function get_events(page: number, per_page: number): Promise<EventsRes> {
-  const events_e = await find_events(page, per_page);
+export async function get_events(page: number, per_page: number, user_location: string): Promise<EventsRes> {
+  const events_e = await find_events(page, per_page, user_location);
   return await as_events_response(events_e, page, per_page);
 }
 
@@ -172,20 +172,25 @@ async function find_event_by_user(user_id: string, event_id: string): Promise<Ev
   return event;
 }
 
-async function find_events(page: number, per_page: number): Promise<EventE[]> {
+async function find_events(page: number, per_page: number, user_location: string): Promise<EventE[]> {
   const offset = Math.max((per_page * page) - per_page, 0);
   const limit = per_page;
 
   const event_repo = await Database.get_repo(EventE);
 
-  const events = event_repo.createQueryBuilder('event')
+  let query = event_repo.createQueryBuilder('event')
     .limit(limit)
     .offset(offset)
-    .where('event.unix_time > :before_2_hours', { before_2_hours: moment().subtract(2, 'hours').toDate().getTime() })
-    .orderBy('unix_time', 'ASC')
-    .getMany();
+    .where('event.unix_time > :before_2_hours', { before_2_hours: moment().subtract(2, 'hours').toDate().getTime() });
 
-  return events;
+  if (user_location) {
+    const userCoordinates = user_location.split(',');
+    query = query.orderBy(`location_point <-> 'SRID=4326;POINT(${userCoordinates[0]} ${userCoordinates[1]})'`);
+  } else {
+    query = query.orderBy('unix_time', 'ASC');
+  }
+
+  return query.getMany();
 }
 
 // todo für patch und save eigene funktionen, damit link null gesetzt werden kann

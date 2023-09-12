@@ -5,6 +5,7 @@ import {
   DataSourceOptions
 } from 'typeorm';
 import { join } from 'path';
+import fs from 'fs';
 
 // ########################################
 // ########################################
@@ -19,10 +20,15 @@ export class Database {
   static default_config: DataSourceOptions = {
     type: 'postgres',
     host: process.env.DATABASE_HOST,
+    port: Number(process.env.DATABASE_PORT),
     username: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE_NAME,
     synchronize: true,
+    ssl: {
+      rejectUnauthorized: false,
+      ca: fs.readFileSync(__dirname + '/ca-certificate.crt').toString(),
+    },
     // dropSchema: process.env.NODE_ENV === 'DEVELOPMENT' ? true : false, // does not work due to lack of permissions
     entities: [join(__dirname, '..', 'commons', '/typeorm_entities/**/*')],
     extra: { max: Number(process.env.NUMBER_OF_DB_CONNECTIONS) }

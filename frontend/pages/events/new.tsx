@@ -78,7 +78,7 @@ const CreateEvent = ({ user }) => {
 
 			const lat = place.geometry.location.lat()
 			const lng = place.geometry.location.lng()
-			setCoordinates([lat, lng])
+			setCoordinates([lng, lat])
 		})
 	}, [])
 

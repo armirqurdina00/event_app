@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Point } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
 import { GroupUpvoteE } from './GroupUpvoteE';
 import { GroupDownvoteE } from './GroupDownvoteE';
+import { Point } from 'geojson';
 
 @Entity()
 export class GroupE {
@@ -22,14 +23,13 @@ export class GroupE {
   @Column()
   locationUrl: string;
 
+  @Index({ spatial: true })
   @Column({
-    type: 'point',
-    transformer: { // need to use transformer as there's an active issue in typeorm with getter/setter of Point type: https://github.com/typeorm/typeorm/issues/2896
-      from: v => { return { coordinates: [v?.x, v?.y] }; },
-      to: v => `${v.coordinates[0]},${v.coordinates[1]}`, // [1,2] -> '1,2'
-    },
+    type: 'geography',
+    spatialFeatureType: 'Point',
+    srid: 4326
   })
-  location_point: Point;
+  location_point: Point
 
   @Column({ default: 0 })
   upvotes_sum: number;

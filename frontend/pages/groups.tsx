@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
 import Page from '@/components/page'
 import GroupCard from '@/components/group-card'
 import { GroupIds, GroupRes, GroupsRes } from '../utils/backend_client'
@@ -11,17 +11,29 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import { BackendClient } from '../utils/backend_client'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import axios, { AxiosResponse } from 'axios'
+import LocationContext from '../utils/location-context'
 
 const PAGE_SIZE = 10
 
-export const getServerSideProps = async () => {
+export const getServerSideProps = async (context) => {
 	const backendClient = new BackendClient({
 		BASE: process.env.BACKEND_URL,
 	})
 
+	let longitude = Number(context.query.longitude)
+	let latitude = Number(context.query.latitude)
+
+	if (!longitude || !latitude) {
+		return {
+			props: { initialGroups: [] },
+		}
+	}
+
 	const { items: initialGroups } = await backendClient.groups.getGroups(
 		1,
-		PAGE_SIZE
+		PAGE_SIZE,
+		latitude,
+		longitude
 	)
 
 	return {
@@ -31,14 +43,19 @@ export const getServerSideProps = async () => {
 
 const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 	const router = useRouter()
+	const { location, setLocation } = useContext(LocationContext)
 	const { user } = useUser()
-	const [page, setPage] = useState(2)
+	const [page, setPage] = useState(initialGroups.length === 0 ? 1 : 2)
 	const [loading, setLoading] = useState(false)
-	const [hasMore, setHasMore] = useState(initialGroups.length == PAGE_SIZE)
+	const [hasMore, setHasMore] = useState(true)
 	const [groups, setGroups] = useState<GroupRes[]>(initialGroups)
 	const [userUpvotes, setUserUpvotes] = useState<GroupIds>([])
 	const [userDownvotes, setUserDownvotes] = useState<GroupIds>([])
 	const [isSwiped, setIsSwiped] = useState(false)
+
+	useEffect(() => {
+		if (initialGroups.length === 0) loadMore()
+	}, [location])
 
 	useEffect(() => {
 		if (user?.sub) loadUserVotes()
@@ -63,7 +80,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 
 		try {
 			const response = await fetch(
-				`/api/groups?page=${page}&per_page=${PAGE_SIZE}`
+				`/api/groups?page=${page}&per_page=${PAGE_SIZE}&latitude=${location.latitude}&longitude=${location.latitude}`
 			)
 
 			const data: GroupsRes = await response.json()

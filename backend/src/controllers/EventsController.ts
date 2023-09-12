@@ -16,9 +16,9 @@ export class EventsController extends Controller {
   @Response<HttpError>('404', 'Not Found')
   @Response<HttpError>('500', 'Internal Server Error')
   @Get('/events')
-  public async get_events(@Query() page: Page,@Query() per_page: PerPage): Promise<EventsRes> {
+  public async get_events(@Query() page: Page, @Query() per_page: PerPage, @Query() user_location?: string): Promise<EventsRes> {
     try {
-      return await get_events(page, per_page);
+      return await get_events(page, per_page, user_location);
     } catch (err) {
       log_error(err);
       throw err;

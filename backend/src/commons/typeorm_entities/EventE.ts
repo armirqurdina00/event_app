@@ -1,7 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Point } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
 import { RecurringPattern } from '../TsoaTypes';
 import { EventUpvoteE } from './EventUpvoteE';
 import { EventDownvoteE } from './EventDownvoteE';
+import { Point } from 'geojson';
 
 @Entity()
 export class EventE {
@@ -26,14 +27,13 @@ export class EventE {
   @Column()
   locationUrl: string;
 
+  @Index({ spatial: true })
   @Column({
-    type: 'point',
-    transformer: { // need to use transformer as there's an active issue in typeorm with getter/setter of Point type: https://github.com/typeorm/typeorm/issues/2896
-      from: v => { return { coordinates: [v?.x, v?.y] }; },
-      to: v => `${v.coordinates[0]},${v.coordinates[1]}`, // [1,2] -> '1,2'
-    },
+    type: 'geography',
+    spatialFeatureType: 'Point',
+    srid: 4326
   })
-  location_point: Point;
+  location_point: Point
 
   @Column({ default: 'https://res.cloudinary.com/dqolsfqjt/image/upload/v1692633904/placeholder-16x9-1_vp8x60.webp' })
   image_url: string;

@@ -13,34 +13,35 @@ test('test groups', async ({ page }) => {
 	await page.getByTestId('add-group-or-event').click()
 
 	// First Login
-	await page.getByRole('button', { name: 'Weiter mit Facebook' }).click();
-	await page.getByRole('button', { name: 'Allow all cookies' }).click();
-	await page.getByPlaceholder('Email or phone number').fill(process.env.FACEBOOK_EMAIL);
-	await page.getByPlaceholder('Password').fill(process.env.FACEBOOK_PW);
-	await page.getByRole('button', { name: 'Log In' }).click();
+	await page.getByLabel('Email Adresse').fill(process.env.TEST_ACCOUNT_EMAIL)
+	await page.getByLabel('Email Adresse').click()
+	await page.getByLabel('Passwort').fill(process.env.TEST_ACCOUNT_PW)
+	await page.getByRole('button', { name: 'Weiter', exact: true }).click()
 
 	// temporary fix due to unknown bug
-	await page.waitForLoadState('networkidle')
-	await page.goto(`${process.env.TEST_URL}/groups/new`) // temporary fix due to unknown bug
+	await page.waitForURL('**/groups/new')
 
 	// Continue adding Group
 	await page.getByLabel('Titel').fill('Test Title 1')
 	await page.getByLabel('Beschreibung').fill('Test Description 1')
 	await page.getByLabel('Link').fill('https://testlink1.de')
-	await page.locator('input[name="group-location"]').fill('Karlsruhe')
+	await page.click('input[name="group-location"]')
+	await page.keyboard.type('Karlsruhe')
 	await page.getByText('KarlsruheGermany').click()
+	await page.waitForLoadState('networkidle') // temporary fix due to unknown bug
 	await page.getByTestId('submit').click()
 
-	// temporary fix due to unknown bug
-	await page.waitForLoadState('networkidle')
-	await page.reload()
+	await page.waitForURL('**/groups')
 
 	// Edit Group
 	await page.getByTestId('edit-test-id').first().click()
 	await page.getByLabel('Titel').fill('Test Title 2')
 	await page.getByLabel('Beschreibung').fill('Test Description 2')
 	await page.getByLabel('Link').fill('https://testlink2.de')
+	await page.waitForLoadState('networkidle') // bug fix, otherwise submit button is not clicked for real.
 	await page.getByTestId('submit').click()
+
+	await page.waitForURL('**/groups')
 
 	// Delete Group
 	await page.getByTestId('edit-test-id').first().click()

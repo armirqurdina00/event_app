@@ -11,10 +11,67 @@ import { useRouter } from 'next/router'
 import { Button, Menu, MenuItem } from '@mui/material'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'
+import { useEffect, useContext } from 'react'
+import LocationContext from '../utils/location-context'
 
 function ResponsiveAppBar() {
 	const { user } = useUser()
 	const router = useRouter()
+	const { location, setLocation } = useContext(LocationContext)
+
+	useEffect(() => {
+		const updateUrl = (latitude, longitude) => {
+			// Get current query params from the router
+			const currentQuery = { ...router.query }
+
+			// Update the parameters
+			currentQuery.latitude = latitude
+			currentQuery.longitude = longitude
+
+			// Update the current URL without reloading the page
+			router.push(
+				{
+					pathname: router.pathname,
+					query: currentQuery,
+				},
+				undefined,
+				{ shallow: true }
+			)
+		}
+
+		const getUserLocationFromDevice = () => {
+			if (!navigator.geolocation) {
+				console.log('Geolocation not supported')
+				return
+			}
+
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					const { latitude, longitude } = position.coords
+					localStorage.setItem('latitude', String(latitude))
+					localStorage.setItem('longitude', String(longitude))
+					updateUrl(latitude, longitude)
+					setLocation({ latitude, longitude })
+				},
+				() => console.error('Unable to retrieve your location')
+			)
+		}
+
+		if (router.query.latitude && router.query.longitude) {
+			return
+		}
+
+		const latitude = localStorage.getItem('latitude')
+		const longitude = localStorage.getItem('longitude')
+
+		if (latitude && longitude) {
+			updateUrl(latitude, longitude)
+			setLocation({ latitude, longitude })
+			return
+		}
+
+		getUserLocationFromDevice()
+	}, [])
 
 	const handle_logout = (event: React.MouseEvent<HTMLElement>) => {
 		router.push('/api/auth/logout')
@@ -44,7 +101,11 @@ function ResponsiveAppBar() {
 	return (
 		<AppBar className='bg-zinc-100 text-zinc-600' position='static'>
 			<Container maxWidth='xs'>
-				<Toolbar disableGutters className='flex justify-between' variant='dense'>
+				<Toolbar
+					disableGutters
+					className='flex justify-between'
+					variant='dense'
+				>
 					<div className='flex flex-grow items-center text-xl'>
 						<LocationOnIcon />
 						<p className='ml-2 mr-2'>{'Karlsruhe'}</p>

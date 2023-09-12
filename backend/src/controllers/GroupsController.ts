@@ -13,9 +13,9 @@ export class GroupsController extends Controller {
   @Response<HttpError>('404', 'Not Found')
   @Response<HttpError>('500', 'Internal Server Error')
   @Get('/groups')
-  public async get_groups(@Query() page: Page,@Query() per_page: PerPage): Promise<GroupsRes> {
+  public async get_groups(@Query() page: Page,@Query() per_page: PerPage, @Query() latitude?: number, @Query() longitude?: number): Promise<GroupsRes> {
     try {
-      return await get_groups(page, per_page);
+      return await get_groups(page, per_page, latitude, longitude);
     } catch (err) {
       log_error(err);
       throw err;

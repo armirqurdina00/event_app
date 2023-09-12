@@ -1,5 +1,5 @@
 {
-	"id": "https://karlsruhetanzt.de/?source=pwa",
+	"id": "https://sabaki.dance/?source=pwa",
 	"name": "Salsa Bachata Kizomba",
 	"short_name": "SaBaKi",
 	"description": "Entdecke mit uns die lebendige Welt von Salsa, Bachata und Kizomba Events in deiner Stadt.",
@@ -21,7 +21,7 @@
 			"purpose": "any maskable"
 		}
 	],
-	"start_url": "/?source=pwa",
+	"start_url": "https://sabaki.dance/?source=pwa",
 	"background_color": "#1d2020",
 	"orientation": "portrait",
 	"display": "standalone",

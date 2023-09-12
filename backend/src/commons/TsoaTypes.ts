@@ -1,5 +1,4 @@
 import { FieldErrors } from 'tsoa';
-import { Point } from 'typeorm';
 
 export type GroupUpvoteRes = GroupVoteRes
 

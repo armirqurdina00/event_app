@@ -3,7 +3,6 @@ import assert from 'assert';
 assert(process.env.NODE_ENV, 'Environment variable \'NODE_ENV\' undefined.');
 assert(process.env.PORT, 'Environment variable \'PORT\' undefined.');
 assert(process.env.DATABASE_USERNAME, 'Environment variable \'DATABASE_USERNAME\' undefined.');
-assert(process.env.DATABASE_USER, 'Environment variable \'DATABASE_USER\' undefined.');
 assert(process.env.DATABASE_PASSWORD, 'Environment variable \'DATABASE_PASSWORD\' undefined.');
 assert(process.env.DATABASE_HOST, 'Environment variable \'DATABASE_HOST\' undefined.');
 assert(process.env.DATABASE_NAME, 'Environment variable \'DATABASE_NAME\' undefined.');

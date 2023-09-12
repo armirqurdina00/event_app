@@ -9,7 +9,7 @@
 		"build": "npx openapi-typescript-codegen --client fetch --input ../backend/build/swagger.json --output utils/backend_client --name BackendClient && next build",
 		"start": "next start",
 		"lint": "next lint",
-		"test": "npx playwright test --headed"
+		"test": "npx playwright test"
 	},
 	"dependencies": {
 		"@auth0/nextjs-auth0": "^3.0.0",

@@ -13,41 +13,38 @@ test('test events', async ({ page }) => {
 	await page.getByTestId('add-group-or-event').click()
 
 	// First Login
-	await page.getByRole('button', { name: 'Weiter mit Facebook' }).click();
-	await page.getByRole('button', { name: 'Allow all cookies' }).click();
-	await page.getByPlaceholder('Email or phone number').fill(process.env.FACEBOOK_EMAIL);
-	await page.getByPlaceholder('Password').fill(process.env.FACEBOOK_PW);
-	await page.getByRole('button', { name: 'Log In' }).click();
+	await page.getByLabel('Email Adresse').fill(process.env.TEST_ACCOUNT_EMAIL)
+	await page.getByLabel('Email Adresse').click()
+	await page.getByLabel('Passwort').fill(process.env.TEST_ACCOUNT_PW)
+	await page.getByRole('button', { name: 'Weiter', exact: true }).click()
 
 	// temporary fix due to unknown bug
-	await page.waitForLoadState('networkidle')
-	await page.goto(`${process.env.TEST_URL}/events/new`)
+	await page.waitForURL('**/events/new')
 
 	// Continue adding Event
 	await page.locator('input[name="event-title"]').fill('Test Title 1')
-	await page.locator('input[name="event-location"]').fill('Karlsruhe')
+	await page.click('input[name="event-location"]')
+	await page.keyboard.type('Karlsruhe')
 	await page.getByText('KarlsruheGermany').click()
 	await page.getByTestId('input-test-id').setInputFiles(__dirname + '/../public/images/icon-512.png')
+	await page.waitForLoadState('networkidle') // temporary fix due to unknown bug
 	await page.getByTestId('submit').click()
 
 	// temporary fix due to unknown bug
-	await page.waitForLoadState('networkidle')
-	await page.reload()
+	await page.waitForURL('**/events')
 
 	// Edit Event
 	await page.getByTestId('edit-test-id').first().click()
 	await page.locator('input[name="event-title"]').fill('Test Title 2')
-	await page.locator('input[name="event-location"]').fill('Karlsruhe')
-	await page.getByText('KarlsruheGermany').click()
+	await page.click('input[name="event-location"]')
+	await page.keyboard.type('Karlsruhe')
+	await page.waitForLoadState('networkidle') // bug fix, otherwise submit button is not clicked for real.
 	await page.getByTestId('submit').click()
 
-	// temporary fix due to unknown bug
-	await page.waitForLoadState('networkidle')
-	await page.reload()
+	await page.waitForURL('**/events')
 
 	// Delete Event
 	await page.getByTestId('edit-test-id').first().click()
 	await page.getByTestId('delete').click()
 	await page.getByTestId('delete-confirmation').click()
 })
-

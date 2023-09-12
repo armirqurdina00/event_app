@@ -15,14 +15,15 @@ export default async function postEvents(
 
 			const response = await backend_client.events.getEvents(
 				Number(req.query.page),
-				Number(req.query.per_page)
+				Number(req.query.per_page),
+				req.cookies["user_location"]
 			)
 			res.status(200).json(response)
 		} else {
 			res.status(404).end()
 		}
 	} catch (err: any | AxiosError) {
-		console.error('Error in postEvents: ', err)
+		console.error('Error in getEvents: ', err)
 		if (axios.isAxiosError(err)) {
 			res.status(err.response.status).json(err)
 		}

@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { BackendClient } from '../../utils/backend_client'
 import axios, { AxiosError } from 'axios'
 
-export default async function postGroups(
+export default async function getGroups(
 	req: NextApiRequest,
 	res: NextApiResponse
 ) {
@@ -14,7 +14,9 @@ export default async function postGroups(
 
 			const response = await backend_client.groups.getGroups(
 				Number(req.query.page),
-				Number(req.query.per_page)
+				Number(req.query.per_page),
+				Number(req.query.latitude),
+				Number(req.query.longitude)
 			)
 			res.status(200).json(response)
 		} else {

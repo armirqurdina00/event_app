@@ -60,7 +60,7 @@ async function createEvent(EventRepo) {
   event.recurring_pattern = 'NONE';
   event.location_point = {
     type: 'Point',
-    coordinates: [49.0069, 8.4037]
+    coordinates:  [8.4037, 49.0069]
   };
 
   const { event_id } = await EventRepo.save(event);
@@ -78,7 +78,7 @@ async function createWeeklyEvent(EventRepo) {
   event.recurring_pattern = 'WEEKLY';
   event.location_point = {
     type: 'Point',
-    coordinates: [49.0069, 8.4037]
+    coordinates:  [8.4037, 49.0069]
   };
 
   const { event_id } = await EventRepo.save(event);

@@ -16,7 +16,7 @@ async function delete_old_events() {
 
     const events = await data_source.getRepository(EventE).createQueryBuilder('event')
       .where('recurring_pattern = :recurring_pattern', { recurring_pattern: RecurringPattern.NONE })
-      .andWhere('unix_time < :before_6_hours', { before_6_hours: moment().subtract(6, 'hours').toDate().getTime() })
+      .andWhere('unix_time < :one_week_ago', { one_week_ago: moment().subtract(1, 'week').toDate().getTime() })
       .getMany();
 
     for (const i in events){
@@ -39,7 +39,7 @@ async function delete_old_events() {
 
     await data_source.createQueryBuilder()
       .where('recurring_pattern = :recurring_pattern', { recurring_pattern: RecurringPattern.NONE })
-      .andWhere('unix_time < :before_6_hours', { before_6_hours: moment().subtract(6, 'hours').toDate().getTime() })
+      .andWhere('unix_time < :one_week_ago', { one_week_ago: moment().subtract(1, 'week').toDate().getTime() })
       .delete()
       .from(EventE)
       .execute();
@@ -56,7 +56,7 @@ async function update_recurrent_weekly_events() {
 
     const events = await data_source.getRepository(EventE).createQueryBuilder('event')
       .where('event.recurring_pattern = :recurring_pattern', { recurring_pattern: 'WEEKLY' })
-      .andWhere('event.unix_time < :before_6_hours', { before_6_hours: moment().subtract(6, 'hours').toDate().getTime() })
+      .andWhere('event.unix_time < :eight_hours_ago', { eight_hours_ago: moment().subtract(8, 'hours').toDate().getTime() })
       .getMany();
 
     const updatedEvents = [];
@@ -78,6 +78,9 @@ async function update_recurrent_weekly_events() {
 
       const newDate = moment(Number(event.unix_time)).add(1, 'week').toDate();
       event.unix_time = newDate.getTime();
+      event.upvotes_sum = 0;
+      event.downvotes_sum = 0;
+      event.votes_diff = 0;
       updatedEvents.push(event);
     }
 

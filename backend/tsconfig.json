@@ -26,6 +26,6 @@
     "indentSize": 2,
     "tabSize": 2
   },
-  "include": ["src", "src/helpers-for-tests"],
+  "include": ["src/**/*", "src/helpers-for-tests"],
   "exclude": ["**/node_modules", "**/tmp*"]
 }

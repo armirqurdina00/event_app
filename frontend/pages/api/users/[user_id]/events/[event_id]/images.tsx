@@ -29,9 +29,9 @@ export default withApiAuthRequired(
 				}
 
 				const response2: AxiosResponse<ImageRes> = await axios.post(
-					`${process.env.BACKEND_URL}/v1/users/${req.query.user_id}/events/${String(
-						req.query.event_id
-					)}/images`,
+					`${process.env.BACKEND_URL}/v1/users/${
+						req.query.user_id
+					}/events/${String(req.query.event_id)}/images`,
 					formData,
 					{
 						headers: headers,
@@ -39,9 +39,16 @@ export default withApiAuthRequired(
 				)
 
 				res.status(200).json(response2.data)
-			} catch (e) {
-				console.error(e)
-				res.status(500).json({ data: null, error: 'Internal Server Error' })
+			} catch (error) {
+				if (error.code === 1009) {
+					// Handle the file size exceeded error here
+					console.error('File size exceeded the limit:', error.message)
+					res.status(413).json({ error: 'File size exceeded the limit' })
+				} else {
+					// Handle other errors
+					console.error('Error:', error)
+					res.status(500).json({ error: 'Internal Server Error' })
+				}
 			}
 		} else {
 			res.status(404).end()

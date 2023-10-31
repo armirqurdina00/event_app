@@ -22,6 +22,12 @@ export default withApiAuthRequired(async function patchGroups(
 				req.body
 			)
 			res.status(200).json(response)
+		} else if (req.method === 'GET') {
+			const response = await backend_client.groups.getUserGroup(
+				String(req.query.user_id),
+				String(req.query.group_id)
+			)
+			res.status(200).json(response)
 		} else if (req.method === 'DELETE') {
 			const response = await backend_client.groups.deleteGroup(
 				String(req.query.user_id),

@@ -85,28 +85,49 @@ const EditEvent = ({ event }) => {
 	const [file, setFile] = useState(null)
 	const [image_url, setImageURL] = useState(event.image_url)
 	const [isFullscreen, setIsFullscreen] = useState(false)
+	const [placeFromAutocomplete, setPlaceFromAutocomplete] = useState(false)
 
 	useEffect(() => {
 		const options = {
-			componentRestrictions: { country: 'de' },
-			fields: ['geometry', 'name', 'url'],
+			fields: ['address_components', 'geometry', 'name', 'url'],
 		}
+
 		autoCompleteRef.current = new window.google.maps.places.Autocomplete(
 			locInputRef.current,
 			options
 		)
 		autoCompleteRef.current.addListener('place_changed', async function () {
 			const place = await autoCompleteRef.current.getPlace()
-			setLocation(place.name)
+
+			// Extract the city name from the address components
+			let cityName = ''
+			const addressComponents = place.address_components || []
+			for (const component of addressComponents) {
+				if (component.types.includes('locality')) {
+					cityName = component.long_name
+					break
+				}
+			}
+
+			// Combine city name and place name if they are different
+			let combinedName = place.name
+			if (cityName && !place.name.includes(cityName)) {
+				combinedName = `${cityName}, ${place.name}`
+			}
+
+			setLocation(combinedName)
 			setLocationUrl(place.url)
 
 			const lat = place.geometry.location.lat()
 			const lng = place.geometry.location.lng()
 			setCoordinates([lng, lat])
+			setPlaceFromAutocomplete(true)
 		})
 	}, [])
 
 	// Input Validation
+
+	const [imageError, setImageError] = useState(null)
 
 	const [validationErrors, setValidationErrors] = useState({
 		date: null,
@@ -137,6 +158,9 @@ const EditEvent = ({ event }) => {
 
 	const isValidLocation = (location) => {
 		if (!location.trim()) return 'Location is required'
+		if (!placeFromAutocomplete && location !== event.location)
+			return 'Please select a city from the autocomplete options.'
+
 		return null
 	}
 
@@ -186,7 +210,11 @@ const EditEvent = ({ event }) => {
 		try {
 			setIsLoading(true)
 			await axios.delete(`/api/users/${user.sub}/events/${event.event_id}`)
-			router.push('/events')
+			delete router.query.event_id
+			router.push({
+				pathname: '/events',
+				query: router.query,
+			})
 		} catch (error) {
 			console.error('Error fetching data:', error)
 		} finally {
@@ -239,10 +267,18 @@ const EditEvent = ({ event }) => {
 					})
 				}
 
-				router.push('/events')
+				delete router.query.event_id
+				router.push({
+					pathname: '/events',
+					query: router.query,
+				})
 			} catch (error) {
-				console.error('Error fetching data:', error)
-				setError(true)
+				if (error?.response?.status === 413) {
+					setImageError('Datei ist zu groß.')
+				} else {
+					console.error('Error fetching data:', error)
+					setError(error)
+				}
 			} finally {
 				setIsLoading(false)
 			}
@@ -299,6 +335,11 @@ const EditEvent = ({ event }) => {
 							unoptimized={true}
 							onClick={handle_fullscreen}
 						/>
+						{imageError && (
+							<div className='my-2 rounded-md border border-red-400 bg-red-100 px-4 py-2 text-red-700'>
+								{imageError}
+							</div>
+						)}
 						{isFullscreen && (
 							<div
 								className='fixed left-0 top-0 z-50 flex h-screen w-screen items-center justify-center overflow-y-auto bg-black bg-opacity-70'
@@ -405,7 +446,16 @@ const EditEvent = ({ event }) => {
 						/>
 						{error && <Error setError={setError} />}
 						<div className='mt-3 flex w-full flex-wrap justify-around'>
-							<Button variant='outlined' onClick={() => router.push('/events')}>
+							<Button
+								variant='outlined'
+								onClick={() => {
+									delete router.query.event_id
+									router.push({
+										pathname: '/events',
+										query: router.query,
+									})
+								}}
+							>
 								{' '}
 								Zurück
 							</Button>

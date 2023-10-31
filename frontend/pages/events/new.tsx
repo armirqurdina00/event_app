@@ -60,11 +60,11 @@ const CreateEvent = ({ user }) => {
 		'https://res.cloudinary.com/dqolsfqjt/image/upload/v1692633904/placeholder-16x9-1_vp8x60.webp'
 	)
 	const [isFullscreen, setIsFullscreen] = useState(false)
+	const [placeFromAutocomplete, setPlaceFromAutocomplete] = useState(false)
 
 	useEffect(() => {
 		const options = {
-			componentRestrictions: { country: 'de' },
-			fields: ['geometry', 'name', 'url'],
+			fields: ['address_components', 'geometry', 'name', 'url'],
 		}
 
 		autoCompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -73,12 +73,30 @@ const CreateEvent = ({ user }) => {
 		)
 		autoCompleteRef.current.addListener('place_changed', async function () {
 			const place = await autoCompleteRef.current.getPlace()
-			setLocation(place.name)
+
+			// Extract the city name from the address components
+			let cityName = ''
+			const addressComponents = place.address_components || []
+			for (const component of addressComponents) {
+				if (component.types.includes('locality')) {
+					cityName = component.long_name
+					break
+				}
+			}
+
+			// Combine city name and place name if they are different
+			let combinedName = place.name
+			if (cityName && !place.name.includes(cityName)) {
+				combinedName = `${cityName}, ${place.name}`
+			}
+
+			setLocation(combinedName)
 			setLocationUrl(place.url)
 
 			const lat = place.geometry.location.lat()
 			const lng = place.geometry.location.lng()
 			setCoordinates([lng, lat])
+			setPlaceFromAutocomplete(true)
 		})
 	}, [])
 
@@ -113,6 +131,8 @@ const CreateEvent = ({ user }) => {
 
 	const isValidLocation = (location) => {
 		if (!location.trim()) return 'Location is required'
+		if (!placeFromAutocomplete)
+			return 'Please select a city from the autocomplete options.'
 		return null
 	}
 
@@ -203,7 +223,10 @@ const CreateEvent = ({ user }) => {
 					})
 				}
 
-				router.push('/events')
+				router.push({
+					pathname: '/events',
+					query: router.query,
+				})
 			} catch (error) {
 				console.error('Error fetching data:', error)
 				setError(true)
@@ -366,7 +389,15 @@ const CreateEvent = ({ user }) => {
 						/>
 						{error && <Error setError={setError} />}
 						<div className='mt-3 flex w-full flex-wrap justify-around'>
-							<Button variant='outlined' onClick={() => router.push('/events')}>
+							<Button
+								variant='outlined'
+								onClick={() => {
+									router.push({
+										pathname: '/events',
+										query: router.query,
+									})
+								}}
+							>
 								{' '}
 								Zurück
 							</Button>

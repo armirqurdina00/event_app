@@ -1,0 +1,32 @@
+{
+  "event_id": "200025211212749",
+  "eventname": "★ Salsation Festival 2023 ★ Salsa Festival Karlsruhe ★",
+  "thumb_url": "https://cdn-az.allevents.in/events9/banners/2f130f6d6d70c15302e39fa019c41249cc3bb788a8251432a46f325bc23c76b1-rimg-w300-h300-gmir?v=1695763572",
+  "thumb_url_large": "https://cdn-az.allevents.in/events9/banners/2f130f6d6d70c15302e39fa019c41249cc3bb788a8251432a46f325bc23c76b1-rimg-w300-h300-gmir?v=1695763572",
+  "banner_url": "https://cdn-az.allevents.in/events9/banners/92f614778e0726e75a0059becbd3e1b61df6a779a92240cd51ea587345b85417-rimg-w960-h501-gmir.jpg?v=1695763572",
+  "start_time": 1700852400,
+  "start_time_display": "Nov 24",
+  "location": "Salsation Festival",
+  "venue": {
+    "street": "",
+    "city": "Rastatt",
+    "state": "BW",
+    "country": "Germany",
+    "latitude": 49.009498596191406,
+    "longitude": 8.404399871826172,
+    "full_address": "Salsation Festival, Rastatt, Germany"
+  },
+  "label": "Upcoming",
+  "featured": 0,
+  "event_url": "https://allevents.in/rastatt/★-salsation-festival-2023-★-salsa-festival-karlsruhe-★/200025211212749?ref=quicksearch-event-results",
+  "share_url": "https://allevents.in/rastatt/200025211212749",
+  "object_type": "events",
+  "end_url": "https://allevents.in/rastatt/★-salsation-festival-2023-★-salsa-festival-karlsruhe-★/200025211212749",
+  "distance": 0.295797119140625,
+  "ticket": {
+    "has_tickets": false
+  },
+  "recurring_event_details": {
+    "has_slots": false
+  }
+}

@@ -14,3 +14,6 @@ frontend/.env.local
 .DS_Store
 
 node_modules
+frontend/playwright/.auth/userAuth.json
+
+backend/storage/

@@ -4,10 +4,11 @@
   },
   "scripts": {
     "start": "docker-compose up --build",
-    "test": "docker-compose up --build -d && ./wait-for-it.sh localhost:3000 -- npm run test --prefix frontend",
+    "test": "docker-compose up --build -d && ./wait-for-it.sh localhost:3000 -- npm run test --prefix frontend; docker compose down",
     "test-prod": "TEST_URL=https://sabaki.dance npm run test --prefix frontend"
   },
   "devDependencies": {
-    "@types/google.maps": "^3.54.0"
+    "@types/google.maps": "^3.54.0",
+    "@types/mocha": "^10.0.3"
   }
 }

@@ -1,12 +1,10 @@
 import { FieldErrors } from 'tsoa';
+import { GroupType } from './enums';
 
-export type GroupUpvoteRes = GroupVoteRes
-
-export type GroupDownvoteRes = GroupVoteRes
-
-export interface GroupVoteRes {
-  group_id: string,
+export class GroupJoinRes {
   user_id: string
+  group_id: string
+  link: string
 }
 
 export type EventUpvoteRes = EventVoteRes
@@ -26,7 +24,7 @@ export interface ImageRes {
 
 export interface GroupReqBody {
   title: string;
-  description: string;
+  description?: string;
   link?: string;
   location: string;
   locationUrl: string;
@@ -42,17 +40,17 @@ export interface GroupPatchReqBody {
   coordinates?: Array<number>;
 }
 
+export type UserGroupRes = GroupRes & { link: string };
+
 export class GroupRes {
   group_id: string;
   title: string;
-  description: string;
-  link: string;
+  description?: string;
+  type: GroupType;
   location: string;
   locationUrl: string;
   coordinates: Array<number>;
-  upvotes_sum: number;
-  downvotes_sum: number;
-  votes_diff: number;
+  number_of_joins: number;
   created_by: string;
   created_at: Date;
   updated_by: string;
@@ -70,7 +68,7 @@ export interface GroupsRes {
 }
 
 export interface EventReqBody {
-  unix_time: number;
+  unix_time: UnixTime;
   recurring_pattern?: RecurringPattern;
   title: string;
   description?: string;
@@ -78,22 +76,24 @@ export interface EventReqBody {
   locationUrl: string;
   coordinates: Array<number>;
   image_url?: string;
+  url?: string;
 }
 
 export interface EventPatchReqBody {
-  unix_time?: number;
+  unix_time?: UnixTime;
   recurring_pattern?: RecurringPattern;
   title?: string;
   description?: string;
   location?: string;
   locationUrl?: string;
   image_url?: string | null;
+  url?: string | null;
   coordinates?: Array<number>;
 }
 
 export class EventRes {
   event_id: string;
-  unix_time: number;
+  unix_time: UnixTime;
   recurring_pattern: RecurringPattern;
   title: string;
   description?: string;
@@ -101,6 +101,7 @@ export class EventRes {
   locationUrl: string;
   coordinates: Array<number>;
   image_url?: string | null;
+  url?: string | null;
   upvotes_sum: number;
   downvotes_sum: number;
   votes_diff: number;
@@ -138,12 +139,19 @@ export interface HttpBadRequestError {
 }
 
 /**
+ * In milliseconds since the Unix epoch.
+ */
+export type UnixTime = number;
+
+/**
  * @format int32
+ * @example 1
  */
 export type Page = number;
 
 /**
  * @format int32
+ * @example 10
  */
 export type PerPage = number;
 

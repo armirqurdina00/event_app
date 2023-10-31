@@ -1,6 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
-import { GroupUpvoteE } from './GroupUpvoteE';
-import { GroupDownvoteE } from './GroupDownvoteE';
+import { GroupJoinE } from './GroupJoinE';
 import { Point } from 'geojson';
 
 @Entity()
@@ -11,7 +10,7 @@ export class GroupE {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @Column()
@@ -31,14 +30,8 @@ export class GroupE {
   })
   location_point: Point
 
-  @Column({ default: 0 })
-  upvotes_sum: number;
-
-  @Column({ default: 0 })
-  downvotes_sum: number;
-
-  @Column({ default: 0 })
-  votes_diff: number;
+  @Column({ default: 1 })
+  number_of_joins: number;
 
   @Column()
   created_by: string;
@@ -52,9 +45,6 @@ export class GroupE {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => GroupUpvoteE, 'event')
-  upvotes: GroupUpvoteE[];
-
-  @OneToMany(() => GroupDownvoteE, 'event')
-  downvotes: GroupDownvoteE[];
+  @OneToMany(() => GroupJoinE, 'group')
+  joins: GroupJoinE[];
 }

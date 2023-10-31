@@ -27,6 +27,9 @@ export class EventE {
   @Column()
   locationUrl: string;
 
+  @Column({ nullable: true })
+  url: string;
+
   @Index({ spatial: true })
   @Column({
     type: 'geography',

@@ -7,13 +7,10 @@ import { StyledEngineProvider } from '@mui/material/styles'
 import Script from 'next/script'
 import CookieConsent from '@/components/cookie-consent'
 import { useState } from 'react'
-import LocationContext from '../utils/location-context'
+import UserConfigContext from '../utils/UserConfigContext'
 
 const App = ({ Component, pageProps }: AppProps) => {
-	const [location, setLocation] = useState({
-		latitude: 49.006889,
-		longitude: 8.403653,
-	})
+	const [userConfig, setUserConfig] = useState(null)
 
 	return (
 		<>
@@ -34,15 +31,15 @@ const App = ({ Component, pageProps }: AppProps) => {
 						disableTransitionOnChange
 					>
 						{' '}
-						<LocationContext.Provider
+						<UserConfigContext.Provider
 							value={{
-								location,
-								setLocation,
+								userConfig,
+								setUserConfig
 							}}
 						>
 							<Meta />
 							<Component {...pageProps} />
-						</LocationContext.Provider>
+						</UserConfigContext.Provider>
 					</ThemeProvider>
 				</StyledEngineProvider>
 			</UserProvider>

@@ -19,13 +19,19 @@ API: https://backend.sabaki.dance/api/docs
   - [Installation](#installation)
   - [Usage](#usage)
   - [Contributing](#contributing)
+  - [User Personas](#user-personas)
+    - [1. Dance Enthusiast - Social Dancer (Sarah)](#1-dance-enthusiast---social-dancer-sarah)
+    - [2. Event Organizer - Dance Instructor (Alex)](#2-event-organizer---dance-instructor-alex)
+    - [3. Newcomer to Dancing (Michael)](#3-newcomer-to-dancing-michael)
+  - [User Stories](#user-stories)
+    - [As Sarah, the Dance Enthusiast:](#as-sarah-the-dance-enthusiast)
+    - [As Alex, the Event Organizer:](#as-alex-the-event-organizer)
   - [License](#license)
   - [Contact](#contact)
 
 ## Installation
 
-Set missing secret environment variables in frontend/.env.local.template and backend/.env/*.template. Rename files and delete suffix ".template".
-Enable "Allow Offline Access" in Auth0 for your backend API to retrieve refresh tokens. Set the "offline_access" scope in your environment variable to make this possible.
+Set up postgres database and auth0. Set missing secret environment variables in frontend/.env.local.template and backend/.env/*.template. Rename files and delete suffix ".template".
 
 ## Usage
 
@@ -60,6 +66,34 @@ Enable "Allow Offline Access" in Auth0 for your backend API to retrieve refresh 
 ## Contributing
 
 Join our [Whatsapp Group](https://chat.whatsapp.com/Gi4MKwu2YbpDu7qUjROg2L). 
+
+## User Personas
+
+### 1. Dance Enthusiast - Social Dancer (Sarah)
+
+- **Description:** Sarah is a passionate social dancer who loves salsa, kizomba, and bachata. She enjoys attending events, meeting fellow dancers, and learning new moves. Often traveling, she seeks dance events in various cities.
+
+### 2. Event Organizer - Dance Instructor (Alex)
+
+- **Description:** Alex is an experienced dance instructor and event organizer. He teach salsa, bachata, and kizomba classes in the local area and regularly host dance events. Alex is interested in promoting their events to a wider audience and connecting with dancers who want to attend their classes and parties.
+
+### 3. Newcomer to Dancing (Michael)
+
+- **Description:** Michael is new to the world of dance and wants to explore salsa, kizomba, and bachata. He is looking for beginner-friendly dance events and online dance communities where he can learn and practice dance steps.
+
+## User Stories
+
+### As Sarah, the Dance Enthusiast:
+
+1. **Search for Dance Events:** As a salsa, kizomba, and bachata enthusiast, I want to search for local dance events happening this weekend so that I can plan my schedule.
+
+2. **View Event Details:** As a user, I want to view details of a dance event, including location, date, time, and dance instructors, to decide if it's worth attending.
+
+3. **Connect with Dancers:** As a member of the dance community, I want to connect with other dancers and event organizers through WhatsApp and Telegram groups.
+
+### As Alex, the Event Organizer:
+
+1. **Create and Publish Events:** As a dance event organizer, I want to create and publish new dance events, providing all the necessary event details, to attract attendees.
 
 ## License
 

@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { BackendClient, GroupRes, GroupReqBody, GroupPatchReqBody, ApiError } from '../helpers-for-tests/backend_client';
 import { get_access_token, get_user_id } from '../helpers-for-tests/auth';
 import { HttpStatusCode } from '../commons/enums';
+import { GroupJoinRes } from 'src/commons/TsoaTypes';
 
 let backend_client: BackendClient;
 const group_ids = [];
@@ -27,7 +28,7 @@ describe('Tests for groups endpoints.', function() {
     user_id = await get_user_id();
   });
 
-  it('POST /v1/groups', async function() {
+  it('POST /v1/users/{user_id}/groups', async function() {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
@@ -41,6 +42,29 @@ describe('Tests for groups endpoints.', function() {
 
     const response: GroupRes = await backend_client.groups.postGroups(user_id, body);
     group_ids.push(response.group_id);
+
+    expect(response.title).to.equal(body.title);
+    expect(response.description).to.equal(body.description);
+    expect(response.location).to.equal(body.location);
+    expect(response.locationUrl).to.equal(body.locationUrl);
+  });
+
+  it('get /v1/users/{user_id}/groups/{group_id}', async function() {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+
+    const body: GroupReqBody = {
+      title: 'Street Salsa',
+      description: 'City Park',
+      link: 'https://example.com/whatsapp-group',
+      location: 'City Park',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates:  [8.4037, 49.0069]
+    };
+
+    const { group_id } = await backend_client.groups.postGroups(user_id, body);
+    group_ids.push(group_id);
+
+    const response = await backend_client.groups.getUserGroup(user_id, group_id);
 
     expect(response.title).to.equal(body.title);
     expect(response.description).to.equal(body.description);
@@ -115,6 +139,63 @@ describe('Tests for groups endpoints.', function() {
     expect(response_2.total_number_of_items).to.be.above(number_of_items - 1);
   });
 
+  it('GET /v1/groups returns only groups within the specified radius.', async function() {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+
+    const group_ids_inside: string[] = [];
+    const group_ids_outside: string[] = [];
+
+    const centerCoordinates = [8.4037, 49.0069]; // Center coordinates for search
+    const [longitude, latitude] = centerCoordinates;
+    const distance = 5; // 5 km
+
+    // Unique titles for data independence
+    const titleInside = `Group Inside ${Date.now()}`;
+    const titleOutside = `Group Outside ${Date.now()}`;
+
+    // Group data within the radius
+    const bodyInsideRadius: GroupReqBody = {
+      title: titleInside,
+      description: titleInside,
+      link: 'https://example.com/dance-party',
+      location: 'Group Inside',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: centerCoordinates,
+    };
+
+    // Group data outside the radius
+    const bodyOutsideRadius: GroupReqBody = {
+      ...bodyInsideRadius,
+      title: titleOutside,
+      location: 'Group Outside',
+      coordinates: [longitude + 0.1, latitude], // adjust to ensure outside the radius
+    };
+
+    const groupsInside = 3;
+    const groupsOutside = 2;
+
+    for (let i = 0; i < groupsInside; i++) {
+      const { group_id } = await backend_client.groups.postGroups(user_id, bodyInsideRadius);
+      group_ids_inside.push(group_id);
+      group_ids.push(group_id);
+    }
+
+    for (let i = 0; i < groupsOutside; i++) {
+      const { group_id } = await backend_client.groups.postGroups(user_id, bodyOutsideRadius);
+      group_ids_outside.push(group_id);
+      group_ids.push(group_id);
+    }
+
+    const response = await backend_client.groups.getGroups(1, 100, latitude, longitude, distance);
+
+    // Assertions based on unique titles
+    const returnedGroupsInside = response.items.filter(group => group.title === titleInside);
+    const returnedGroupsOutside = response.items.filter(group => group.title === titleOutside);
+
+    expect(returnedGroupsInside.length).to.equal(groupsInside);
+    expect(returnedGroupsOutside.length).to.equal(0);
+  });
+
   it('GET /v1/groups ordered by user_location', async function() {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
@@ -176,7 +257,7 @@ describe('Tests for groups endpoints.', function() {
 
     const { group_id }: GroupRes = await backend_client.groups.postGroups(user_id, body);
 
-    await backend_client.groups.postUpvotes(user_id, group_id);
+    await backend_client.groups.postGroupJoin(user_id, group_id);
 
     await backend_client.groups.deleteGroup(user_id, group_id);
 
@@ -189,13 +270,13 @@ describe('Tests for groups endpoints.', function() {
     }
   });
 
-  it('POST /v1/groups/{group_id}/upvotes and POST /v1/groups/{group_id}/downvotes', async function() {
+  it('POST and GET /v1/groups/{group_id}/joins', async function() {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
       title: 'Street Salsa',
       description: 'City Park',
-      link: 'https://example.com/dance-party',
+      link: 'https://example.com/whatsapp-group',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
       coordinates:  [8.4037, 49.0069]
@@ -204,58 +285,17 @@ describe('Tests for groups endpoints.', function() {
     const { group_id } = await backend_client.groups.postGroups(user_id, body);
     group_ids.push(group_id);
 
-    await backend_client.groups.postUpvotes(user_id, group_id);
-    let res = await backend_client.groups.getGroup(group_id);
-    expect(res.upvotes_sum).to.equal(1);
-    expect(res.downvotes_sum).to.equal(0);
-    expect(res.votes_diff).to.equal(1);
+    const response_1: GroupJoinRes = await backend_client.groups.postGroupJoin(user_id, group_id);
 
-    try {
-      await backend_client.groups.postUpvotes(user_id, group_id);
-      throw new Error('postUpvotes should fail');
-    } catch(err: any) {
-      expect(err?.status === 400);
-    }
+    expect(response_1.user_id).to.equal(user_id);
+    expect(response_1.group_id).to.equal(group_id);
+    expect(response_1.link).to.equal(body.link);
 
-    await backend_client.groups.deleteUpvotes(user_id, group_id);
-    res = await backend_client.groups.getGroup(group_id);
-    expect(res.upvotes_sum).to.equal(0);
-    expect(res.downvotes_sum).to.equal(0);
-    expect(res.votes_diff).to.equal(0);
+    const response_2: GroupJoinRes = await backend_client.groups.getGroupJoin(user_id, group_id);
 
-    await backend_client.groups.postDownvotes(user_id, group_id);
-    res = await backend_client.groups.getGroup(group_id);
-    expect(res.upvotes_sum).to.equal(0);
-    expect(res.downvotes_sum).to.equal(1);
-    expect(res.votes_diff).to.equal(-1);
-
-    await backend_client.groups.deleteDownvotes(user_id, group_id);
-  });
-
-  it('GET /v1/users/groups/upvotes and GET /v1/users/groups/downvotes', async function() {
-    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
-
-    const body: GroupReqBody = {
-      title: 'Street Salsa',
-      description: 'City Park',
-      link: 'https://example.com/dance-party',
-      location: 'City Park',
-      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
-    };
-
-    const { group_id } = await backend_client.groups.postGroups(user_id, body);
-    group_ids.push(group_id);
-
-    await backend_client.groups.postUpvotes(user_id, group_id);
-    let res = await backend_client.groups.getUpvotes(user_id);
-    expect(res.includes(group_id));
-
-    await backend_client.groups.deleteUpvotes(user_id, group_id);
-
-    await backend_client.groups.postDownvotes(user_id, group_id);
-    res = await backend_client.groups.getDownvotes(user_id);
-    expect(res.includes(group_id));
+    expect(response_2.user_id).to.equal(user_id);
+    expect(response_2.group_id).to.equal(group_id);
+    expect(response_2.link).to.equal(body.link);
   });
 
   after(async function () {

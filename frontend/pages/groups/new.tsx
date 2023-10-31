@@ -32,10 +32,10 @@ const CreateGroup = () => {
 	const [locationUrl, setLocationUrl] = useState('')
 	const [coordinates, setCoordinates] = useState<number[]>([])
 	const [error, setError] = useState(false)
+	const [placeFromAutocomplete, setPlaceFromAutocomplete] = useState(false)
 
 	useEffect(() => {
 		const options = {
-			componentRestrictions: { country: 'de' },
 			fields: ['geometry', 'name', 'url'],
 			types: ['locality'],
 		}
@@ -52,6 +52,7 @@ const CreateGroup = () => {
 			const lat = place.geometry.location.lat()
 			const lng = place.geometry.location.lng()
 			setCoordinates([lng, lat])
+			setPlaceFromAutocomplete(true)
 		})
 	}, [])
 
@@ -73,9 +74,8 @@ const CreateGroup = () => {
 	}
 
 	const isValidDescription = (description) => {
-		const MAX_CHAR = 150
-		if (!description.trim()) return 'Description is required'
-		if (description.length > MAX_CHAR)
+		const MAX_CHAR = 4000
+		if (description && description.length > MAX_CHAR)
 			return `Description is too long. ${description.length} > ${MAX_CHAR}`
 		return null
 	}
@@ -89,6 +89,8 @@ const CreateGroup = () => {
 
 	const isValidLocation = (location) => {
 		if (!location.trim()) return 'Location is required'
+		if (!placeFromAutocomplete)
+			return 'Please select a city from the autocomplete options.'
 		return null
 	}
 
@@ -142,7 +144,10 @@ const CreateGroup = () => {
 				if (link.trim()) body.link = link
 				setIsLoading(true)
 				await axios.post(`/api/users/${user.sub}/groups`, body)
-				router.push('/groups')
+				router.push({
+					pathname: '/groups',
+					query: router.query,
+				})
 			} catch (error) {
 				console.error(error)
 				setError(true)
@@ -178,7 +183,6 @@ const CreateGroup = () => {
 						variant='outlined'
 						multiline
 						fullWidth
-						required
 						rows={3}
 					/>
 					<TextField
@@ -207,7 +211,15 @@ const CreateGroup = () => {
 					/>
 					{error && <Error setError={setError} />}
 					<div className='mt-3 flex w-full flex-wrap justify-around'>
-						<Button variant='outlined' onClick={() => router.push('/groups')}>
+						<Button
+							variant='outlined'
+							onClick={() => {
+								router.push({
+									pathname: '/events',
+									query: router.query,
+								})
+							}}
+						>
 							Zurück
 						</Button>
 						<Button

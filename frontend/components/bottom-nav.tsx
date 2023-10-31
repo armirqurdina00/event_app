@@ -4,21 +4,47 @@ import { useUser } from '@auth0/nextjs-auth0/client'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import GroupsIcon from '@mui/icons-material/Groups'
 import EventIcon from '@mui/icons-material/Event'
+import { Dialog, DialogActions, DialogContent, Typography } from '@mui/material'
+import { useState } from 'react'
 
 const BottomNav = () => {
 	const router = useRouter()
 	const { user } = useUser()
+	const [openJoinDialog, setOpenJoinDialog] = useState(false)
 
 	function handle(href) {
-		router.push(href)
+		delete router.query.event_id
+		delete router.query.group_id
+		router.push({
+			pathname: href,
+			query: router.query,
+		})
+	}
+
+	const handleLogIn = async () => {
+		setOpenJoinDialog(false)
+		router.push('/api/auth/login')
 	}
 
 	const add = () => {
-		if (!user) router.push('/api/auth/login')
+		if (!user) {
+			setOpenJoinDialog(true)
+			return
+		}
 		if (/^\/groups*/.test(router.pathname)) {
-			router.push('/groups/new')
+			delete router.query.event_id
+			delete router.query.group_id
+			router.push({
+				pathname: '/groups/new',
+				query: router.query,
+			})
 		} else if (/^\/events*/.test(router.pathname)) {
-			router.push('/events/new')
+			delete router.query.event_id
+			delete router.query.group_id
+			router.push({
+				pathname: '/events/new',
+				query: router.query,
+			})
 		}
 	}
 
@@ -81,6 +107,28 @@ const BottomNav = () => {
 					</Button>
 				</div>
 			</nav>
+			<Dialog open={openJoinDialog} onClose={() => setOpenJoinDialog(false)}>
+				<DialogContent>
+					{/* Hier können Sie den Text und die Erklärung für die Anmeldung anzeigen */}
+					<Typography variant='h6'>Anmeldung erforderlich</Typography>
+					<Typography>
+						Um Events und Gruppen zu speichern musst du dich anmelden. Das
+						klappt mit einem Klick via Google Anmeldung.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setOpenJoinDialog(false)} color='primary'>
+						Schließen
+					</Button>
+					<Button
+						onClick={handleLogIn}
+						color='primary'
+						data-testid='login-test-id'
+					>
+						Jetzt anmelden
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</div>
 	)
 }

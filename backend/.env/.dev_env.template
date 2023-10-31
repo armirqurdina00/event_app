@@ -1,18 +1,53 @@
+# Environment the application is running in
 NODE_ENV=DEVELOPMENT
+
+# Port the application is listening on
 PORT=8080
-DATABASE_USERNAME=
-DATABASE_PASSWORD=
-DATABASE_HOST=
-DATABASE_PORT=
-DATABASE_NAME=mxmqukkx
-AUTH0_ISSUER_BASE_URL=
-AUTH0_AUDIENCE=
-CLOUDINARY_URL=
+
+# Database username
+DATABASE_USERNAME=agonq
+
+# Database password (removed for security reasons)
+# DATABASE_PASSWORD=
+
+# Host URL for the database
+DATABASE_HOST=db-postgresql-fra1-10648-do-user-14622107-0.b.db.ondigitalocean.com
+
+# Port of the database
+DATABASE_PORT=25060
+
+# Name of the development database
+DATABASE_NAME=sabaki-dev-database
+
+# Auth0 issuer base URL (removed for security reasons)
+# AUTH0_ISSUER_BASE_URL=
+
+# Auth0 audience (removed for security reasons)
+# AUTH0_AUDIENCE=
+
+# Cloudinary configuration URL (removed for security reasons)
+# CLOUDINARY_URL=
+
+# Interval for event data update
 EVENT_UPDATE_INTERVAL_IN_SECONDS=5
 
-# for tests
-AUTH0_TEST_M2M_APP_CLIENT_ID=
-AUTH0_TEST_M2M_APP_CLIENT_SECRET=
+# Amount of simultaneous database connections
+NUMBER_OF_DB_CONNECTIONS=2
+
+# Google Maps API Key (removed for security reasons)
+# GOOGLE_MAPS_API_KEY=
+
+# Auth0 Test M2M Application Client ID (removed for security reasons)
+# AUTH0_TEST_M2M_APP_CLIENT_ID=
+
+# Auth0 Test M2M Application Client Secret (removed for security reasons)
+# AUTH0_TEST_M2M_APP_CLIENT_SECRET=
+
+# Timeout duration for tests
 TESTS_TIMEOUT_IN_SECONDS=20
+
+# Rate of requests to the BU API
 BU_API_REQUESTS_PER_SECOND=0.5
+
+# Base URL for the BU API
 BU_API_URL=http://localhost:8080

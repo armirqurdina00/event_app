@@ -55,15 +55,15 @@ const EditGroup = ({ group }) => {
 	const [is_loading, setIsLoading] = useState(false)
 	const [title, setTitle] = useState(group.title)
 	const [description, setDescription] = useState(group.description)
-	const [link, setLink] = useState(group.link)
+	const [link, setLink] = useState('')
 	const [location, setLocation] = useState(group.location)
 	const [locationUrl, setLocationUrl] = useState(group.locationUrl)
 	const [coordinates, setCoordinates] = useState<number[]>(group.coordinates)
 	const [error, setError] = useState(false)
+	const [placeFromAutocomplete, setPlaceFromAutocomplete] = useState(false)
 
 	useEffect(() => {
 		const options = {
-			componentRestrictions: { country: 'de' },
 			fields: ['geometry', 'name', 'url'],
 			types: ['locality'],
 		}
@@ -80,8 +80,25 @@ const EditGroup = ({ group }) => {
 			const lat = place.geometry.location.lat()
 			const lng = place.geometry.location.lng()
 			setCoordinates([lng, lat])
+			setPlaceFromAutocomplete(true)
 		})
 	}, [])
+
+	useEffect(() => {
+		const fetchGroupLink = async () => {
+			try {
+				const response = await axios.get(
+					`/api/users/${user.sub}/groups/${group.group_id}`
+				)
+				setLink(response.data.link)
+			} catch (error) {
+				console.error('Error fetching the group link', error)
+				setError(true)
+			}
+		}
+
+		if (user && group) fetchGroupLink()
+	}, [user, group])
 
 	// Input Validation
 
@@ -101,9 +118,8 @@ const EditGroup = ({ group }) => {
 	}
 
 	const isValidDescription = (description) => {
-		const MAX_CHAR = 150
-		if (!description.trim()) return 'Description is required'
-		if (description.length > MAX_CHAR)
+		const MAX_CHAR = 4000
+		if (description && description.length > MAX_CHAR)
 			return `Description is too long. ${description.length} > ${MAX_CHAR}`
 		return null
 	}
@@ -116,6 +132,8 @@ const EditGroup = ({ group }) => {
 
 	const isValidLocation = (location) => {
 		if (!location.trim()) return 'Location is required'
+		if (!placeFromAutocomplete && location !== group.location)
+			return 'Please select a city from the autocomplete options.'
 		return null
 	}
 
@@ -149,25 +167,9 @@ const EditGroup = ({ group }) => {
 			!coordinatesError &&
 			!locationUrlError
 		)
-
-		// Check if any error is present
-		return !Object.values(errors).some(Boolean)
 	}
 
 	// Handle Events
-
-	const handle_delete = async () => {
-		try {
-			setIsLoading(true)
-			await axios.delete(`/api/users/${user.sub}/groups/${group.group_id}`)
-			router.push('/groups')
-		} catch (error) {
-			console.error(error)
-			setError(true)
-		} finally {
-			setIsLoading(false)
-		}
-	}
 
 	const handle_patch = async () => {
 		const isFormValid = validateInputs()
@@ -187,13 +189,34 @@ const EditGroup = ({ group }) => {
 					`/api/users/${user.sub}/groups/${group.group_id}`,
 					body
 				)
-				router.push('/groups')
+				delete router.query.group_id
+				router.push({
+					pathname: '/groups',
+					query: router.query,
+				})
 			} catch (error) {
 				console.error(error)
 				setError(true)
 			} finally {
 				setIsLoading(false)
 			}
+		}
+	}
+
+	const handle_delete = async () => {
+		try {
+			setIsLoading(true)
+			await axios.delete(`/api/users/${user.sub}/groups/${group.group_id}`)
+			delete router.query.group_id
+			router.push({
+				pathname: '/groups',
+				query: router.query,
+			})
+		} catch (error) {
+			console.error(error)
+			setError(true)
+		} finally {
+			setIsLoading(false)
 		}
 	}
 
@@ -229,7 +252,6 @@ const EditGroup = ({ group }) => {
 						variant='outlined'
 						multiline
 						fullWidth
-						required
 						rows={3}
 					/>
 					<TextField
@@ -247,7 +269,7 @@ const EditGroup = ({ group }) => {
 						value={location}
 						onChange={(event) => setLocation(event.target.value)}
 						id='outlined-basic'
-						name='event-location'
+						name='group-location'
 						label='Ort'
 						variant='outlined'
 						fullWidth
@@ -257,7 +279,16 @@ const EditGroup = ({ group }) => {
 					/>
 					{error && <Error setError={setError} />}
 					<div className='mt-3 flex w-full flex-nowrap justify-around'>
-						<Button variant='outlined' onClick={() => router.push('/groups')}>
+						<Button
+							variant='outlined'
+							onClick={() => {
+								delete router.query.group_id
+								router.push({
+									pathname: '/events',
+									query: router.query,
+								})
+							}}
+						>
 							Zurück
 						</Button>
 						<Button

@@ -6,72 +6,19 @@ import IconButton from '@mui/material/IconButton'
 import Container from '@mui/material/Container'
 import Avatar from '@mui/material/Avatar'
 import { useUser } from '@auth0/nextjs-auth0/client'
-import LoginIcon from '@mui/icons-material/Login'
 import { useRouter } from 'next/router'
-import { Button, Menu, MenuItem } from '@mui/material'
+import { Menu, MenuItem } from '@mui/material'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'
-import { useEffect, useContext } from 'react'
-import LocationContext from '../utils/location-context'
+import { useEffect, useContext, useState } from 'react'
+import { useUserConfig } from '@/hooks/useUserConfig'
 
 function ResponsiveAppBar() {
 	const { user } = useUser()
 	const router = useRouter()
-	const { location, setLocation } = useContext(LocationContext)
-
-	useEffect(() => {
-		const updateUrl = (latitude, longitude) => {
-			// Get current query params from the router
-			const currentQuery = { ...router.query }
-
-			// Update the parameters
-			currentQuery.latitude = latitude
-			currentQuery.longitude = longitude
-
-			// Update the current URL without reloading the page
-			router.push(
-				{
-					pathname: router.pathname,
-					query: currentQuery,
-				},
-				undefined,
-				{ shallow: true }
-			)
-		}
-
-		const getUserLocationFromDevice = () => {
-			if (!navigator.geolocation) {
-				console.log('Geolocation not supported')
-				return
-			}
-
-			navigator.geolocation.getCurrentPosition(
-				(position) => {
-					const { latitude, longitude } = position.coords
-					localStorage.setItem('latitude', String(latitude))
-					localStorage.setItem('longitude', String(longitude))
-					updateUrl(latitude, longitude)
-					setLocation({ latitude, longitude })
-				},
-				() => console.error('Unable to retrieve your location')
-			)
-		}
-
-		if (router.query.latitude && router.query.longitude) {
-			return
-		}
-
-		const latitude = localStorage.getItem('latitude')
-		const longitude = localStorage.getItem('longitude')
-
-		if (latitude && longitude) {
-			updateUrl(latitude, longitude)
-			setLocation({ latitude, longitude })
-			return
-		}
-
-		getUserLocationFromDevice()
-	}, [])
+	const { userConfig } = useUserConfig(router)
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+	const open = Boolean(anchorEl)
 
 	const handle_logout = (event: React.MouseEvent<HTMLElement>) => {
 		router.push('/api/auth/logout')
@@ -82,20 +29,36 @@ function ResponsiveAppBar() {
 	}
 
 	const handle_imprint = (event: React.MouseEvent<HTMLElement>) => {
-		router.push('/imprint')
+		router.push({
+			pathname: '/imprint',
+			query: router.query,
+		})
 	}
 
-	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
-	const open = Boolean(anchorEl)
+	const handle_location = (event: React.MouseEvent<HTMLElement>) => {
+		if (router.pathname.includes('/groups')) {
+			router.push({
+				pathname: '/groups/location',
+				query: router.query,
+			})
+		} else {
+			router.push({
+				pathname: '/events/location',
+				query: router.query,
+			})
+		}
+	}
+
 	const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setAnchorEl(event.currentTarget)
 	}
+
 	const handle_close = () => {
 		setAnchorEl(null)
 	}
 
 	const handle_feedback = () => {
-		router.push('https://api.whatsapp.com/send?phone=+4917641952181')
+		router.push('https://wa.me/4917641952181')
 	}
 
 	return (
@@ -106,9 +69,17 @@ function ResponsiveAppBar() {
 					className='flex justify-between'
 					variant='dense'
 				>
-					<div className='flex flex-grow items-center text-xl'>
+					<div
+						className='flex flex-grow items-center text-xl'
+						onClick={handle_location}
+					>
 						<LocationOnIcon />
-						<p className='ml-2 mr-2'>{'Karlsruhe'}</p>
+						{userConfig?.city && (
+							<p className='ml-2 mr-2 cursor-pointer'>
+								{userConfig.city} &middot; {userConfig.distance}
+								{'km'}
+							</p>
+						)}
 					</div>
 					<Box>
 						<IconButton

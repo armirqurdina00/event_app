@@ -1,88 +1,112 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import Page from '@/components/page'
 import GroupCard from '@/components/group-card'
-import { GroupIds, GroupRes, GroupsRes } from '../utils/backend_client'
-import Fab from '@mui/material/Fab'
-import { styled } from '@mui/material/styles'
-import AddIcon from '@mui/icons-material/Add'
-import { ButtonBase } from '@mui/material'
+import { GroupRes, GroupsRes } from '../utils/backend_client'
 import { useRouter } from 'next/router'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import { BackendClient } from '../utils/backend_client'
 import InfiniteScroll from 'react-infinite-scroll-component'
-import axios, { AxiosResponse } from 'axios'
-import LocationContext from '../utils/location-context'
-import SelectDistance from '@/components/select-distance'
+import { useUserConfig } from '@/hooks/useUserConfig'
+import { COOKIE_KEYS } from '../utils/constants'
+import cookie from 'cookie'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 20
+const PAGE = 1
 
-export const getServerSideProps = async (context) => {
-	const backendClient = new BackendClient({
-		BASE: process.env.BACKEND_URL,
-	})
+const parseCookies = (cookieString) => {
+	return cookie.parse(cookieString || '')
+}
 
-	let longitude = Number(context.query.longitude)
-	let latitude = Number(context.query.latitude)
-
-	if (!longitude || !latitude) {
-		return {
-			props: { initialGroups: [] },
-		}
-	}
-
-	const { items: initialGroups } = await backendClient.groups.getGroups(
-		1,
-		PAGE_SIZE,
-		latitude,
-		longitude
-	)
-
+const getLocationDataFromCookies = (cookies) => {
 	return {
-		props: { initialGroups },
+		latitude: Number(cookies[COOKIE_KEYS.LATITUDE]),
+		longitude: Number(cookies[COOKIE_KEYS.LONGITUDE]),
+		distance: Number(cookies[COOKIE_KEYS.DISTANCE]),
 	}
 }
 
-const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
-	const router = useRouter()
-	const { location, setLocation } = useContext(LocationContext)
-	const { user } = useUser()
-	const [page, setPage] = useState(initialGroups.length === 0 ? 1 : 2)
-	const [loading, setLoading] = useState(false)
-	const [hasMore, setHasMore] = useState(true)
-	const [groups, setGroups] = useState<GroupRes[]>(initialGroups)
-	const [userUpvotes, setUserUpvotes] = useState<GroupIds>([])
-	const [userDownvotes, setUserDownvotes] = useState<GroupIds>([])
-	const [isSwiped, setIsSwiped] = useState(false)
-	const [distance, setDistance] = useState("5")
+const fetchInitialGroups = async (latitude, longitude, distance) => {
+	const backendClient = new BackendClient({
+		BASE: process.env.BACKEND_URL,
+	})
+	const { items: initialGroups } = await backendClient.groups.getGroups(
+		PAGE,
+		PAGE_SIZE,
+		latitude,
+		longitude,
+		distance
+	)
+	return initialGroups
+}
 
-	useEffect(() => {
-		if (initialGroups.length === 0) loadMore()
-	}, [location])
+export const getServerSideProps = async (context) => {
+	const { cookie: cookieString } = context.req.headers
+	const cookies = parseCookies(cookieString)
 
-	useEffect(() => {
-		if (user?.sub) loadUserVotes()
-	}, [user])
+	const { latitude, longitude, distance } = getLocationDataFromCookies(cookies)
 
-	const loadUserVotes = async function () {
-		const upvotes: AxiosResponse<string[]> = await axios.get(
-			`/api/users/${user.sub}/groups/upvotes`
-		)
-		setUserUpvotes(upvotes.data)
+	const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY
 
-		const downvotes: AxiosResponse<string[]> = await axios.get(
-			`/api/users/${user.sub}/groups/downvotes`
-		)
-		setUserDownvotes(downvotes.data)
+	if (!latitude || !longitude || !distance) {
+		return {
+			props: { initialGroups: [], googleMapsApiKey },
+		}
 	}
 
-	const loadMore = async () => {
-		if (loading || !hasMore) return
+	const initialGroups = await fetchInitialGroups(latitude, longitude, distance)
 
+	return {
+		props: {
+			initialGroups,
+			googleMapsApiKey,
+		},
+	}
+}
+
+const Groups: React.FC<{
+	initialGroups: GroupRes[]
+	googleMapsApiKey: string
+}> = ({ initialGroups, googleMapsApiKey }) => {
+	const router = useRouter()
+	const { userConfig, init } = useUserConfig(router)
+	const { user } = useUser()
+	const [page, setPage] = useState(1)
+	const [loading, setLoading] = useState(false)
+	const [hasMore, setHasMore] = useState(
+		initialGroups.length === 0 || initialGroups.length == PAGE_SIZE
+	)
+	const [groups, setGroups] = useState<GroupRes[]>(initialGroups)
+	const [isSwiped, setIsSwiped] = useState(false)
+
+	useEffect(() => {
+		if (!userConfig) init(googleMapsApiKey)
+	}, [])
+
+	useEffect(() => {
+		loadFirstGroups()
+	}, [userConfig])
+
+	const loadMoreGroups = async () => {
+		if (!hasMore) return
+
+		loadGroups()
+	}
+
+	const loadFirstGroups = async () => {
+		loadGroups(PAGE, [])
+	}
+
+	const loadGroups = async (pageToLoad?: number, prevGroups?: GroupRes[]) => {
+		if (loading || !userConfig) return
+
+		pageToLoad ||= page
+		if (!prevGroups || prevGroups.length == 0) prevGroups ||= groups
 		setLoading(true)
+		setHasMore(true)
 
 		try {
 			const response = await fetch(
-				`/api/groups?page=${page}&per_page=${PAGE_SIZE}&latitude=${location.latitude}&longitude=${location.latitude}`
+				`/api/groups?page=${pageToLoad}&per_page=${PAGE_SIZE}&latitude=${userConfig.latitude}&longitude=${userConfig.longitude}&distance=${userConfig.distance}`
 			)
 
 			const data: GroupsRes = await response.json()
@@ -98,14 +122,16 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 				return
 			}
 
-			setPage((page) => page + 1)
-			setGroups((prevGroups) => [...prevGroups, ...newGroups])
+			setGroups([...prevGroups, ...newGroups])
+			setPage(pageToLoad + 1)
 		} catch (error) {
-			console.error('Error loading more groups:', error)
+			console.error('Error loading groups:', error)
 		} finally {
 			setLoading(false)
 		}
 	}
+
+	// Swipe feature
 
 	const touchStartRef = useRef(null)
 	const touchEndRef = useRef(null)
@@ -127,7 +153,10 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 
 		if (isRightSwipe) {
 			setIsSwiped(!isSwiped)
-			router.push('/events')
+			router.push({
+				pathname: '/events',
+				query: router.query,
+			})
 		}
 
 		touchStartRef.current = null
@@ -141,13 +170,12 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 			onTouchEnd={onTouchEnd}
 		>
 			<Page>
-				<SelectDistance distance={distance} setDistance={setDistance} />
 				<div className={`${isSwiped && 'slideOutToRightAnimation'}`}>
 					<InfiniteScroll
 						dataLength={groups.length}
-						next={loadMore}
+						next={loadMoreGroups}
 						hasMore={hasMore}
-						className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-3 pt-4'
+						className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-4 pt-4'
 						style={{ overflow: 'hidden' }}
 						loader={
 							<div className='basis-full'>
@@ -156,12 +184,7 @@ const Groups: React.FC<{ initialGroups: GroupRes[] }> = ({ initialGroups }) => {
 						}
 					>
 						{groups.map((group, index) => (
-							<GroupCard
-								key={index}
-								group={group}
-								upvoted={userUpvotes.indexOf(group.group_id) !== -1}
-								downvoted={userDownvotes.indexOf(group.group_id) !== -1}
-							/>
+							<GroupCard key={index} group={group} />
 						))}
 					</InfiniteScroll>
 				</div>

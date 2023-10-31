@@ -2,7 +2,7 @@ import Head from 'next/head'
 
 const Meta = () => (
 	<Head>
-		<title>SaBaKi</title>
+		<title>SaBaKi - Salsa, Bachata und Kizomba Events und Gruppen in deiner Stadt</title>
 		<meta charSet='utf-8' />
 		<meta name='mobile-web-app-capable' content='yes' />
 		<meta name='apple-mobile-web-app-capable' content='yes' />
@@ -12,7 +12,7 @@ const Meta = () => (
 		/>
 		<meta name='apple-mobile-web-app-title' content='SaBaKi' />
 		<meta name='application-name' content='SaBaKi' />
-		<meta name='description' content='Embrace the Dance: Discover Thrilling Events in Your City' />
+		<meta name='description' content='Salsa, Bachata und Kizomba Events und Gruppen in deiner Stadt.' />
 		<meta
 			name='theme-color'
 			content='#f4f4f5'

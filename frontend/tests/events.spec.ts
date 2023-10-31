@@ -11,6 +11,7 @@ test('test events', async ({ page }) => {
 
 	// Add Event
 	await page.getByTestId('add-group-or-event').click()
+	await page.getByRole('button', { name: 'Jetzt anmelden' }).click()
 
 	// First Login
 	await page.getByLabel('Email Adresse').fill(process.env.TEST_ACCOUNT_EMAIL)
@@ -19,29 +20,39 @@ test('test events', async ({ page }) => {
 	await page.getByRole('button', { name: 'Weiter', exact: true }).click()
 
 	// temporary fix due to unknown bug
-	await page.waitForURL('**/events/new')
+	await page.waitForURL(
+		/.*\/events\?latitude=[^&]+&longitude=[^&]+&distance=[^&]+&city=[^&]+&orderBy=[^&]+&selectedItem=[^&]+$/
+	)
+	await page.getByTestId('add-group-or-event').click()
 
 	// Continue adding Event
 	await page.locator('input[name="event-title"]').fill('Test Title 1')
 	await page.click('input[name="event-location"]')
 	await page.keyboard.type('Karlsruhe')
 	await page.getByText('KarlsruheGermany').click()
-	await page.getByTestId('input-test-id').setInputFiles(__dirname + '/../public/images/icon-512.png')
+	await new Promise((res) => setTimeout(res, 1000)) // wait for place_changed event
+	await page
+		.getByTestId('input-test-id')
+		.setInputFiles(__dirname + '/../public/images/icon-512.png')
 	await page.waitForLoadState('networkidle') // temporary fix due to unknown bug
 	await page.getByTestId('submit').click()
 
 	// temporary fix due to unknown bug
-	await page.waitForURL('**/events')
+	await page.waitForURL(
+		/.*\/events\?latitude=[^&]+&longitude=[^&]+&distance=[^&]+&city=[^&]+&orderBy=[^&]+&selectedItem=[^&]+$/
+	)
 
 	// Edit Event
 	await page.getByTestId('edit-test-id').first().click()
 	await page.locator('input[name="event-title"]').fill('Test Title 2')
 	await page.click('input[name="event-location"]')
-	await page.keyboard.type('Karlsruhe')
-	await page.waitForLoadState('networkidle') // bug fix, otherwise submit button is not clicked for real.
+	await page.getByText('KarlsruheGermany').click() // bug fix, otherwise submit button is not clicked for real.
+	await new Promise((res) => setTimeout(res, 1000)) // wait for place_changed event
 	await page.getByTestId('submit').click()
 
-	await page.waitForURL('**/events')
+	await page.waitForURL(
+		/.*\/events\?latitude=[^&]+&longitude=[^&]+&distance=[^&]+&city=[^&]+&orderBy=[^&]+&selectedItem=[^&]+$/
+	)
 
 	// Delete Event
 	await page.getByTestId('edit-test-id').first().click()

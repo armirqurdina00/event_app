@@ -7,12 +7,30 @@ import { useRouter } from 'next/router'
 import { Button, Typography } from '@mui/material'
 import { useUser } from '@auth0/nextjs-auth0/client'
 import axios from 'axios'
-import StarBorderIcon from '@mui/icons-material/StarBorder'
-import StarIcon from '@mui/icons-material/Star'
 import Image from 'next/image'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import Link from 'next/link'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
+import {
+	TelegramShareButton,
+	TelegramIcon,
+	WhatsappShareButton,
+	WhatsappIcon,
+} from 'react-share'
+import ShareIcon from '@mui/icons-material/Share'
+import {
+	Popover,
+	List,
+	ListItem,
+	ListItemText,
+	Dialog,
+	DialogActions,
+	DialogContent,
+} from '@mui/material'
+import DayDisplay from './day-display'
+import { atcb_action } from 'add-to-calendar-button'
+import EditCalendarIcon from '@mui/icons-material/EditCalendar'
+import LaunchIcon from '@mui/icons-material/Launch'
 
 const EventCard = ({
 	event,
@@ -30,35 +48,58 @@ const EventCard = ({
 	const [processing, setProcessing] = useState(false)
 	const [showDescription, setShowDescription] = useState(false)
 	const [isFullscreen, setIsFullscreen] = useState(false)
+	const [currentUrl, setCurrentUrl] = useState(null)
+	const [openJoinDialog, setOpenJoinDialog] = useState(false)
+
+	useEffect(() => {
+		setVotesDiff(event.votes_diff)
+	}, [event])
 
 	useEffect(() => {
 		setUpvoteClicked(upvoted)
 	}, [upvoted])
+
 	useEffect(() => {
 		setUpvoteClicked(downvoted)
 	}, [downvoted])
 
+	useEffect(() => {
+		setCurrentUrl(window.location.href)
+	}, [])
+
 	// Handle Events
 
-	function handle_edit() {
-		router.push(`/events/${event.event_id}`)
+	const handleLogIn = async () => {
+		setOpenJoinDialog(false)
+		router.push('/api/auth/login')
 	}
 
-	const handle_location_link = () => {
+	function handleEdit() {
+		router.push({
+			pathname: `/events/${event.event_id}`,
+			query: router.query,
+		})
+	}
+
+	function handleUrl() {
+		if (!event.url) return
+		window.open(event.url, '_blank')
+	}
+
+	const handleLocationUrl = () => {
 		if (!event.locationUrl) return
-		router.push(event.locationUrl)
+		window.open(event.locationUrl, '_blank')
 	}
 
-	async function handle_upvotes() {
-		if (processing) return
-		setProcessing(true)
-
+	async function handleAddToCalendar(evt) {
 		if (!user) {
-			router.push('/api/auth/login')
+			setOpenJoinDialog(true)
 			return
 		}
 
 		try {
+			if (processing) return
+			setProcessing(true)
 			if (upvoteClicked) {
 				setUpvoteClicked(false)
 				await axios.delete(
@@ -71,6 +112,7 @@ const EventCard = ({
 					`/api/users/${user.sub}/events/${event.event_id}/upvotes`
 				)
 				setVotesDiff((preValue) => preValue + 1)
+				showAddToCalenderModal(evt)
 			}
 		} catch (err) {
 			throw err
@@ -79,108 +121,27 @@ const EventCard = ({
 		}
 	}
 
-	const handle_fullscreen = () => {
+	const showAddToCalenderModal = (evt) => {
+		atcb_action(
+			{
+				name: event.title,
+				description: event.description,
+				location: `${event.location}`,
+				startDate: new Date(event.unix_time).toISOString().split('T')[0],
+				startTime: new Date(event.unix_time).toTimeString().substring(0, 5),
+				endTime: new Date(event.unix_time).toTimeString().substring(0, 5),
+				timeZone: 'currentBrowser',
+				options: ['Google', 'Apple', 'Outlook.com', 'iCal'],
+			},
+			evt.currentTarget
+		)
+	}
+
+	const handleFullscreen = () => {
 		setIsFullscreen(!isFullscreen)
 	}
 
 	// Render
-
-	const get_day = (unix_time) => {
-		const eventMoment = moment(unix_time)
-		const now = moment()
-		const currentWeekNumber = moment().week()
-		const eventWeekNumber = eventMoment.week()
-
-		if (eventMoment.isSame(now, 'day')) {
-			return (
-				<div className='text-md flex items-baseline justify-between gap-2'>
-					<span className='text-md font-medium '>
-						<span className='text-red-500'>Heute</span> &middot;{' '}
-						{`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
-					</span>
-					<p className='text-sm'>
-						{moment(event.unix_time).format('HH:mm ')}Uhr
-					</p>
-				</div>
-			)
-		} else if (eventMoment.isSame(now.add(1, 'day'), 'day')) {
-			return (
-				<div className='text-md flex items-baseline justify-between gap-2'>
-					<span className='text-md font-medium '>
-						<span className='text-red-500'>Morgen</span> &middot;{' '}
-						{`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
-					</span>
-
-					<p className='text-sm'>
-						{moment(event.unix_time).format('HH:mm ')}Uhr
-					</p>
-				</div>
-			)
-		} else if (eventWeekNumber === currentWeekNumber) {
-			return (
-				<div className='text-md flex items-baseline justify-between gap-2'>
-					<span className='text-md font-medium '>
-						Diesen{' '}
-						{`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
-					</span>
-					<p className='text-sm'>
-						{moment(event.unix_time).format('HH:mm ')}Uhr
-					</p>
-				</div>
-			)
-		} else if (eventWeekNumber === currentWeekNumber + 1) {
-			return (
-				<div className='text-md flex items-baseline justify-between gap-2'>
-					<span className='text-md font-medium '>
-						Nächste Woche &middot;{' '}
-						{`${eventMoment.format('dd')}, ${eventMoment.format('DD.MM')}`}
-					</span>
-					<p className='text-sm'>
-						{moment(event.unix_time).format('HH:mm ')}Uhr
-					</p>
-				</div>
-			)
-		} else if (eventWeekNumber === currentWeekNumber + 2) {
-			return (
-				<div className='text-md flex items-baseline justify-between gap-2'>
-					<span className='text-md font-medium '>
-						In zwei Wochen &middot;{' '}
-						{`${eventMoment.format('dd')}, ${eventMoment.format('DD.MM')}`}
-					</span>
-					<p className='text-sm'>
-						{moment(event.unix_time).format('HH:mm ')}Uhr
-					</p>
-				</div>
-			)
-		} else if (eventWeekNumber === currentWeekNumber + 3) {
-			return (
-				<div className='text-md flex items-baseline justify-between gap-2'>
-					<span className='text-md font-medium '>
-						In drei Wochen &middot;{' '}
-						{`${eventMoment.format('dd')}, ${eventMoment.format('DD.MM')}`}
-					</span>
-					<p className='text-sm'>
-						{moment(event.unix_time).format('HH:mm ')}Uhr
-					</p>
-				</div>
-			)
-		} else {
-			return (
-				<div className='text-md flex items-baseline justify-between gap-2'>
-					<span className='text-md font-medium '>
-						<span>
-							{`${eventMoment.format('dd')}`},{' '}
-							{moment(event.unix_time).format('DD.MM')}
-						</span>
-					</span>
-
-					<p className='text-sm'>
-						{moment(event.unix_time).format('HH:mm ')}Uhr
-					</p>
-				</div>
-			)
-		}
-	}
 
 	const formatTextForDisplay = (inputText) => {
 		if (!inputText) return
@@ -224,8 +185,111 @@ const EventCard = ({
 		))
 	}
 
+	const ShareButtons = ({ currentUrl, event }) => {
+		const [anchorEl, setAnchorEl] = useState(null)
+		const handleClick = (e) => setAnchorEl(e.currentTarget)
+		const handleClose = () => setAnchorEl(null)
+
+		return (
+			<>
+				<button
+					onClick={handleClick}
+					className='cursor-pointer rounded-full bg-black bg-opacity-70 p-1'
+				>
+					<ShareIcon color='primary' className='z-10 text-3xl' />
+				</button>
+				<SharePopover
+					anchorEl={anchorEl}
+					onClose={handleClose}
+					currentUrl={currentUrl}
+					event={event}
+				/>
+			</>
+		)
+	}
+
+	const SharePopover = ({ anchorEl, onClose, currentUrl, event }) => (
+		<Popover
+			open={Boolean(anchorEl)}
+			anchorEl={anchorEl}
+			onClose={onClose}
+			anchorOrigin={{
+				vertical: 'bottom',
+				horizontal: 'center',
+			}}
+			transformOrigin={{
+				vertical: 'top',
+				horizontal: 'center',
+			}}
+		>
+			<List>
+				<ListItem button>
+					<WhatsappShareButton
+						url={currentUrl}
+						title={`🎉 *${event.title}*\n\n📅 *Datum und Uhrzeit:*\n${moment(
+							event.unix_time
+						).format('DD.MM.YYYY, HH:mm [Uhr]')}\n\n📍 *Ort:*\n ${
+							event.location
+						}\n${event.locationUrl}\n\n🔗 *Mehr:*\n`}
+						onClick={onClose}
+					>
+						<ListItemText
+							primary={
+								<div className='flex items-center gap-3'>
+									<WhatsappIcon size={32} round={true} /> Share on Whatsapp
+								</div>
+							}
+						/>
+					</WhatsappShareButton>
+				</ListItem>
+				<ListItem button>
+					<TelegramShareButton
+						url={currentUrl}
+						title={`\n🎉 **${
+							event.title
+						}**\n\n📅 **Datum und Uhrzeit:**\n${moment(event.unix_time).format(
+							'DD.MM.YYYY, HH:mm [Uhr]'
+						)}\n\n📍 **Ort:**\n ${event.location}\n${event.locationUrl}`}
+						onClick={onClose}
+					>
+						<ListItemText
+							primary={
+								<div className='flex items-center gap-3'>
+									<TelegramIcon size={32} round={true} /> Share on Telegram
+								</div>
+							}
+						/>
+					</TelegramShareButton>
+				</ListItem>
+			</List>
+		</Popover>
+	)
+
+	const CalendarButton = () =>
+		upvoteClicked ? (
+			<Button
+				className='mt-1 w-full !bg-blue-100 text-blue-600'
+				onClick={handleAddToCalendar}
+			>
+				<div className='flex items-center gap-2'>
+					<EditCalendarIcon color='primary' />
+					<span className='font-bold'> Im Kalender gespeichert</span>
+				</div>
+			</Button>
+		) : (
+			<Button
+				className='mt-1 w-full !bg-gray-300 text-black'
+				onClick={handleAddToCalendar}
+			>
+				<div className='flex items-center gap-2'>
+					<EditCalendarIcon />
+					<span> Im Kalender speichern</span>
+				</div>
+			</Button>
+		)
+
 	return (
-		<div className='relative mx-2 rounded-xl border border-gray-200 bg-white shadow'>
+		<div className='relative mx-5 rounded-xl border border-gray-200 bg-white shadow'>
 			<div className='relative w-full'>
 				<Image
 					className={`event-img-16-9 rounded-t-xl object-cover`}
@@ -238,26 +302,36 @@ const EventCard = ({
 					quality={100}
 					data-testid='event-picture'
 					unoptimized={true}
-					onClick={handle_fullscreen}
+					onClick={handleFullscreen}
 				/>
 				{isFullscreen && (
 					<div
-						className='fixed left-0 top-0 z-50 flex h-screen w-screen items-center justify-center overflow-y-auto bg-black bg-opacity-70'
-						onClick={handle_fullscreen}
+						className='fixed left-0 top-0 z-40 flex h-screen w-screen items-center justify-center overflow-y-auto bg-black bg-opacity-70'
+						onClick={handleFullscreen}
 					>
 						<img src={event.image_url} alt='Description' />
 					</div>
 				)}
-				<div className='absolute left-0 top-0 flex w-full cursor-pointer justify-between p-2'>
-					<div />
-					<div className='flex gap-3'>
-						{event.created_by === user?.sub && (
+				<div className='absolute left-0 top-0 flex w-full  justify-between p-2'>
+					<div className='flex-grow' onClick={handleFullscreen} />
+					<div className='flex flex-col gap-4'>
+						{event.url && (
 							<button
-								className='rounded-full bg-black bg-opacity-40 p-1'
-								onClick={handle_edit}
+								className='cursor-pointer rounded-full bg-black bg-opacity-70 p-1'
+								onClick={handleUrl}
 								data-testid='edit-test-id'
 							>
-								<EditIcon color='primary' className='z-20 text-3xl' />
+								<LaunchIcon color='primary' className='z-10 text-3xl' />
+							</button>
+						)}
+						<ShareButtons currentUrl={currentUrl} event={event} />
+						{event.created_by === user?.sub && (
+							<button
+								className='cursor-pointer rounded-full bg-black bg-opacity-70 p-1'
+								onClick={handleEdit}
+								data-testid='edit-test-id'
+							>
+								<EditIcon color='primary' className='z-10 text-3xl' />
 							</button>
 						)}
 					</div>
@@ -265,7 +339,7 @@ const EventCard = ({
 			</div>
 			<div className='px-3 py-2'>
 				<div className='-my-0.5 flex items-center justify-between'>
-					{get_day(event.unix_time)}
+					<DayDisplay unix_time={event.unix_time} />
 					<div />
 				</div>
 				<div className='-my-0.5 flex  justify-between'>
@@ -273,40 +347,21 @@ const EventCard = ({
 						{event.title}
 					</h4>
 				</div>
-				<div className='text-md -my-0.5 flex justify-between font-medium text-gray-500'>
+				<div className='text-md -my-0.5 flex justify-between font-medium text-gray-500 '>
 					<div
-						className='flex cursor-pointer items-center gap-1'
-						onClick={handle_location_link}
+						className='flex max-w-xs cursor-pointer items-center gap-1'
+						onClick={handleLocationUrl}
 					>
-						<LocationOnIcon className='text-sm ' />
-						<p>{event.location}</p>
+						<LocationOnIcon className='text-sm' />
+						<p className='truncate'>{event.location}</p>
 					</div>
 					<div />
 				</div>
 				<div className='w-full text-gray-500'>
 					<span className='text-sm'>{votesDiff} sind interessiert</span>
-					<div className='flex gap-3'>
+					<div className='flex gap-1'>
 						<div className='flex-grow'>
-							{upvoteClicked ? (
-								<Button
-									className='mt-1 w-full !bg-blue-100 text-blue-600'
-									onClick={handle_upvotes}
-								>
-									<div className='flex items-center gap-2'>
-										<StarIcon color='primary' />{' '}
-										<span className='font-bold'> Interessiert</span>
-									</div>
-								</Button>
-							) : (
-								<Button
-									className='mt-1 w-full !bg-gray-300 text-black'
-									onClick={handle_upvotes}
-								>
-									<div className='flex items-center gap-2'>
-										<StarBorderIcon /> <span> Interessiert</span>
-									</div>
-								</Button>
-							)}
+							<CalendarButton />
 						</div>
 						{event.description && (
 							<div>
@@ -336,11 +391,37 @@ const EventCard = ({
 			</div>
 			{showDescription && event.description && (
 				<div>
-					<Typography variant='body1' className='mx-3 mb-3 mt-3 select-text'>
+					<Typography
+						variant='body1'
+						className='mx-3 mb-3 mt-3 select-text overflow-clip'
+					>
 						{formatTextForDisplay(event.description)}
 					</Typography>
 				</div>
 			)}
+			<Dialog open={openJoinDialog} onClose={() => setOpenJoinDialog(false)}>
+				<DialogContent>
+					{/* Hier können Sie den Text und die Erklärung für die Anmeldung anzeigen */}
+					<Typography variant='h6'>Anmeldung erforderlich</Typography>
+					<Typography>
+						{' '}
+						Angemeldet kannst du zudem den WhatsApp und Telegram Gruppen
+						beitreten.
+					</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setOpenJoinDialog(false)} color='primary'>
+						Schließen
+					</Button>
+					<Button
+						onClick={handleLogIn}
+						color='primary'
+						data-testid='login-test-id'
+					>
+						Jetzt anmelden
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</div>
 	)
 }

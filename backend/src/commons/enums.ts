@@ -1,12 +1,66 @@
+export enum SCRAPE_RESULT {
+  NO_NEW_EVENTS_FOUND = 'NO_NEW_EVENTS_FOUND',
+  EVENTS_FOUND = 'EVENTS_FOUND',
+  NO_RELEVANT_FUTURE_EVENTS_FOUND = 'NO_RELEVANT_FUTURE_EVENTS_FOUND',
+  STALE = 'STALE',
+}
+
+export type FacebookCrawlerConfig = {
+  STALE_URL_EXPIRY_TIME_IN_DAYS: number;
+};
+
+export type ScrapeUrlManagerConfig = {
+  MIN_SCRAPE_TIME_DIFF_IN_DAYS: number
+  NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: number; // This represents a percentage (e.g., 0.3 for 30%)
+};
+
+export type DummyFacebookScraperConfig = {
+  NO_EVENTS_FROM_SEARCH_URLS?: boolean;
+  NO_EVENTS_FROM_ORGANIZER_URLS?: boolean;
+  GENERATE_NEW_EVENT_URLS?: boolean;
+};
+
+export enum ScrapeUrlStatus {
+  IN_PAST = 'IN_PAST',
+  NOT_PROCESSED = 'NOT_PROCESSED',
+  PROCESSED = 'PROCESSED',
+  NOT_RELEVANT = 'NOT_RELEVANT',
+  FAILED_TO_PROCESS = 'FAILED_TO_PROCESS',
+  STALE = 'STALE',
+}
+
+export type ExpirationDates = {
+  FOR_SEARCH: Date;
+  FOR_ORGANIZERS: Date;
+  FOR_EVENTS: Date;
+};
+
+export enum UrlType {
+  SEARCH_URL = 'search_url',
+  ORGANIZER_URL = 'organizator_url',
+  EVENT_URL = 'event_url',
+}
+
+export enum OrderBy {
+  Chronological = 'chronological',
+  Popularity = 'popularity',
+}
+
 export enum NodeEnv {
   'DEVELOPMENT' = 'DEVELOPMENT',
   'TEST' = 'TEST',
-  'PRODUCTION' = 'PRODUCTION'
+  'PRODUCTION' = 'PRODUCTION',
+}
+
+export enum GroupType {
+  'TELEGRAM' = 'TELEGRAM',
+  'WHATSAPP' = 'WHATSAPP',
+  'MISC' = 'MISC',
 }
 
 export enum Votes {
   'UP' = 'UP',
-  'DOWN' = 'DOWN'
+  'DOWN' = 'DOWN',
 }
 
 export enum LOG_COLORS {
@@ -32,7 +86,7 @@ export enum LOG_COLORS {
   'BGBLUE' = '\x1b[44m%s\x1b[0m',
   'BGMAGENTA' = '\x1b[45m%s\x1b[0m',
   'BGCYAN' = '\x1b[46m%s\x1b[0m',
-  'BGWHITE' = '\x1b[47m%s\x1b[0m'
+  'BGWHITE' = '\x1b[47m%s\x1b[0m',
 }
 
 export enum HttpStatusCode {
@@ -407,5 +461,5 @@ export enum HttpStatusCode {
    * Intended for use by intercepting proxies used to control access to the network (e.g., "captive portals" used
    * to require agreement to Terms of Service before granting full Internet access via a Wi-Fi hotspot).
    */
-  NETWORK_AUTHENTICATION_REQUIRED = 511
+  NETWORK_AUTHENTICATION_REQUIRED = 511,
 }

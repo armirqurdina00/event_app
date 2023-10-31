@@ -16,7 +16,8 @@ export default async function getGroups(
 				Number(req.query.page),
 				Number(req.query.per_page),
 				Number(req.query.latitude),
-				Number(req.query.longitude)
+				Number(req.query.longitude),
+				Number(req.query.distance)
 			)
 			res.status(200).json(response)
 		} else {

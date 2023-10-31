@@ -41,6 +41,7 @@ describe('Tests for events endpoints.', function() {
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
       image_url: 'http://res.cloudinary.com/dqolsfqjt/image/upload/v1691513488/vt97k2aqwhhf85njpucg.jpg',
+      url: 'https://www.facebook.com/events/985182309362614/',
       recurring_pattern: RecurringPattern.WEEKLY,
       coordinates:  [8.4037, 49.0069]
     };
@@ -48,10 +49,19 @@ describe('Tests for events endpoints.', function() {
     const response: EventRes = await backend_client.events.postEvents(user_id, body);
     event_ids.push(response.event_id);
 
+    try {
+      const response2: EventRes = await backend_client.events.postEvents(user_id, body);
+      event_ids.push(response2.event_id);
+      throw new Error('Expected API to return 400 but it did not.');
+    } catch (error: any) {
+      expect(error?.status).to.equal(400);
+    }
+
     expect(response.unix_time).to.equal(body.unix_time);
     expect(response.title).to.equal(body.title);
     expect(response.location).to.equal(body.location);
     expect(response.image_url).to.equal(body.image_url);
+    expect(response.url).to.equal(body.url);
     expect(response.recurring_pattern).to.equal(body.recurring_pattern);
   });
 
@@ -92,6 +102,7 @@ describe('Tests for events endpoints.', function() {
     const number_of_items = 3;
 
     for (let i = 0; i < number_of_items; i++) {
+      body.unix_time = body.unix_time + 1;
       const { event_id } = await backend_client.events.postEvents(user_id, body);
       event_ids.push(event_id);
     }
@@ -109,7 +120,7 @@ describe('Tests for events endpoints.', function() {
     const page = 1;
     const per_page = 2;
 
-    const response_2 = await backend_client.events.getEvents(page, per_page, '');
+    const response_2 = await backend_client.events.getEvents(page, per_page);
 
     expect(response_2.page).to.be.a('number');
     expect(response_2.per_page).to.be.a('number');
@@ -119,6 +130,64 @@ describe('Tests for events endpoints.', function() {
     expect(response_2.page).to.equal(page);
     expect(response_2.per_page).to.equal(per_page);
     expect(response_2.total_number_of_items).to.be.above(number_of_items - 1);
+  });
+
+  it('GET /v1/events returns only events within the specified radius.', async function() {
+    this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
+
+    const event_ids_inside: string[] = [];
+    const event_ids_outside: string[] = [];
+
+    const centerCoordinates = [8.4037, 49.0069]; // Center coordinates for search
+    const [longitude, latitude] = centerCoordinates;
+    const distance = 5; // 5 km
+
+    // Unique titles for data independence
+    const titleInside = `Street Salsa Inside ${Date.now()}`;
+    const titleOutside = `Street Salsa Outside ${Date.now()}`;
+
+    // Event data within the radius
+    const bodyInsideRadius: EventReqBody = {
+      unix_time: moment().add(1, 'week').toDate().getTime(),
+      title: titleInside,
+      location: 'City Park Inside',
+      locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
+      coordinates: centerCoordinates,
+    };
+
+    // Event data outside the radius
+    const bodyOutsideRadius: EventReqBody = {
+      ...bodyInsideRadius,
+      title: titleOutside,
+      location: 'City Park Outside',
+      coordinates: [longitude + 0.1, latitude], // adjust to ensure outside the radius
+    };
+
+    const eventsInside = 3;
+    const eventsOutside = 2;
+
+    for (let i = 0; i < eventsInside; i++) {
+      bodyInsideRadius.unix_time = bodyInsideRadius.unix_time + 1;
+      const { event_id } = await backend_client.events.postEvents(user_id, bodyInsideRadius);
+      event_ids_inside.push(event_id);
+      event_ids.push(event_id);
+    }
+
+    for (let i = 0; i < eventsOutside; i++) {
+      bodyOutsideRadius.unix_time = bodyOutsideRadius.unix_time + 1;
+      const { event_id } = await backend_client.events.postEvents(user_id, bodyOutsideRadius);
+      event_ids_outside.push(event_id);
+      event_ids.push(event_id);
+    }
+
+    const response = await backend_client.events.getEvents(1, 100, latitude, longitude, distance);
+
+    // Assertions based on unique titles
+    const returnedEventsInside = response.items.filter(event => event.title === titleInside);
+    const returnedEventsOutside = response.items.filter(event => event.title === titleOutside);
+
+    expect(returnedEventsInside.length).to.equal(eventsInside);
+    expect(returnedEventsOutside.length).to.equal(0);
   });
 
   it('DELETE /v1/events/{event_id}', async function() {

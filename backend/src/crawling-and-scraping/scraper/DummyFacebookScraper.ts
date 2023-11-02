@@ -79,10 +79,6 @@ export default class DummyFacebookScraper implements IFacebookScraper {
     };
   }
 
-  async fetchOtherEventURLsFromEvent(url: string): Promise<string[]> {
-    return ['https://example.com/otherEvent1', 'https://example.com/otherEvent2'];
-  }
-
   setConfig(config: DummyFacebookScraperConfig) {
     if (config?.NO_EVENTS_FROM_SEARCH_URLS !== undefined)
       this.NO_EVENTS_FROM_SEARCH_URLS = config?.NO_EVENTS_FROM_SEARCH_URLS;
@@ -107,6 +103,10 @@ export default class DummyFacebookScraper implements IFacebookScraper {
       return [];
     else
       return ['https://example.com/organizerEventX', 'https://example.com/organizerEventY'];
+  }
+
+  async fetchRepeatingEventURLsFromEvent(url: string): Promise<string[]> {
+    return ['https://example.com/eventX', 'https://example.com/eventY', 'https://example.com/repeatingEvent1', 'https://example.com/repeatingEvent2'];
   }
 
   async fetchOrganizerUrlFromEvent(url: string): Promise<string> {

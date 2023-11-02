@@ -36,20 +36,20 @@ const getFilterDataFromCookies = (cookies) => {
 	return {
 		startUnixTime:
 			cookies[COOKIE_KEYS.START_UNIX_TIME] !== 'null' &&
-				cookies[COOKIE_KEYS.START_UNIX_TIME] !== 'undefined' &&
-				cookies[COOKIE_KEYS.START_UNIX_TIME] !== undefined
+			cookies[COOKIE_KEYS.START_UNIX_TIME] !== 'undefined' &&
+			cookies[COOKIE_KEYS.START_UNIX_TIME] !== undefined
 				? String(cookies[COOKIE_KEYS.START_UNIX_TIME])
 				: null,
 		endUnixTime:
 			cookies[COOKIE_KEYS.END_UNIX_TIME] !== 'null' &&
-				cookies[COOKIE_KEYS.END_UNIX_TIME] !== 'undefined' &&
-				cookies[COOKIE_KEYS.END_UNIX_TIME] !== undefined
+			cookies[COOKIE_KEYS.END_UNIX_TIME] !== 'undefined' &&
+			cookies[COOKIE_KEYS.END_UNIX_TIME] !== undefined
 				? String(cookies[COOKIE_KEYS.END_UNIX_TIME])
 				: null,
 		orderBy:
 			cookies[COOKIE_KEYS.ORDER_BY] !== 'null' &&
-				cookies[COOKIE_KEYS.ORDER_BY] !== 'undefined' &&
-				cookies[COOKIE_KEYS.ORDER_BY] !== undefined
+			cookies[COOKIE_KEYS.ORDER_BY] !== 'undefined' &&
+			cookies[COOKIE_KEYS.ORDER_BY] !== undefined
 				? String(cookies[COOKIE_KEYS.ORDER_BY])
 				: null,
 	}
@@ -132,33 +132,6 @@ const Events: React.FC<{
 	const menuRef = useRef(null)
 	const itemRefs = {} // To store references to each item
 	const [selectedItem, setSelectedItem] = useState(null) // initially set to null
-
-	const [scrollUp, setScrollUp] = useState(false);
-	const [lastScrollY, setLastScrollY] = useState(0);
-
-	const controlNavbar = () => {
-		if (typeof window !== 'undefined') {
-			if (window.scrollY > lastScrollY) { // if scroll down hide the navbar
-				setScrollUp(false)
-			} else { // if scroll up show the navbar
-				setScrollUp(true);
-			}
-
-			// remember current page location to use in the next move
-			setLastScrollY(window.scrollY);
-		}
-	};
-
-	useEffect(() => {
-		if (typeof window !== 'undefined') {
-			window.addEventListener('scroll', controlNavbar);
-
-			// cleanup function
-			return () => {
-				window.removeEventListener('scroll', controlNavbar);
-			};
-		}
-	}, [lastScrollY]);
 
 	useEffect(() => {
 		if (!userConfig) init(googleMapsApiKey)
@@ -259,13 +232,13 @@ const Events: React.FC<{
 	function getCurrentMonth() {
 		const currentDate = moment();
 		const endDate = moment().add(30, 'days');
-
+	
 		return {
 			startUnixTime: currentDate.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
 			endUnixTime: endDate.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
 		}
 	}
-
+	
 	// Swipe feature
 
 	const touchStartRef = useRef(null)
@@ -407,17 +380,18 @@ const Events: React.FC<{
 			<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
 				<div
 					ref={menuRef}
-					className={`sticky ${scrollUp ? 'top-[52px]' : 'top-0'} z-30 bg-zinc-50 flex space-x-2 overflow-x-auto pt-2 mt-2 pb-3 md:justify-center px-2`}
+					className='sticky top-0 z-30 bg-zinc-50 flex space-x-2 overflow-x-auto pt-2 mt-2 pb-3 md:justify-center px-2'
 				>
 					{items.map((item) => (
 						<div
 							ref={(el) => (itemRefs[item.id] = el)} // Attach the ref to each item
 							key={item.id}
 							onClick={() => handleItemClick(item.id)}
-							className={`bg-white flex max-w-[12rem] flex-none items-center justify-center rounded-lg px-3 py-1 text-center ${selectedItem === item.id
+							className={`bg-white flex max-w-[12rem] flex-none items-center justify-center rounded-lg px-3 py-1 text-center ${
+								selectedItem === item.id
 									? 'border-2 border-blue-500 font-semibold text-blue-500'
 									: 'border border-gray-300 text-gray-700'
-								}`}
+							}`}
 						>
 							{item.label}
 						</div>
@@ -453,49 +427,6 @@ const Events: React.FC<{
 						</InfiniteScroll>
 					</div>
 				</div>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
-				<p>Armir</p>
 			</div>
 		</Page>
 	)

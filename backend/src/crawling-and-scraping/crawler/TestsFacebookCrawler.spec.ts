@@ -93,6 +93,14 @@ describe('FacebookCrawler Functionality', function () {
 
       // todo: test if crawler does not overwrite events from other users
     });
+
+    it('Should save other events retrieved from repeating event', async function () {
+      const city = 'Karlsruhe';
+      await this.Crawler.scrapeEventsViaSearch(city);
+      const savedEvents = await getEvents(1, 100);
+      expect(savedEvents.items.length).to.equal(4);
+    });
+
   });
 
   describe('Adaptive Scraping Strategy For Search URLs Based on Event Discoveries', function () {

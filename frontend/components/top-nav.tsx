@@ -20,33 +20,6 @@ function ResponsiveAppBar() {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 	const open = Boolean(anchorEl)
 
-	const [sticky, setSticky] = useState(false);
-	const [lastScrollY, setLastScrollY] = useState(0);
-
-	const controlNavbar = () => {
-		if (typeof window !== 'undefined') {
-			if (window.scrollY > lastScrollY) { // if scroll down hide the navbar
-				setSticky(false)
-			} else { // if scroll up show the navbar
-				setSticky(true);
-			}
-
-			// remember current page location to use in the next move
-			setLastScrollY(window.scrollY);
-		}
-	};
-
-	useEffect(() => {
-		if (typeof window !== 'undefined') {
-			window.addEventListener('scroll', controlNavbar);
-
-			// cleanup function
-			return () => {
-				window.removeEventListener('scroll', controlNavbar);
-			};
-		}
-	}, [lastScrollY]);
-
 	const handle_logout = (event: React.MouseEvent<HTMLElement>) => {
 		router.push('/api/auth/logout')
 	}
@@ -89,7 +62,7 @@ function ResponsiveAppBar() {
 	}
 
 	return (
-		<AppBar className={`bg-zinc-100 text-zinc-600 ${sticky ? 'sticky' : 'static'}`}>
+		<AppBar className='bg-zinc-100 text-zinc-600' position='static'>
 			<Container maxWidth='xs'>
 				<Toolbar
 					disableGutters

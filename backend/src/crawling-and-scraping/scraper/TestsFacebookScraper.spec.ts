@@ -56,7 +56,7 @@ describe('Tests for FacebookScraper.', function() {
   });
 
   it('Should fetch other event URLs from repeating event', async function() {
-    const eventURLs = await this.Scraper.fetchOtherEventURLsFromEvent(TEST_DATA.REPEATING_EVENT_URL);
+    const eventURLs = await this.Scraper.fetchRepeatingEventURLsFromEvent(TEST_DATA.REPEATING_EVENT_URL);
     expect(eventURLs.length).to.greaterThan(1);
   });
 
@@ -68,12 +68,12 @@ describe('Tests for FacebookScraper.', function() {
     console.log('orgUrl', orgUrl);
 
     const event_url1 = 'https://www.facebook.com/events/313338057705499/';
-    const eventData1 = await this.Scraper.fetchOtherEventURLsFromEvent(event_url1);
+    const eventData1 = await this.Scraper.fetchRepeatingEventURLsFromEvent(event_url1);
     console.log('eventData1', eventData1);
 
 
     const event_url2 = 'https://www.facebook.com/events/565562635417838';
-    const eventData2 = await this.Scraper.fetchOtherEventURLsFromEvent(event_url2);
+    const eventData2 = await this.Scraper.fetchRepeatingEventURLsFromEvent(event_url2);
     console.log('eventData2', eventData2);
 
   });

@@ -132,7 +132,7 @@ export default class FacebookScraper implements IFacebookScraper {
     }
   }
 
-  public async fetchOtherEventURLsFromEvent(url: string) {
+  public async fetchRepeatingEventURLsFromEvent(url: string) {
     try {
       const browser = await chromium.launch({ headless: HEADLESS });
       const context = await browser.newContext({
@@ -146,11 +146,16 @@ export default class FacebookScraper implements IFacebookScraper {
       await expect(page.getByRole('button', { name: 'Allow all cookies' })).toBeVisible({ timeout: 2000 });
       await page.getByRole('button', { name: 'Allow all cookies' }).click();
 
-      await expect(page.locator('[aria-label^="+"]')).toBeVisible({ timeout: 1000 });
+      try {
+        await expect(page.locator('[aria-label^="+"]')).toBeVisible({ timeout: 1000 });
+      } catch(error) {
+        console.info(`No repeating events found for ${url}.`);
+        return [];
+      }
 
       await page.locator('[aria-label^="+"]').click();
 
-      await expect(page.locator('span').filter({ hasText: /^Event dates$/ }).first()).toBeVisible({ timeout: 2000 });
+      await expect(page.locator('span').filter({ hasText: /^Event dates/ }).first()).toBeVisible({ timeout: 2000 });
 
       const content = <string>await page.content();
 
@@ -167,10 +172,12 @@ export default class FacebookScraper implements IFacebookScraper {
 
       if (browser) await browser.close();
 
+      console.info(`Found ${uniqueLinks.length} repeating events for ${url}.`);
+
       return uniqueLinks;
     } catch (err){
       await page.screenshot({ path: __dirname + `/${uuidv4()}.png` });
-      console.error(`Error in fetchOtherEventURLsFromEvent with url: ${url}`);
+      console.error(`Error in fetchRepeatingEventURLsFromEvent with url: ${url}`);
       throw err;
     }
   }

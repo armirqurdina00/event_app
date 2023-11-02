@@ -109,14 +109,14 @@ export default class FacebookCrawler implements IFacebookCrawler {
   // utils
 
   private processSearchUrl(urlE: ScrapeUrlE, city: string): Promise<SCRAPE_RESULT> {
-    return this.processUrl(urlE, city);
+    return this.processSearchOrOrganizerUrl(urlE, city);
   }
 
   private processOrganizerUrl(urlE: ScrapeUrlE, city: string): Promise<SCRAPE_RESULT> {
-    return this.processUrl(urlE, city);
+    return this.processSearchOrOrganizerUrl(urlE, city);
   }
 
-  private async processUrl(urlE: ScrapeUrlE, city: string): Promise<SCRAPE_RESULT> {
+  private async processSearchOrOrganizerUrl(urlE: ScrapeUrlE, city: string): Promise<SCRAPE_RESULT> {
     if (this.chackIfUrlIsStale(urlE)) {
       return SCRAPE_RESULT.STALE;
     }
@@ -127,7 +127,7 @@ export default class FacebookCrawler implements IFacebookCrawler {
       return SCRAPE_RESULT.NO_NEW_EVENTS_FOUND;
     }
 
-    const { numberOfSavedEvents } = await this.scrapeEventUrls(newEventUrls, city);
+    const { numberOfSavedEvents } = await this.scrapeNewEventUrls(newEventUrls, city);
 
     if (numberOfSavedEvents === 0) {
       return SCRAPE_RESULT.NO_RELEVANT_FUTURE_EVENTS_FOUND;
@@ -147,7 +147,7 @@ export default class FacebookCrawler implements IFacebookCrawler {
     }
   }
 
-  private async scrapeEventUrls(eventUrls: string[], city: string): Promise<{ numberOfSavedEvents: number }> {
+  private async scrapeNewEventUrls(eventUrls: string[], city: string): Promise<{ numberOfSavedEvents: number }> {
 
     const existingUrls = await this.ScrapeUrlManager.getScrapeUrls(eventUrls);
     const existingUrlsSet = new Set(existingUrls.map((record) => record.url));
@@ -184,13 +184,12 @@ export default class FacebookCrawler implements IFacebookCrawler {
           if (organizerUrl)
             await this.ScrapeUrlManager.saveOrganizerUrl(organizerUrl, city);
 
-          const otherEventUrls = await this.scrapeOtherEventUrls(eventUrl);
+          const repeatingEventUrls = await this.scrapeRepeatingEventUrls(eventUrl);
 
-          for (const otherEventUrl of otherEventUrls) {
-            // Only add to queue if it has not already been in the queue
+          for (const repeatingEventUrl of repeatingEventUrls) {
             // Only add to queue if it does not exist in the database
-            if (!existingUrlsSet.has(otherEventUrl) && !visitedUrls.has(otherEventUrl))
-              queue.push(otherEventUrl);
+            if (!existingUrlsSet.has(repeatingEventUrl))
+              queue.push(repeatingEventUrl);
           }
 
           if (inFuture) {
@@ -246,7 +245,6 @@ export default class FacebookCrawler implements IFacebookCrawler {
   }
 
   async updateEvent(eventData: EventData) {
-    const user_id = await get_user_id();
     const coordinates = await this.getEventCoordinates(eventData);
     const city = await this.getEventCity(eventData, coordinates);
     const location = this.getEventLocation(city, eventData.location.name);
@@ -254,7 +252,7 @@ export default class FacebookCrawler implements IFacebookCrawler {
 
     const existing_event = await find_event_by_coordinates_and_time(eventReqBody.unix_time, eventReqBody.coordinates);
 
-    await this.updateEventsAndVotes(existing_event.event_id, user_id, eventReqBody, eventData.usersInterested);
+    await this.updateEventsAndVotes(existing_event.event_id, existing_event.created_by, eventReqBody, eventData.usersInterested);
     this.logEventAction('updated', existing_event.event_id, eventData.name, eventReqBody.unix_time, location);
   }
 
@@ -264,13 +262,6 @@ export default class FacebookCrawler implements IFacebookCrawler {
     const city = await this.getEventCity(eventData, coordinates);
     const location = this.getEventLocation(city, eventData.location.name);
     const eventReqBody = this.createEventRequestBody(eventData, coordinates, location);
-
-    // temp fix for data from old schema where urls are not normalized
-    const existing_event = await find_event_by_coordinates_and_time(eventReqBody.unix_time, eventReqBody.coordinates);
-    if (existing_event) {
-      console.warn(`Temp Fix: Event with the same coordinates and time already exists in the database. Event is not saved. Scraped Event: ${eventData.url}`);
-      return;
-    }
 
     const event_id = await this.saveEventAndVotes(user_id, eventReqBody, eventData.usersInterested);
     this.logEventAction('saved', event_id, eventData.name, eventReqBody.unix_time, location);
@@ -501,14 +492,14 @@ export default class FacebookCrawler implements IFacebookCrawler {
     return eventData;
   }
 
-  async scrapeOtherEventUrls(eventUrl: string): Promise<string[]> {
-    const otherEventUrls = await this.saveFetchOtherEventURLsFromEvent(eventUrl);
-    return otherEventUrls;
+  async scrapeRepeatingEventUrls(eventUrl: string): Promise<string[]> {
+    const repeatingEventUrls = await this.saveFetchRepeatingEventURLsFromEvent(eventUrl);
+    return repeatingEventUrls;
   }
 
-  async saveFetchOtherEventURLsFromEvent(eventUrl: string): Promise<string[]> {
+  async saveFetchRepeatingEventURLsFromEvent(eventUrl: string): Promise<string[]> {
     try {
-      return await this.Scraper.fetchOtherEventURLsFromEvent(eventUrl);
+      return await this.Scraper.fetchRepeatingEventURLsFromEvent(eventUrl);
     } catch (err) {
       console.error(`Error fetching other event URLs from Event Url ${eventUrl}:`, err);
       return [];

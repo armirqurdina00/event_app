@@ -13,12 +13,62 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 import { useEffect, useContext, useState } from 'react'
 import { useUserConfig } from '@/hooks/useUserConfig'
 
-function ResponsiveAppBar() {
+function ResponsiveAppBar({ children }: ResponsiveAppBarProps) {
 	const { user } = useUser()
 	const router = useRouter()
 	const { userConfig } = useUserConfig(router)
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 	const open = Boolean(anchorEl)
+
+	const [sticky, setSticky] = useState(false)
+	const [lastScrollY, setLastScrollY] = useState(0)
+	const [scrollUpDistance, setScrollUpDistance] = useState(0)
+	const [scrollDownDistance, setScrollDownDistance] = useState(0)
+
+	useEffect(() => {
+		const controlNavbar = () => {
+			if (typeof window !== 'undefined') {
+				if (window.scrollY < 5) {
+					setSticky(false)
+					setScrollDownDistance(0)
+					setScrollUpDistance(0)
+				}
+				else if (window.scrollY > lastScrollY) {
+					setScrollUpDistance(0)
+					// if scroll down hide the navbar
+					if (scrollDownDistance > 300) { //if user scrolls down > 300px
+						setSticky(false)
+					}
+					else {
+						const distance = scrollDownDistance + (window.scrollY - lastScrollY)
+						setScrollDownDistance(distance)
+					}
+				} else {
+					// if scroll up show the navbar
+					if (scrollUpDistance > 500) { // if user scrolls up > 500px
+						setSticky(true)
+						setScrollDownDistance(0)
+					}
+					else {
+						const distance = scrollUpDistance + (lastScrollY - window.scrollY)
+						setScrollUpDistance(distance)
+					}
+				}
+
+				// remember current page location to use in the next move
+				setLastScrollY(window.scrollY)
+			}
+		}
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener('scroll', controlNavbar)
+
+			// cleanup function
+			return () => {
+				window.removeEventListener('scroll', controlNavbar)
+			}
+		}
+	}, [lastScrollY])
 
 	const handle_logout = (event: React.MouseEvent<HTMLElement>) => {
 		router.push('/api/auth/logout')
@@ -62,7 +112,11 @@ function ResponsiveAppBar() {
 	}
 
 	return (
-		<AppBar className='bg-zinc-100 text-zinc-600' position='static'>
+		<AppBar
+			className={`bg-zinc-100 text-zinc-600 static ${sticky
+				&& 'sticky transition-transform duration-1000 ease-in-out -translate-y-0'
+				} ${scrollDownDistance > 300 && '-translate-y-full'}`}
+		>
 			<Container maxWidth='xs'>
 				<Toolbar
 					disableGutters
@@ -115,6 +169,7 @@ function ResponsiveAppBar() {
 					</Box>
 				</Toolbar>
 			</Container>
+			{children}
 		</AppBar>
 	)
 }

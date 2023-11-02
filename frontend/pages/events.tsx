@@ -16,6 +16,8 @@ import { useUserConfig } from '@/hooks/useUserConfig'
 import { COOKIE_KEYS, SELECTED_ITEMS } from '../utils/constants'
 import cookie from 'cookie'
 import moment from 'moment'
+import TopNav from '@/components/top-nav'
+import BottomNav from '@/components/bottom-nav'
 
 const PAGE_SIZE = 20
 const PAGE = 1
@@ -230,15 +232,15 @@ const Events: React.FC<{
 	}
 
 	function getCurrentMonth() {
-		const currentDate = moment();
-		const endDate = moment().add(30, 'days');
-	
+		const currentDate = moment()
+		const endDate = moment().add(30, 'days')
+
 		return {
 			startUnixTime: currentDate.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
 			endUnixTime: endDate.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
 		}
 	}
-	
+
 	// Swipe feature
 
 	const touchStartRef = useRef(null)
@@ -279,7 +281,10 @@ const Events: React.FC<{
 			id: SELECTED_ITEMS.POPULAR_WEEKEND,
 			label: 'Beliebt nächstes Wochenende',
 		},
-		{ id: SELECTED_ITEMS.POPULAR_MONTH, label: 'Beliebt in den nächsten 30 Tagen' },
+		{
+			id: SELECTED_ITEMS.POPULAR_MONTH,
+			label: 'Beliebt in den nächsten 30 Tagen',
+		},
 		{ id: SELECTED_ITEMS.ALL_TIME_POPULAR, label: 'Allzeit beliebt' },
 	]
 
@@ -376,18 +381,18 @@ const Events: React.FC<{
 	}
 
 	return (
-		<Page>
-			<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
+		<>
+			<TopNav>
 				<div
 					ref={menuRef}
-					className='sticky top-0 z-30 bg-zinc-50 flex space-x-2 overflow-x-auto pt-2 mt-2 pb-3 md:justify-center px-2'
+					className='sticky top-0 z-30 mt-2 flex space-x-2 overflow-x-auto bg-zinc-50 px-2 pb-3 pt-2 md:justify-center'
 				>
 					{items.map((item) => (
 						<div
 							ref={(el) => (itemRefs[item.id] = el)} // Attach the ref to each item
 							key={item.id}
 							onClick={() => handleItemClick(item.id)}
-							className={`bg-white flex max-w-[12rem] flex-none items-center justify-center rounded-lg px-3 py-1 text-center ${
+							className={`flex max-w-[12rem] flex-none items-center justify-center rounded-lg bg-white px-3 py-1 text-center ${
 								selectedItem === item.id
 									? 'border-2 border-blue-500 font-semibold text-blue-500'
 									: 'border border-gray-300 text-gray-700'
@@ -397,38 +402,42 @@ const Events: React.FC<{
 						</div>
 					))}
 				</div>
-
-				<div
-					onTouchStart={onTouchStart}
-					onTouchMove={onTouchMove}
-					onTouchEnd={onTouchEnd}
-				>
-					<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
-						<InfiniteScroll
-							dataLength={events.length}
-							next={loadMoreEvents}
-							hasMore={hasMore}
-							className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-4 pt-2'
-							style={{ overflow: 'hidden' }}
-							loader={
-								<div className='basis-full'>
-									<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
-								</div>
-							}
-						>
-							{events.map((event, index) => (
-								<EventCard
-									key={index}
-									event={event}
-									upvoted={userUpvotes.indexOf(event.event_id) !== -1}
-									downvoted={userDownvotes.indexOf(event.event_id) !== -1}
-								/>
-							))}
-						</InfiniteScroll>
+			</TopNav>
+			<main className='mx-auto min-h-screen max-w-screen-xl pb-28 px-safe'>
+				<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
+					<div
+						onTouchStart={onTouchStart}
+						onTouchMove={onTouchMove}
+						onTouchEnd={onTouchEnd}
+					>
+						<div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
+							<InfiniteScroll
+								dataLength={events.length}
+								next={loadMoreEvents}
+								hasMore={hasMore}
+								className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-4 pt-2'
+								style={{ overflow: 'hidden' }}
+								loader={
+									<div className='basis-full'>
+										<div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
+									</div>
+								}
+							>
+								{events.map((event, index) => (
+									<EventCard
+										key={index}
+										event={event}
+										upvoted={userUpvotes.indexOf(event.event_id) !== -1}
+										downvoted={userDownvotes.indexOf(event.event_id) !== -1}
+									/>
+								))}
+							</InfiniteScroll>
+						</div>
 					</div>
 				</div>
-			</div>
-		</Page>
+			</main>
+			<BottomNav />
+		</>
 	)
 }
 

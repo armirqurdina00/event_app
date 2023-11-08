@@ -1,176 +1,235 @@
-import * as React from 'react'
-import AppBar from '@mui/material/AppBar'
-import Box from '@mui/material/Box'
-import Toolbar from '@mui/material/Toolbar'
-import IconButton from '@mui/material/IconButton'
-import Container from '@mui/material/Container'
-import Avatar from '@mui/material/Avatar'
-import { useUser } from '@auth0/nextjs-auth0/client'
-import { useRouter } from 'next/router'
-import { Menu, MenuItem } from '@mui/material'
-import LocationOnIcon from '@mui/icons-material/LocationOn'
-import WhatsAppIcon from '@mui/icons-material/WhatsApp'
-import { useEffect, useContext, useState } from 'react'
-import { useUserConfig } from '@/hooks/useUserConfig'
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable prefer-rest-params */
+import * as React from 'react';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import { useUser } from '@auth0/nextjs-auth0/client';
+import { useRouter } from 'next/router';
+import { Menu, MenuItem } from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { useEffect, useState, useRef } from 'react';
+import { useUserConfig } from '@/hooks/useUserConfig';
 
-function ResponsiveAppBar({ children }: ResponsiveAppBarProps) {
-	const { user } = useUser()
-	const router = useRouter()
-	const { userConfig } = useUserConfig(router)
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-	const open = Boolean(anchorEl)
+const LONG_SCROLL_UP = 300;
+const LONG_SCROLL_DOWN = 100;
 
-	const [sticky, setSticky] = useState(false)
-	const [lastScrollY, setLastScrollY] = useState(0)
-	const [scrollUpDistance, setScrollUpDistance] = useState(0)
-	const [scrollDownDistance, setScrollDownDistance] = useState(0)
+const useScrollControl = () => {
+  const [scrollUpDistance, setScrollUpDistance] = useState(0);
+  const [scrollDownDistance, setScrollDownDistance] = useState(0);
+  const [sticky, setSticky] = useState(false);
+  const lastScrollY = useRef(0);
 
-	useEffect(() => {
-		const controlNavbar = () => {
-			if (typeof window !== 'undefined') {
-				if (window.scrollY < 5) {
-					setSticky(false)
-					setScrollDownDistance(0)
-					setScrollUpDistance(0)
-				}
-				else if (window.scrollY > lastScrollY) {
-					setScrollUpDistance(0)
-					// if scroll down hide the navbar
-					if (scrollDownDistance > 300) { //if user scrolls down > 300px
-						setSticky(false)
-					}
-					else {
-						const distance = scrollDownDistance + (window.scrollY - lastScrollY)
-						setScrollDownDistance(distance)
-					}
-				} else {
-					// if scroll up show the navbar
-					if (scrollUpDistance > 500) { // if user scrolls up > 500px
-						setSticky(true)
-						setScrollDownDistance(0)
-					}
-					else {
-						const distance = scrollUpDistance + (lastScrollY - window.scrollY)
-						setScrollUpDistance(distance)
-					}
-				}
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
 
-				// remember current page location to use in the next move
-				setLastScrollY(window.scrollY)
-			}
-		}
+      if (currentScrollY < 5) {
+        setSticky(false);
+        setScrollDownDistance(0);
+        setScrollUpDistance(0);
+      } else if (currentScrollY > lastScrollY.current) { // scroll down
+        setScrollUpDistance(0);
 
-		if (typeof window !== 'undefined') {
-			window.addEventListener('scroll', controlNavbar)
+        if (scrollDownDistance > LONG_SCROLL_DOWN) { // scroll down long enough
+          setSticky(false);
+        } else {
+          setScrollDownDistance(
+            (prevDistance) =>
+              prevDistance + (currentScrollY - lastScrollY.current)
+          );
+        }
+      } else { // scroll up
+        if (scrollUpDistance > LONG_SCROLL_UP) { // scroll up long enough
+          setScrollDownDistance(0);
+          setSticky(true);
+        } else {
+          setScrollUpDistance(
+            (prevDistance) =>
+              prevDistance + (lastScrollY.current - currentScrollY)
+          );
+        }
+      }
+      lastScrollY.current = currentScrollY;
+    };
 
-			// cleanup function
-			return () => {
-				window.removeEventListener('scroll', controlNavbar)
-			}
-		}
-	}, [lastScrollY])
+    // Throttle the scroll handler to improve performance
+    const throttledHandleScroll = throttle(handleScroll, 100);
 
-	const handle_logout = (event: React.MouseEvent<HTMLElement>) => {
-		router.push('/api/auth/logout')
-	}
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', throttledHandleScroll);
 
-	const handle_login = (event: React.MouseEvent<HTMLElement>) => {
-		router.push('/api/auth/login')
-	}
+      return () => {
+        window.removeEventListener('scroll', throttledHandleScroll);
+      };
+    }
+  }, [scrollDownDistance, scrollUpDistance]);
 
-	const handle_imprint = (event: React.MouseEvent<HTMLElement>) => {
-		router.push({
-			pathname: '/imprint',
-			query: router.query,
-		})
-	}
+  return { scrollUpDistance, scrollDownDistance, sticky };
+};
 
-	const handle_location = (event: React.MouseEvent<HTMLElement>) => {
-		if (router.pathname.includes('/groups')) {
-			router.push({
-				pathname: '/groups/location',
-				query: router.query,
-			})
-		} else {
-			router.push({
-				pathname: '/events/location',
-				query: router.query,
-			})
-		}
-	}
+function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
+  const { user } = useUser();
+  const router = useRouter();
+  const { userConfig } = useUserConfig(router);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
 
-	const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-		setAnchorEl(event.currentTarget)
-	}
+  const { scrollDownDistance, sticky } = useScrollControl();
 
-	const handle_close = () => {
-		setAnchorEl(null)
-	}
+  const handle_logout = () => {
+    router.push('/api/auth/logout');
+  };
 
-	const handle_feedback = () => {
-		router.push('https://wa.me/4917641952181')
-	}
+  const handle_login = () => {
+    router.push('/api/auth/login');
+  };
 
-	return (
-		<AppBar
-			className={`bg-zinc-100 text-zinc-600 static ${sticky
-				&& 'sticky transition-transform duration-1000 ease-in-out -translate-y-0'
-				} ${scrollDownDistance > 300 && '-translate-y-full'}`}
-		>
-			<Container maxWidth='xs'>
-				<Toolbar
-					disableGutters
-					className='flex justify-between'
-					variant='dense'
-				>
-					<div
-						className='flex flex-grow items-center text-xl'
-						onClick={handle_location}
-					>
-						<LocationOnIcon />
-						{userConfig?.city && (
-							<p className='ml-2 mr-2 cursor-pointer'>
-								{userConfig.city} &middot; {userConfig.distance}
-								{'km'}
-							</p>
-						)}
-					</div>
-					<Box>
-						<IconButton
-							id='basic-button'
-							aria-controls={open ? 'basic-menu' : undefined}
-							aria-haspopup='true'
-							aria-expanded={open ? 'true' : undefined}
-							onClick={handleClick}
-						>
-							<Avatar src={user?.picture} sx={{ width: 36, height: 36 }} />
-						</IconButton>
+  const handle_imprint = () => {
+    router.push({
+      pathname: '/imprint',
+      query: router.query
+    });
+  };
 
-						<Menu
-							id='basic-menu'
-							anchorEl={anchorEl}
-							open={open}
-							onClose={handle_close}
-							MenuListProps={{
-								'aria-labelledby': 'basic-button',
-							}}
-						>
-							<MenuItem onClick={handle_feedback}>
-								<span className='mr-1'>Feedback</span>
-								<WhatsAppIcon style={{ color: '#25d366', fontSize: '20px' }} />
-							</MenuItem>
-							<MenuItem onClick={handle_imprint}>Impressum</MenuItem>
-							{!user ? (
-								<MenuItem onClick={handle_login}>Login</MenuItem>
-							) : (
-								<MenuItem onClick={handle_logout}>Logout</MenuItem>
-							)}
-						</Menu>
-					</Box>
-				</Toolbar>
-			</Container>
-			{children}
-		</AppBar>
-	)
+  const handle_location = () => {
+    if (router.pathname.includes('/groups')) {
+      router.push({
+        pathname: '/groups/location',
+        query: router.query
+      });
+    } else {
+      router.push({
+        pathname: '/events/location',
+        query: router.query
+      });
+    }
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handle_close = () => {
+    setAnchorEl(null);
+  };
+
+  const handle_feedback = () => {
+    router.push('https://wa.me/4917641952181');
+  };
+
+  return (
+    <AppBar
+      className={`bg-zinc-100 text-zinc-600 static ${sticky &&
+			'sticky transition-transform duration-1000 ease-in-out -translate-y-0'
+      } ${scrollDownDistance > LONG_SCROLL_DOWN && '-translate-y-full'}`}
+    >
+      <Container maxWidth='xs'>
+        <Toolbar
+          disableGutters
+          className='flex justify-between'
+          variant='dense'
+        >
+          <div
+            className='flex flex-grow items-center text-xl'
+            onClick={handle_location}
+          >
+            <LocationOnIcon />
+            {userConfig?.city && (
+              <p className='ml-2 mr-2 cursor-pointer'>
+                {userConfig.city} &middot; {userConfig.distance}
+                {'km'}
+              </p>
+            )}
+          </div>
+          <Box>
+            <IconButton
+              id='basic-button'
+              aria-controls={open ? 'basic-menu' : undefined}
+              aria-haspopup='true'
+              aria-expanded={open ? 'true' : undefined}
+              onClick={handleClick}
+            >
+              <Avatar src={user?.picture} sx={{ width: 36, height: 36 }} />
+            </IconButton>
+
+            <Menu
+              id='basic-menu'
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handle_close}
+              MenuListProps={{
+							  'aria-labelledby': 'basic-button'
+              }}
+            >
+              <MenuItem onClick={handle_feedback}>
+                <span className='mr-1'>Feedback</span>
+                <WhatsAppIcon style={{ color: '#25d366', fontSize: '20px' }} />
+              </MenuItem>
+              <MenuItem onClick={handle_imprint}>Impressum</MenuItem>
+              {!user
+							  ? (
+                  <MenuItem onClick={handle_login}>Login</MenuItem>
+							    )
+							  : (
+                  <MenuItem onClick={handle_logout}>Logout</MenuItem>
+							    )}
+            </Menu>
+          </Box>
+        </Toolbar>
+      </Container>
+      {children}
+    </AppBar>
+  );
 }
-export default ResponsiveAppBar
+export default ResponsiveAppBar;
+
+function throttle (func, wait) {
+  let context, args, timeout, result;
+  let previous = 0;
+
+  const later = () => {
+    previous = Date.now();
+    timeout = null;
+    result = func.apply(context, args);
+    if (!timeout) {
+      context = args = null;
+    }
+  };
+
+  const throttled = function () {
+    const now = Date.now();
+    const remaining = wait - (now - previous);
+    context = this;
+    args = arguments;
+
+    if (remaining <= 0 || remaining > wait) {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = now;
+      result = func.apply(context, args);
+      if (!timeout) {
+        context = args = null;
+      }
+    } else if (!timeout) {
+      timeout = setTimeout(later, remaining);
+    }
+
+    return result;
+  };
+
+  throttled.cancel = function () {
+    clearTimeout(timeout);
+    previous = 0;
+    timeout = null;
+    context = args = null;
+  };
+
+  return throttled;
+}

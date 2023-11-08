@@ -1,60 +1,60 @@
-import Page from '@/components/page'
-import Head from 'next/head'
-import Link from 'next/link'
+import Page from '@/components/page';
+import Head from 'next/head';
+import Link from 'next/link';
 
 const Imprint = () => {
-	return (
-		<Page>
-			<Head>
-				<title>Impressum - Magnus Gödde</title>
-			</Head>
-			<div className='p-5'>
-				<div className='container mx-auto'>
-					<h2 className='mb-6 text-center text-3xl'>Impressum</h2>
+  return (
+    <Page>
+      <Head>
+        <title>Impressum - Magnus Gödde</title>
+      </Head>
+      <div className='p-5'>
+        <div className='container mx-auto'>
+          <h2 className='mb-6 text-center text-3xl'>Impressum</h2>
 
-					<section>
-						<h3 className='mt-4 text-2xl'>Angaben gemäß § 5 TMG</h3>
-						<p>
+          <section>
+            <h3 className='mt-4 text-2xl'>Angaben gemäß § 5 TMG</h3>
+            <p>
 							Verantwortlich für den Inhalt dieser Webseite:
-							<br />
+              <br />
 							Magnus Gödde
-						</p>
-					</section>
+            </p>
+          </section>
 
-					<section>
-						<h3 className='mt-4 text-2xl'>Kontakt</h3>
-						<p>
+          <section>
+            <h3 className='mt-4 text-2xl'>Kontakt</h3>
+            <p>
 							Adresse: Anna-Lauter-Straße 3, Karlsruhe
-							<br />
+              <br />
 							Telefon:{' '}
-							<Link className='text-blue-500' href='tel:+4917641952181'>
+              <Link className='text-blue-500' href='tel:+4917641952181'>
 								+4917641952181
-							</Link>
-							<br />
+              </Link>
+              <br />
 							E-Mail:{' '}
-							<Link
-								className='text-blue-500'
-								href='mailto:mail@magnus-goedde.de'
-							>
+              <Link
+                className='text-blue-500'
+                href='mailto:mail@magnus-goedde.de'
+              >
 								mail@magnus-goedde.de
-							</Link>
-							<br />
+              </Link>
+              <br />
 							Website:{' '}
-							<Link className='text-blue-500' href='https://magnus-goedde.de'>
+              <Link className='text-blue-500' href='https://magnus-goedde.de'>
 								magnus-goedde.de
-							</Link>
-							<br />
-						</p>
-					</section>
+              </Link>
+              <br />
+            </p>
+          </section>
 
-					<section>
-						<h3 className='mt-4 text-2xl'>Steuernummer</h3>
-						<p>Steuer-Nr.: 35076/14667</p>
-					</section>
+          <section>
+            <h3 className='mt-4 text-2xl'>Steuernummer</h3>
+            <p>Steuer-Nr.: 35076/14667</p>
+          </section>
 
-					<section>
-						<h3 className='mt-4 text-2xl'>Haftung für Inhalte</h3>
-						<p>
+          <section>
+            <h3 className='mt-4 text-2xl'>Haftung für Inhalte</h3>
+            <p>
 							Die Inhalte dieser Webseite wurden mit größter Sorgfalt erstellt.
 							Allerdings können wir keine Gewähr für die Richtigkeit,
 							Vollständigkeit und Aktualität der Inhalte übernehmen. Als
@@ -69,11 +69,11 @@ const Imprint = () => {
 							ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung
 							möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen
 							werden wir diese Inhalte umgehend entfernen.
-						</p>
-					</section>
+            </p>
+          </section>
 
-					<h4 className='mt-4 text-2xl'>Haftung für Links</h4>
-					<p>
+          <h4 className='mt-4 text-2xl'>Haftung für Links</h4>
+          <p>
 						Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren
 						Inhalte wir keinen Einfluss haben. Deshalb können wir für diese
 						fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der
@@ -85,9 +85,9 @@ const Imprint = () => {
 						Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung
 						nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir
 						derartige Links umgehend entfernen.
-					</p>
-					<h4 className='mt-4 text-2xl'>Urheberrecht</h4>
-					<p>
+          </p>
+          <h4 className='mt-4 text-2xl'>Urheberrecht</h4>
+          <p>
 						Die durch die Seitenbetreiber erstellten Inhalte und Werke auf
 						diesen Seiten unterliegen dem deutschen Urheberrecht. Die
 						Vervielfältigung, Bearbeitung, Verbreitung und jede Art der
@@ -101,9 +101,9 @@ const Imprint = () => {
 						Urheberrechtsverletzung aufmerksam werden, bitten wir um einen
 						entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen
 						werden wir derartige Inhalte umgehend entfernen.
-					</p>
-					<h4 className='mt-4 text-2xl'>Datenschutz</h4>
-					<p>
+          </p>
+          <h4 className='mt-4 text-2xl'>Datenschutz</h4>
+          <p>
 						Die Nutzung unserer Webseite ist in der Regel ohne Angabe
 						personenbezogener Daten möglich. Soweit auf unseren Seiten
 						personenbezogene Daten (beispielsweise Name, Anschrift oder
@@ -119,9 +119,9 @@ const Imprint = () => {
 						ausdrücklich widersprochen. Die Betreiber der Seiten behalten sich
 						ausdrücklich rechtliche Schritte im Falle der unverlangten Zusendung
 						von Werbeinformationen, etwa durch Spam-Mails, vor.
-					</p>
-					<h4 className='mt-4 text-2xl'>Google Analytics</h4>
-					<p>
+          </p>
+          <h4 className='mt-4 text-2xl'>Google Analytics</h4>
+          <p>
 						Diese Website benutzt Google Analytics, einen Webanalysedienst der
 						Google Inc. (”Google”). Google Analytics verwendet sog. ”Cookies”,
 						Textdateien, die auf Ihrem Computer gespeichert werden und die eine
@@ -144,11 +144,11 @@ const Imprint = () => {
 						Nutzung dieser Website erklären Sie sich mit der Bearbeitung der
 						über Sie erhobenen Daten durch Google in der zuvor beschriebenen Art
 						und Weise und zu dem zuvor benannten Zweck einverstanden.
-					</p>
-				</div>
-			</div>
-		</Page>
-	)
-}
+          </p>
+        </div>
+      </div>
+    </Page>
+  );
+};
 
-export default Imprint
+export default Imprint;

@@ -36,11 +36,11 @@
     "swagger-ui-express": "^4.1.6",
     "tsoa": "^3.14.1",
     "typeorm": "^0.3.7",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "@types/mocha": "^10.0.3"
   },
   "devDependencies": {
     "@stoplight/spectral-cli": "^6.0.0",
-    "@types/mocha": "^10.0.3",
     "@types/sinon": "^10.0.20",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",

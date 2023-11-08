@@ -35,18 +35,20 @@ import LaunchIcon from '@mui/icons-material/Launch';
 const EventCard = ({
   event,
   upvoted,
-  downvoted
+  downvoted,
+  details=false,
 }: {
   event: EventRes
   upvoted: boolean
   downvoted: boolean
+  details?: boolean
 }) => {
   const { user } = useUser();
   const router = useRouter();
   const [votesDiff, setVotesDiff] = useState(event.votes_diff);
   const [upvoteClicked, setUpvoteClicked] = useState(upvoted);
   const [processing, setProcessing] = useState(false);
-  const [showDescription, setShowDescription] = useState(false);
+  const [showDescription, setShowDescription] = useState(details);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(null);
   const [openJoinDialog, setOpenJoinDialog] = useState(false);
@@ -64,7 +66,7 @@ const EventCard = ({
   }, [downvoted]);
 
   useEffect(() => {
-    setCurrentUrl(window.location.href);
+    setCurrentUrl(`${window.location.origin}/events/${event.event_id}`);
   }, []);
 
   // Handle Events
@@ -76,7 +78,7 @@ const EventCard = ({
 
   function handleEdit () {
     router.push({
-      pathname: `/events/${event.event_id}`,
+      pathname: `/events/${event.event_id}/edit`,
       query: router.query
     });
   }

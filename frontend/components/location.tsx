@@ -113,6 +113,20 @@ const EditLocation = ({ lastRoute }) => {
         pathname: lastRoute,
         query: router.query
       });
+      const city_obj = { city, latitude, longitude };
+      if (!window.localStorage.getItem('recent_cities')) {
+        const cities = [city_obj];
+        window.localStorage.setItem('recent_cities', JSON.stringify(cities));
+      }
+      else {
+        const recent_cities = JSON.parse(window.localStorage.getItem('recent_cities'));
+        if (recent_cities.length == 5) {
+          recent_cities.shift();
+        }
+        if (recent_cities.some(item => item.latitude === latitude)) { return; }
+        recent_cities.push(city_obj);
+        window.localStorage.setItem('recent_cities', JSON.stringify(recent_cities));
+      }
     }
   };
 
@@ -163,13 +177,13 @@ const EditLocation = ({ lastRoute }) => {
             <Button
               variant='outlined'
               onClick={() => {
-							  router.push({
-							    pathname: lastRoute,
-							    query: router.query
-							  });
+                router.push({
+                  pathname: lastRoute,
+                  query: router.query
+                });
               }}
             >
-							Zurück
+              Zurück
             </Button>
             <Button
               variant='contained'
@@ -178,7 +192,7 @@ const EditLocation = ({ lastRoute }) => {
               onClick={onSubmit}
               data-testid='submit'
             >
-							Speichern
+              Speichern
             </Button>
           </div>
         </div>

@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Page from '@/components/page';
 import GroupCard from '@/components/group-card';
-import { type GroupRes, type GroupsRes, BackendClient } from '../utils/backend_client';
+import {
+  type GroupRes,
+  type GroupsRes,
+  BackendClient,
+} from '../utils/backend_client';
 import { useRouter } from 'next/router';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useUserConfig } from '@/hooks/useUserConfig';
@@ -19,13 +23,13 @@ const getLocationDataFromCookies = (cookies) => {
   return {
     latitude: Number(cookies[COOKIE_KEYS.LATITUDE]),
     longitude: Number(cookies[COOKIE_KEYS.LONGITUDE]),
-    distance: Number(cookies[COOKIE_KEYS.DISTANCE])
+    distance: Number(cookies[COOKIE_KEYS.DISTANCE]),
   };
 };
 
 const fetchInitialGroups = async (latitude, longitude, distance) => {
   const backendClient = new BackendClient({
-    BASE: process.env.BACKEND_URL
+    BASE: process.env.BACKEND_URL,
   });
   const { items: initialGroups } = await backendClient.groups.getGroups(
     PAGE,
@@ -47,7 +51,7 @@ export const getServerSideProps = async (context) => {
 
   if (!latitude || !longitude || !distance) {
     return {
-      props: { initialGroups: [], googleMapsApiKey }
+      props: { initialGroups: [], googleMapsApiKey },
     };
   }
 
@@ -56,14 +60,14 @@ export const getServerSideProps = async (context) => {
   return {
     props: {
       initialGroups,
-      googleMapsApiKey
-    }
+      googleMapsApiKey,
+    },
   };
 };
 
 const Groups: React.FC<{
-  initialGroups: GroupRes[]
-  googleMapsApiKey: string
+  initialGroups: GroupRes[];
+  googleMapsApiKey: string;
 }> = ({ initialGroups, googleMapsApiKey }) => {
   const router = useRouter();
   const { userConfig, init } = useUserConfig(router);
@@ -152,7 +156,7 @@ const Groups: React.FC<{
       setIsSwiped(!isSwiped);
       router.push({
         pathname: '/events',
-        query: router.query
+        query: router.query,
       });
     }
 
@@ -172,11 +176,11 @@ const Groups: React.FC<{
             dataLength={groups.length}
             next={loadMoreGroups}
             hasMore={hasMore}
-            className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-4 pt-4'
+            className="pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-4 pt-4"
             style={{ overflow: 'hidden' }}
             loader={
-              <div className='basis-full'>
-                <div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
+              <div className="basis-full">
+                <div className="loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear"></div>
               </div>
             }
           >

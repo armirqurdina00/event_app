@@ -3,16 +3,19 @@ import { GroupE } from './GroupE';
 
 @Entity()
 export class GroupJoinE {
-    @PrimaryColumn()
-    user_id: string;
+  @PrimaryColumn()
+  user_id: string;
 
-    @PrimaryColumn({ type: 'uuid' })
-    group_id: string;
+  @PrimaryColumn({ type: 'uuid' })
+  group_id: string;
 
-    @CreateDateColumn()
-    created_at: Date;
+  @CreateDateColumn()
+  created_at: Date;
 
-    @ManyToOne(() => GroupE, 'joins')
-    @JoinColumn({ name: 'group_id', foreignKeyConstraintName: 'group_constraint' })
-    group: GroupE;
+  @ManyToOne(() => GroupE, 'joins')
+  @JoinColumn({
+    name: 'group_id',
+    foreignKeyConstraintName: 'group_constraint',
+  })
+  group: GroupE;
 }

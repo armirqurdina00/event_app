@@ -83,10 +83,20 @@ export class EventsController extends Controller {
     @Query() title?: string,
     @Query() start_unix_time?: number,
     @Query() end_unix_time?: number,
-    @Query() order_by: OrderBy = OrderBy.Chronological,
+    @Query() order_by: OrderBy = OrderBy.Chronological
   ): Promise<EventsRes> {
     try {
-      return await get_events(page, per_page, latitude, longitude, distance, title, start_unix_time, end_unix_time, order_by);
+      return await get_events(
+        page,
+        per_page,
+        latitude,
+        longitude,
+        distance,
+        title,
+        start_unix_time,
+        end_unix_time,
+        order_by
+      );
     } catch (err) {
       log_error(err);
       throw err;

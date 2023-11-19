@@ -5,10 +5,10 @@ WORKDIR /app
 
 # Copy package files and install dependencies
 COPY ./backend/package*.json ./backend/
-RUN npm ci --prefix ./backend --omit=dev 
+RUN npm install --prefix ./backend
 
 COPY ./frontend/package*.json ./frontend/
-RUN npm ci --prefix ./frontend --omit=dev
+RUN npm install --prefix ./frontend
 
 # Copy source code
 COPY ./backend ./backend

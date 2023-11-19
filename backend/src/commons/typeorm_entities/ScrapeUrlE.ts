@@ -13,21 +13,25 @@ export class ScrapeUrlE {
   @Column({ nullable: false })
   city: string;
 
-  @Column({ type: 'enum', enum: ScrapeUrlStatus, default: ScrapeUrlStatus.NOT_PROCESSED })
+  @Column({
+    type: 'enum',
+    enum: ScrapeUrlStatus,
+    default: ScrapeUrlStatus.NOT_PROCESSED,
+  })
   scrapeUrlStatus: ScrapeUrlStatus;
 
-  @Column({ nullable: true })
-  expiry: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  expiry: Date | null;
 
-  @Column({ nullable: true, default: moment().toDate() })
-  nextScrape: Date;
+  @Column({ type: 'timestamp', nullable: true, default: moment().toDate() })
+  nextScrape: Date | null;
 
-  @Column({ nullable: true, default: moment().subtract(3, 'days').toDate() })
-  lastScrape: Date;
+  @Column({ type: 'timestamp', nullable: true, default: moment().subtract(3, 'days').toDate() })
+  lastScrape: Date | null;
 
-  @Column({ nullable: true })
-  lastFound: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  lastFound: Date | null;
 
   @CreateDateColumn({ type: 'timestamp', nullable: true }) // This decorator creates a new timestamp column for entity insertion time
-  createdAt: Date;
+  createdAt: Date | null;
 }

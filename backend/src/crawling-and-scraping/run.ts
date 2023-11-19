@@ -7,11 +7,13 @@ import ScrapeUrlManager from './crawler/ScrapeUrlManager';
 import FacebookScraper from './scraper/FacebookScraper';
 
 const CRAWLER_CONFIG: FacebookCrawlerConfig = {
-  STALE_URL_EXPIRY_TIME_IN_DAYS: 90
+  STALE_URL_EXPIRY_TIME_IN_DAYS: 90,
+  ERROR_THRESHOLD: 15,
 };
 const URL_MANAGER_CONFIG: ScrapeUrlManagerConfig = {
-  MIN_SCRAPE_TIME_DIFF_IN_DAYS: 1,
-  NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: 0.3,
+  LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS: 2,
+  NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: 0.5,
+  EVENT_NEXT_SCRAPE_TIME_MULTIPLIER: 0.75,
 };
 
 (async () => {
@@ -31,7 +33,7 @@ async function crawl(city: string) {
   const MyScraper = new FacebookScraper();
   const MyScrapeUrlRepo = (await Database.get_data_source()).getRepository(ScrapeUrlE);
   const MyScrapeUrlManager = new ScrapeUrlManager(MyTimeManager, MyScrapeUrlRepo, URL_MANAGER_CONFIG);
-  const MyCrawler = new FacebookCrawler(MyScraper,MyScrapeUrlManager, MyTimeManager, CRAWLER_CONFIG);
+  const MyCrawler = new FacebookCrawler(MyScraper, MyScrapeUrlManager, MyTimeManager, CRAWLER_CONFIG);
 
   await MyCrawler.scrapeEventsViaSearch(city);
   await MyCrawler.scrapeEventsViaOrganizer(city);
@@ -50,8 +52,7 @@ async function fetchCitiesToBeScraped(): Promise<string[]> {
     .orderBy('joinCount', 'DESC')
     .getRawMany();
 
-  allCities = allCities.map((e) => e.city);
+  allCities = allCities.map(e => e.city);
 
   return allCities;
 }
-

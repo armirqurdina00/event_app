@@ -1,5 +1,4 @@
 import { EventData } from 'facebook-event-scraper/dist/types';
-import { DummyFacebookScraperConfig } from 'src/commons/enums';
 
 interface IFacebookScraper {
   fetchEventUrlsFromSearchUrl(url: string): Promise<string[]>;
@@ -7,7 +6,6 @@ interface IFacebookScraper {
   fetchOrganizerUrlFromEvent(url: string): Promise<string>;
   fetchRepeatingEventURLsFromEvent(url: string): Promise<string[]>;
   fetchEventData(url: string): Promise<EventData>;
-  setConfig?(config: DummyFacebookScraperConfig): void;
   updateSampleEventData?(updates: Partial<EventData>): void;
 }
 

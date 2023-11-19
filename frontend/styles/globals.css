@@ -3,75 +3,75 @@
 @tailwind utilities;
 
 body {
-	@apply min-h-screen select-none bg-zinc-50 text-zinc-900 antialiased p-safe;
+  @apply min-h-screen select-none bg-zinc-50 text-zinc-900 antialiased p-safe;
 
-	/* PWA enhancements */
-	-webkit-overflow-scrolling: touch;
-	-webkit-tap-highlight-color: transparent;
-	-webkit-touch-callout: none;
+  /* PWA enhancements */
+  -webkit-overflow-scrolling: touch;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 .event-img-16-9 {
-	aspect-ratio: 16/9;
-	width: 100%;
+  aspect-ratio: 16/9;
+  width: 100%;
 }
 
 .loader {
-	border-top-color: #3498db;
-	-webkit-animation: spinner 1.5s linear infinite;
-	animation: spinner 1.5s linear infinite;
+  border-top-color: #3498db;
+  -webkit-animation: spinner 1.5s linear infinite;
+  animation: spinner 1.5s linear infinite;
 }
 
 @-webkit-keyframes spinner {
-	0% {
-		-webkit-transform: rotate(0deg);
-	}
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
 
-	100% {
-		-webkit-transform: rotate(360deg);
-	}
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
 }
 
 @keyframes spinner {
-	0% {
-		transform: rotate(0deg);
-	}
+  0% {
+    transform: rotate(0deg);
+  }
 
-	100% {
-		transform: rotate(360deg);
-	}
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .displayNone {
-	display: none;
+  display: none;
 }
 
 .slideOutToLeftAnimation {
-	animation: 0.15s ease-out 0s 1 slideOutToLeft;
-	animation-fill-mode:forwards;
+  animation: 0.15s ease-out 0s 1 slideOutToLeft;
+  animation-fill-mode: forwards;
 }
 
 .slideOutToRightAnimation {
-	animation: 0.15s ease-out 0s 1 slideOutToRight;
-	animation-fill-mode:forwards;
+  animation: 0.15s ease-out 0s 1 slideOutToRight;
+  animation-fill-mode: forwards;
 }
 
 @keyframes slideOutToLeft {
-	0% {
-		transform: translateX(0);
-	}
+  0% {
+    transform: translateX(0);
+  }
 
-	100% {
-		transform: translateX(-100%);
-	}
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 @keyframes slideOutToRight {
-	0% {
-		transform: translateX(0);
-	}
+  0% {
+    transform: translateX(0);
+  }
 
-	100% {
-		transform: translateX(100%);
-	}
+  100% {
+    transform: translateX(100%);
+  }
 }

@@ -2,14 +2,14 @@ import { type NextApiRequest, type NextApiResponse } from 'next';
 import { BackendClient } from '../../utils/backend_client';
 import axios from 'axios';
 
-export default async function getGroups (
+export default async function getGroups(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   try {
     if (req.method === 'GET') {
       const backend_client = new BackendClient({
-        BASE: process.env.BACKEND_URL
+        BASE: process.env.BACKEND_URL,
       });
 
       const response = await backend_client.groups.getGroups(

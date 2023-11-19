@@ -28,33 +28,33 @@ const DayDisplay = ({ unix_time }) => {
   };
 
   const renderDay = (label, eventMoment, unix_time) => (
-    <div className='text-md flex items-baseline justify-between gap-2'>
-      <span className='text-md font-medium'>
-        <span className='text-red-500'>{label}</span> &middot;{' '}
+    <div className="text-md flex items-baseline justify-between gap-2">
+      <span className="text-md font-medium">
+        <span className="text-red-500">{label}</span> &middot;{' '}
         {`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
       </span>
-      <p className='text-sm'>{moment(unix_time).format('HH:mm ')}Uhr</p>
+      <p className="text-sm">{moment(unix_time).format('HH:mm ')}Uhr</p>
     </div>
   );
 
   const renderWeekDay = (label, eventMoment, unix_time) => (
-    <div className='text-md flex items-baseline justify-between gap-2'>
-      <span className='text-md font-medium'>
+    <div className="text-md flex items-baseline justify-between gap-2">
+      <span className="text-md font-medium">
         {label}{' '}
         {`${eventMoment.format('dddd')}, ${eventMoment.format('DD.MM')}`}
       </span>
-      <p className='text-sm'>{moment(unix_time).format('HH:mm ')}Uhr</p>
+      <p className="text-sm">{moment(unix_time).format('HH:mm ')}Uhr</p>
     </div>
   );
 
   const renderDefaultDay = (eventMoment, unix_time) => (
-    <div className='text-md flex items-baseline justify-between gap-2'>
-      <span className='text-md font-medium'>
+    <div className="text-md flex items-baseline justify-between gap-2">
+      <span className="text-md font-medium">
         <span>
           {`${eventMoment.format('dd')}`}, {moment(unix_time).format('DD.MM')}
         </span>
       </span>
-      <p className='text-sm'>{moment(unix_time).format('HH:mm ')}Uhr</p>
+      <p className="text-sm">{moment(unix_time).format('HH:mm ')}Uhr</p>
     </div>
   );
 

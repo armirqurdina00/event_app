@@ -17,8 +17,8 @@ interface CityData {
   googleMapsLink: string;
 }
 
-describe('Add Telegram Groups.', function() {
-  before(async function() {
+describe('Add Telegram Groups.', function () {
+  before(async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const server = require('../index').default;
@@ -26,13 +26,13 @@ describe('Add Telegram Groups.', function() {
 
     backend_client = new BackendClient({
       BASE: process.env.BU_API_URL,
-      TOKEN: get_access_token
+      TOKEN: get_access_token,
     });
 
     user_id = await get_user_id();
   });
 
-  it('Add Telegram Groups via POST /v1/users/{user_id}/groups', async function() {
+  it('Add Telegram Groups via POST /v1/users/{user_id}/groups', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
     const jsonData = readFileSync(inviteURLFilePath, 'utf-8');
     const inviteURLs = JSON.parse(jsonData);
@@ -50,7 +50,8 @@ describe('Add Telegram Groups.', function() {
 async function getCityData(cities: string[]): Promise<CityData[]> {
   const cityDataPromises = cities.map(city => getCityDatum(city));
   const cityDataArray = await Promise.all(cityDataPromises);
-  return cityDataArray.filter(Boolean);
+  const result = cityDataArray.filter(Boolean) as CityData[];
+  return result;
 }
 
 async function getCityDatum(city: string): Promise<CityData | null> {
@@ -76,12 +77,12 @@ async function getCityDatum(city: string): Promise<CityData | null> {
 }
 
 async function createGroups(cityDataArray: CityData[], inviteURLs: Record<string, string>): Promise<void> {
-  const groupPromises = cityDataArray.map(async (cityData) => {
+  const groupPromises = cityDataArray.map(async cityData => {
     const { city } = cityData;
     const title = `${city} • sabaki.dance`;
 
     try {
-      const existingGroup = await backend_client.groups.getGroups(1, 10, null, null, null, title);
+      const existingGroup = await backend_client.groups.getGroups(1, 10, undefined, undefined, undefined, title);
       if (existingGroup.items?.length > 0) {
         console.log(`Group with title ${title} already exists.`);
         return;
@@ -93,7 +94,7 @@ async function createGroups(cityDataArray: CityData[], inviteURLs: Record<string
         link: inviteURLs[city] ?? '',
         location: city,
         locationUrl: cityData.googleMapsLink ?? '',
-        coordinates: [cityData.longitude, cityData.latitude]
+        coordinates: [cityData.longitude, cityData.latitude],
       };
 
       await backend_client.groups.postGroups(user_id, body);
@@ -105,4 +106,3 @@ async function createGroups(cityDataArray: CityData[], inviteURLs: Record<string
 
   await Promise.all(groupPromises);
 }
-

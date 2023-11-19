@@ -5,7 +5,7 @@ WORKDIR /backend
 
 # Copy package files for dependency installation
 COPY backend/package*.json ./
-RUN npm ci --omit=dev
+RUN npm install
 
 # Copy source code, tsconfig, and TSOA configuration
 COPY backend/tsconfig.json backend/tsoa.json ./

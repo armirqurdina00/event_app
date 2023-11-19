@@ -1,22 +1,29 @@
 import assert from 'assert';
 
-assert(process.env.NODE_ENV, 'Environment variable \'NODE_ENV\' undefined.');
-assert(process.env.PORT, 'Environment variable \'PORT\' undefined.');
-assert(process.env.DATABASE_USERNAME, 'Environment variable \'DATABASE_USERNAME\' undefined.');
-assert(process.env.DATABASE_PASSWORD, 'Environment variable \'DATABASE_PASSWORD\' undefined.');
-assert(process.env.DATABASE_HOST, 'Environment variable \'DATABASE_HOST\' undefined.');
-assert(process.env.DATABASE_NAME, 'Environment variable \'DATABASE_NAME\' undefined.');
-assert(process.env.AUTH0_ISSUER_BASE_URL, 'Environment variable \'AUTH0_ISSUER_BASE_URL\' undefined.');
-assert(process.env.AUTH0_AUDIENCE, 'Environment variable \'AUTH0_AUDIENCE\' undefined.');
-assert(process.env.CLOUDINARY_URL, 'Environment variable \'CLOUDINARY_URL\' undefined.');
-assert(process.env.EVENT_UPDATE_INTERVAL_IN_SECONDS, 'Environment variable \'EVENT_UPDATE_INTERVAL_IN_SECONDS\' undefined.');
+assert(process.env.NODE_ENV, "Environment variable 'NODE_ENV' undefined.");
+assert(process.env.PORT, "Environment variable 'PORT' undefined.");
+assert(process.env.DATABASE_USERNAME, "Environment variable 'DATABASE_USERNAME' undefined.");
+assert(process.env.DATABASE_PASSWORD, "Environment variable 'DATABASE_PASSWORD' undefined.");
+assert(process.env.DATABASE_HOST, "Environment variable 'DATABASE_HOST' undefined.");
+assert(process.env.DATABASE_NAME, "Environment variable 'DATABASE_NAME' undefined.");
+assert(process.env.AUTH0_ISSUER_BASE_URL, "Environment variable 'AUTH0_ISSUER_BASE_URL' undefined.");
+assert(process.env.AUTH0_AUDIENCE, "Environment variable 'AUTH0_AUDIENCE' undefined.");
+assert(process.env.CLOUDINARY_URL, "Environment variable 'CLOUDINARY_URL' undefined.");
+assert(
+  process.env.EVENT_UPDATE_INTERVAL_IN_SECONDS,
+  "Environment variable 'EVENT_UPDATE_INTERVAL_IN_SECONDS' undefined."
+);
 
-if (process.env.NODE_ENV==='DEVELOPMENT') { // for testing
-  assert(process.env.AUTH0_TEST_M2M_APP_CLIENT_ID, 'Environment variable \'AUTH0_TEST_M2M_APP_CLIENT_ID\' undefined');
-  assert(process.env.AUTH0_TEST_M2M_APP_CLIENT_SECRET, 'Environment variable \'AUTH0_TEST_M2M_APP_CLIENT_SECRET\' undefined');
-  assert(process.env.TESTS_TIMEOUT_IN_SECONDS, 'Environment variable \'TESTS_TIMEOUT_IN_SECONDS\' undefined');
-  assert(process.env.BU_API_REQUESTS_PER_SECOND, 'Environment variable \'BU_API_REQUESTS_PER_SECOND\' undefined');
-  assert(process.env.BU_API_URL, 'Environment variable \'BU_API_URL\' undefined');
+if (process.env.NODE_ENV === 'DEVELOPMENT') {
+  // for testing
+  assert(process.env.AUTH0_TEST_M2M_APP_CLIENT_ID, "Environment variable 'AUTH0_TEST_M2M_APP_CLIENT_ID' undefined");
+  assert(
+    process.env.AUTH0_TEST_M2M_APP_CLIENT_SECRET,
+    "Environment variable 'AUTH0_TEST_M2M_APP_CLIENT_SECRET' undefined"
+  );
+  assert(process.env.TESTS_TIMEOUT_IN_SECONDS, "Environment variable 'TESTS_TIMEOUT_IN_SECONDS' undefined");
+  assert(process.env.BU_API_REQUESTS_PER_SECOND, "Environment variable 'BU_API_REQUESTS_PER_SECOND' undefined");
+  assert(process.env.BU_API_URL, "Environment variable 'BU_API_URL' undefined");
 }
 
 import { error_handler, not_found_handler, swagger_ui_handler, log, start_managing_events, Database } from './helpers';
@@ -66,5 +73,4 @@ export default (async () => {
   await app.listen(process.env.PORT);
   log(`API is available on http://localhost:${process.env.PORT}/api`);
   log(`Swagger-ui is available on http://localhost:${process.env.PORT}/api/docs`);
-
 })();

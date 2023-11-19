@@ -26,7 +26,7 @@ const style = {
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
-  p: 4
+  p: 4,
 };
 
 export const getServerSideProps = withPageAuthRequired({
@@ -34,15 +34,15 @@ export const getServerSideProps = withPageAuthRequired({
     const { group_id } = context.query;
 
     const backend_client = new BackendClient({
-      BASE: process.env.BACKEND_URL
+      BASE: process.env.BACKEND_URL,
     });
 
     const group = await backend_client.groups.getGroup(group_id as string);
 
     return {
-      props: { group }
+      props: { group },
     };
-  }
+  },
 });
 
 const EditGroup = ({ group }) => {
@@ -65,7 +65,7 @@ const EditGroup = ({ group }) => {
   useEffect(() => {
     const options = {
       fields: ['geometry', 'name', 'url'],
-      types: ['locality']
+      types: ['locality'],
     };
 
     autoCompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -106,30 +106,38 @@ const EditGroup = ({ group }) => {
     title: null,
     description: null,
     link: null,
-    location: null
+    location: null,
   });
 
   const isValidTitle = (title) => {
     const MAX_CHAR = 55;
     if (!title.trim()) return 'Title is required';
-    if (title.length > MAX_CHAR) { return `Title is too long. ${title.length} > ${MAX_CHAR}`; }
+    if (title.length > MAX_CHAR) {
+      return `Title is too long. ${title.length} > ${MAX_CHAR}`;
+    }
     return null;
   };
 
   const isValidDescription = (description) => {
     const MAX_CHAR = 4000;
-    if (description && description.length > MAX_CHAR) { return `Description is too long. ${description.length} > ${MAX_CHAR}`; }
+    if (description && description.length > MAX_CHAR) {
+      return `Description is too long. ${description.length} > ${MAX_CHAR}`;
+    }
     return null;
   };
 
   const isValidLink = (link) => {
-    if (link && !/^(http|https):\/\/[^ "]+$/.test(link)) { return 'Invalid link format'; }
+    if (link && !/^(http|https):\/\/[^ "]+$/.test(link)) {
+      return 'Invalid link format';
+    }
     return null;
   };
 
   const isValidLocation = (location) => {
     if (!location.trim()) return 'Location is required';
-    if (!placeFromAutocomplete && location !== group.location) { return 'Please select a city from the autocomplete options.'; }
+    if (!placeFromAutocomplete && location !== group.location) {
+      return 'Please select a city from the autocomplete options.';
+    }
     return null;
   };
 
@@ -143,13 +151,13 @@ const EditGroup = ({ group }) => {
       title: titleError,
       description: descriptionError,
       link: linkError,
-      location: locationError
+      location: locationError,
     };
 
     setValidationErrors(errors);
 
     const coordinatesError =
-			coordinates.length === 0 ? 'Coordinates are required' : null;
+      coordinates.length === 0 ? 'Coordinates are required' : null;
     console.error(coordinatesError);
 
     const locationUrlError = !locationUrl.trim()
@@ -160,8 +168,8 @@ const EditGroup = ({ group }) => {
     // Check if any error is present
     return (
       !Object.values(errors).some(Boolean) &&
-			!coordinatesError &&
-			!locationUrlError
+      !coordinatesError &&
+      !locationUrlError
     );
   };
 
@@ -178,7 +186,7 @@ const EditGroup = ({ group }) => {
           link,
           location,
           locationUrl,
-          coordinates
+          coordinates,
         };
         setIsLoading(true);
         await axios.patch(
@@ -188,7 +196,7 @@ const EditGroup = ({ group }) => {
         delete router.query.group_id;
         router.push({
           pathname: '/groups',
-          query: router.query
+          query: router.query,
         });
       } catch (error) {
         console.error(error);
@@ -206,7 +214,7 @@ const EditGroup = ({ group }) => {
       delete router.query.group_id;
       router.push({
         pathname: '/groups',
-        query: router.query
+        query: router.query,
       });
     } catch (error) {
       console.error(error);
@@ -219,102 +227,114 @@ const EditGroup = ({ group }) => {
   // Error
 
   const [modalOpen, setModalOpen] = useState(false);
-  const handleModalOpen = () => { setModalOpen(true); };
-  const handleModalClose = () => { setModalOpen(false); };
+  const handleModalOpen = () => {
+    setModalOpen(true);
+  };
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
 
   return (
     <Page>
-      <div className='mx-auto max-w-xl'>
-        <div className='mx-3  my-7 flex flex-wrap justify-center gap-5'>
-          <h1 className='text-3xl'>Bearbeite Gruppe</h1>
+      <div className="mx-auto max-w-xl">
+        <div className="mx-3  my-7 flex flex-wrap justify-center gap-5">
+          <h1 className="text-3xl">Bearbeite Gruppe</h1>
           <TextField
             value={title}
-            onChange={(e) => { setTitle(e.target.value); }}
+            onChange={(e) => {
+              setTitle(e.target.value);
+            }}
             error={!!validationErrors.title}
             helperText={validationErrors.title}
-            name='group-title'
-            label='Titel'
-            variant='outlined'
+            name="group-title"
+            label="Titel"
+            variant="outlined"
             fullWidth
             required
           />
           <TextField
             value={description}
-            onChange={(e) => { setDescription(e.target.value); }}
+            onChange={(e) => {
+              setDescription(e.target.value);
+            }}
             error={!!validationErrors.description}
             helperText={validationErrors.description}
-            name='group-description'
-            label='Beschreibung'
-            variant='outlined'
+            name="group-description"
+            label="Beschreibung"
+            variant="outlined"
             multiline
             fullWidth
             rows={3}
           />
           <TextField
             value={link}
-            onChange={(e) => { setLink(e.target.value); }}
+            onChange={(e) => {
+              setLink(e.target.value);
+            }}
             error={!!validationErrors.link}
             helperText={validationErrors.link}
-            name='group-link'
-            label='Link'
-            variant='outlined'
+            name="group-link"
+            label="Link"
+            variant="outlined"
             fullWidth
           />
           <TextField
             error={validationErrors.location != null}
             value={location}
-            onChange={(event) => { setLocation(event.target.value); }}
-            id='outlined-basic'
-            name='group-location'
-            label='Ort'
-            variant='outlined'
+            onChange={(event) => {
+              setLocation(event.target.value);
+            }}
+            id="outlined-basic"
+            name="group-location"
+            label="Ort"
+            variant="outlined"
             fullWidth
             required
             inputRef={locInputRef}
             helperText={validationErrors.location}
           />
           {error && <Error setError={setError} />}
-          <div className='mt-3 flex w-full flex-nowrap justify-around'>
+          <div className="mt-3 flex w-full flex-nowrap justify-around">
             <Button
-              variant='outlined'
+              variant="outlined"
               onClick={() => {
-							  delete router.query.group_id;
-							  router.push({
-							    pathname: '/events',
-							    query: router.query
-							  });
+                delete router.query.group_id;
+                router.push({
+                  pathname: '/events',
+                  query: router.query,
+                });
               }}
             >
-							Zurück
+              Zurück
             </Button>
             <Button
-              variant='contained'
-              className='bg-blue-500'
+              variant="contained"
+              className="bg-blue-500"
               endIcon={<SendIcon />}
               onClick={handle_patch}
               disabled={is_loading}
-              data-testid='submit'
+              data-testid="submit"
             >
-							Speichern
+              Speichern
             </Button>
           </div>
-          <div className='mx-5 flex w-full  items-center px-4 opacity-40'>
-            <div className='flex-1 rounded-full border-t-4 border-red-500'></div>
-            <span className='mx-2 px-2 text-red-500'>
-              <WarningIcon className='text-5xl' />
+          <div className="mx-5 flex w-full  items-center px-4 opacity-40">
+            <div className="flex-1 rounded-full border-t-4 border-red-500"></div>
+            <span className="mx-2 px-2 text-red-500">
+              <WarningIcon className="text-5xl" />
             </span>
-            <div className='flex-1 border-t-4 border-red-500'></div>
+            <div className="flex-1 border-t-4 border-red-500"></div>
           </div>
 
-          <div className='flex justify-center'>
+          <div className="flex justify-center">
             <Button
-              variant='contained'
-              className='bg-red-500'
+              variant="contained"
+              className="bg-red-500"
               endIcon={<DeleteIcon />}
               onClick={handleModalOpen}
-              data-testid='delete'
+              data-testid="delete"
             >
-							Löschen
+              Löschen
             </Button>
           </div>
         </div>
@@ -322,22 +342,22 @@ const EditGroup = ({ group }) => {
       <Modal
         open={modalOpen}
         onClose={handleModalClose}
-        aria-labelledby='modal-modal-title'
-        className='z-40'
+        aria-labelledby="modal-modal-title"
+        className="z-40"
       >
         <Box sx={style}>
-          <Typography id='modal-modal-title' variant='h6' component='h2'>
-						Möchtest du die Gruppe wirklich löschen?
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Möchtest du die Gruppe wirklich löschen?
           </Typography>
-          <div className='mt-5 flex justify-center'>
+          <div className="mt-5 flex justify-center">
             <Button
-              variant='contained'
-              className='bg-red-500'
+              variant="contained"
+              className="bg-red-500"
               endIcon={<DeleteIcon />}
               onClick={handle_delete}
-              data-testid='delete-confirmation'
+              data-testid="delete-confirmation"
             >
-							Löschen
+              Löschen
             </Button>
           </div>
         </Box>

@@ -21,7 +21,8 @@ export async function get_event(event_id: string): Promise<EventRes> {
 
   if (!event) raise_event_not_found(event_id);
 
-  return as_event_response(event);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return as_event_response(event!);
 }
 
 export async function get_events(
@@ -43,13 +44,25 @@ export async function get_events(
 
   if (distance && (!latitude || !longitude)) throw new OperationError('Bad request.', HttpStatusCode.BAD_REQUEST);
 
-  const events_e = await find_events(page, per_page, latitude, longitude, distance, title, start_unix_time, end_unix_time, order_by);
+  const events_e = await find_events(
+    page,
+    per_page,
+    latitude,
+    longitude,
+    distance,
+    title,
+    start_unix_time,
+    end_unix_time,
+    order_by
+  );
   return await as_events_response(events_e, page, per_page);
 }
 
 export async function post_event(user_id: string, req_body: EventPatchReqBody): Promise<EventRes> {
-  const existing_event = await find_event_by_coordinates_and_time(req_body.unix_time, req_body.coordinates);
-  if (existing_event) raise_event_already_exists();
+  if (req_body.unix_time !== undefined && req_body.coordinates !== undefined) {
+    const existing_event = await find_event_by_coordinates_and_time(req_body.unix_time, req_body.coordinates);
+    if (existing_event) raise_event_already_exists();
+  }
 
   const event = await save_event(null, user_id, req_body);
   return as_event_response(event);
@@ -64,7 +77,7 @@ export async function patch_event(user_id: string, event_id: string, req_body: E
   return as_event_response(event);
 }
 
-export async function delete_event(user_id: string, event_id: string): Promise<EventRes> {
+export async function delete_event(user_id: string, event_id: string): Promise<undefined> {
   const event = await find_event_by_user(user_id, event_id);
 
   if (!event) raise_event_not_found(event_id);
@@ -93,12 +106,12 @@ export async function post_upvote(event_id: string, user_id: string): Promise<Ev
 
 export async function get_user_upvotes(user_id: string): Promise<EventIds> {
   const userUpvotes = await find_user_votes(user_id, Votes.UP);
-  return userUpvotes.map((v) => v.event_id);
+  return userUpvotes.map(v => v.event_id);
 }
 
 export async function get_user_downvotes(user_id: string): Promise<EventIds> {
   const userDownvotes = await find_user_votes(user_id, Votes.DOWN);
-  return userDownvotes.map((v) => v.event_id);
+  return userDownvotes.map(v => v.event_id);
 }
 
 export async function get_upvotes(event_id: string): Promise<EventVoteRes[]> {
@@ -170,7 +183,7 @@ export async function post_image(user_id: string, event_id: string, file: Expres
 
 // Private functions for Events
 
-async function find_event(event_id: string): Promise<EventE> {
+async function find_event(event_id: string): Promise<EventE | null> {
   const event_repo = await Database.get_repo(EventE);
   const event = await event_repo.findOne({
     where: { event_id },
@@ -178,7 +191,7 @@ async function find_event(event_id: string): Promise<EventE> {
   return event;
 }
 
-async function find_event_by_user(user_id: string, event_id: string): Promise<EventE> {
+async function find_event_by_user(user_id: string, event_id: string): Promise<EventE | null> {
   const event_repo = await Database.get_repo(EventE);
   const event = await event_repo.findOne({
     where: { event_id, created_by: user_id },
@@ -240,17 +253,17 @@ async function find_events(
     // Filter events within the provided time interval.
     query = query.andWhere('event.unix_time BETWEEN :start_unix_time AND :end_unix_time', {
       start_unix_time,
-      end_unix_time
+      end_unix_time,
     });
   }
 
-  if (order_by === OrderBy.Popularity)
-    return query
-      .orderBy('event.upvotes_sum', 'DESC')
-      .getMany();
+  if (order_by === OrderBy.Popularity) return query.orderBy('event.upvotes_sum', 'DESC').getMany();
   else
     return query
-      .orderBy('DATE_TRUNC(\'day\', TIMESTAMP WITH TIME ZONE \'epoch\' + event.unix_time * INTERVAL \'0.001 seconds\')', 'ASC')
+      .orderBy(
+        "DATE_TRUNC('day', TIMESTAMP WITH TIME ZONE 'epoch' + event.unix_time * INTERVAL '0.001 seconds')",
+        'ASC'
+      )
       .addOrderBy('event.upvotes_sum', 'DESC')
       .getMany();
 }
@@ -278,7 +291,7 @@ function applyLocationFilters(
   query: SelectQueryBuilder<EventE>,
   latitude: number,
   longitude: number,
-  distance?: number
+  distance: number
 ): SelectQueryBuilder<EventE> {
   const distance_in_m = distance * 1000;
   return query.andWhere(
@@ -288,7 +301,7 @@ function applyLocationFilters(
 
 // todo für patch und save eigene funktionen, damit link null gesetzt werden kann
 export async function save_event(
-  event_id: string,
+  event_id: string | null,
   user_id: string,
   req_body: EventReqBody | EventPatchReqBody
 ): Promise<EventE> {
@@ -307,7 +320,7 @@ export async function save_event(
       coordinates: req_body.coordinates,
     };
   }
-  if (req_body.image_url !== undefined) event.image_url = req_body.image_url;
+  if (req_body.image_url) event.image_url = req_body.image_url;
   if (req_body.url !== undefined) event.url = req_body.url;
   if (req_body.recurring_pattern !== undefined) event.recurring_pattern = req_body.recurring_pattern;
 
@@ -320,7 +333,7 @@ export async function save_event(
 async function remove_event_and_votes(event_id: string): Promise<void> {
   const data_source = await Database.get_data_source();
 
-  await data_source.manager.transaction(async (tx_manager) => {
+  await data_source.manager.transaction(async tx_manager => {
     await tx_manager
       .createQueryBuilder()
       .where('event_id = :event_id', { event_id })
@@ -357,7 +370,7 @@ function as_event_response(event_e: EventE): EventRes {
   result.votes_diff = event_e.votes_diff;
   result.created_by = event_e.created_by;
   result.created_at = event_e.created_at;
-  result.updated_by = event_e.updated_by;
+  if (event_e.updated_by) result.updated_by = event_e.updated_by;
   result.updated_at = event_e.updated_at;
 
   return result;
@@ -368,7 +381,7 @@ async function as_events_response(events_e: EventE[], page: number, per_page: nu
     page,
     per_page,
     total_number_of_items: await get_number_of_events(),
-    items: events_e.map((event_e) => as_event_response(event_e)),
+    items: events_e.map(event_e => as_event_response(event_e)),
   };
 }
 
@@ -480,7 +493,7 @@ async function delete_vote(event_id: string, user_id: string, vote_type: Votes):
   const data_source = await Database.get_data_source();
 
   if (vote_type === Votes.UP) {
-    await data_source.manager.transaction(async (tx_manager) => {
+    await data_source.manager.transaction(async tx_manager => {
       await tx_manager
         .createQueryBuilder()
         .where('event_id = :event_id', { event_id })
@@ -500,7 +513,7 @@ async function delete_vote(event_id: string, user_id: string, vote_type: Votes):
         .execute();
     });
   } else {
-    await data_source.manager.transaction(async (tx_manager) => {
+    await data_source.manager.transaction(async tx_manager => {
       await tx_manager
         .createQueryBuilder()
         .where('event_id = :event_id', { event_id })

@@ -2,7 +2,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next';
 import axios from 'axios';
 import { type OrderBy } from '../../utils/backend_client';
 
-export default async function getEvents (
+export default async function getEvents(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -11,18 +11,18 @@ export default async function getEvents (
       const BASE_URL = process.env.BACKEND_URL;
 
       const params: {
-        page: number,
-        per_page: number,
-        latitude?: number,
-        longitude?: number,
-        distance?: number,
-        title?: string,
-        start_unix_time?: number,
-        end_unix_time?: number,
-        order_by?: OrderBy
+        page: number;
+        per_page: number;
+        latitude?: number;
+        longitude?: number;
+        distance?: number;
+        title?: string;
+        start_unix_time?: number;
+        end_unix_time?: number;
+        order_by?: OrderBy;
       } = {
         page: Number(req.query.page),
-        per_page: Number(req.query.per_page)
+        per_page: Number(req.query.per_page),
       };
 
       if (req.query.latitude) {

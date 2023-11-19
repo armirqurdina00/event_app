@@ -4,7 +4,7 @@ import {
   type EventsRes,
   type EventRes,
   type EventIds,
-  OrderBy
+  OrderBy,
 } from '../utils/backend_client';
 import { useRouter } from 'next/router';
 import { useUser } from '@auth0/nextjs-auth0/client';
@@ -28,30 +28,30 @@ const getLocationDataFromCookies = (cookies) => {
   return {
     latitude: Number(cookies[COOKIE_KEYS.LATITUDE]),
     longitude: Number(cookies[COOKIE_KEYS.LONGITUDE]),
-    distance: Number(cookies[COOKIE_KEYS.DISTANCE])
+    distance: Number(cookies[COOKIE_KEYS.DISTANCE]),
   };
 };
 
 const getFilterDataFromCookies = (cookies) => {
   return {
     startUnixTime:
-			cookies[COOKIE_KEYS.START_UNIX_TIME] !== 'null' &&
-			cookies[COOKIE_KEYS.START_UNIX_TIME] !== 'undefined' &&
-			cookies[COOKIE_KEYS.START_UNIX_TIME] !== undefined
-			  ? String(cookies[COOKIE_KEYS.START_UNIX_TIME])
-			  : null,
+      cookies[COOKIE_KEYS.START_UNIX_TIME] !== 'null' &&
+      cookies[COOKIE_KEYS.START_UNIX_TIME] !== 'undefined' &&
+      cookies[COOKIE_KEYS.START_UNIX_TIME] !== undefined
+        ? String(cookies[COOKIE_KEYS.START_UNIX_TIME])
+        : null,
     endUnixTime:
-			cookies[COOKIE_KEYS.END_UNIX_TIME] !== 'null' &&
-			cookies[COOKIE_KEYS.END_UNIX_TIME] !== 'undefined' &&
-			cookies[COOKIE_KEYS.END_UNIX_TIME] !== undefined
-			  ? String(cookies[COOKIE_KEYS.END_UNIX_TIME])
-			  : null,
+      cookies[COOKIE_KEYS.END_UNIX_TIME] !== 'null' &&
+      cookies[COOKIE_KEYS.END_UNIX_TIME] !== 'undefined' &&
+      cookies[COOKIE_KEYS.END_UNIX_TIME] !== undefined
+        ? String(cookies[COOKIE_KEYS.END_UNIX_TIME])
+        : null,
     orderBy:
-			cookies[COOKIE_KEYS.ORDER_BY] !== 'null' &&
-			cookies[COOKIE_KEYS.ORDER_BY] !== 'undefined' &&
-			cookies[COOKIE_KEYS.ORDER_BY] !== undefined
-			  ? String(cookies[COOKIE_KEYS.ORDER_BY])
-			  : null
+      cookies[COOKIE_KEYS.ORDER_BY] !== 'null' &&
+      cookies[COOKIE_KEYS.ORDER_BY] !== 'undefined' &&
+      cookies[COOKIE_KEYS.ORDER_BY] !== undefined
+        ? String(cookies[COOKIE_KEYS.ORDER_BY])
+        : null,
   };
 };
 
@@ -86,13 +86,13 @@ export const getServerSideProps = async (context) => {
 
   const { latitude, longitude, distance } = getLocationDataFromCookies(cookies);
   const { startUnixTime, endUnixTime, orderBy } =
-		getFilterDataFromCookies(cookies);
+    getFilterDataFromCookies(cookies);
 
   const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   if (!latitude || !longitude || !distance) {
     return {
-      props: { initialEvents: [], googleMapsApiKey }
+      props: { initialEvents: [], googleMapsApiKey },
     };
   }
 
@@ -108,14 +108,14 @@ export const getServerSideProps = async (context) => {
   return {
     props: {
       initialEvents,
-      googleMapsApiKey
-    }
+      googleMapsApiKey,
+    },
   };
 };
 
 const Events: React.FC<{
-  initialEvents: EventRes[]
-  googleMapsApiKey: string
+  initialEvents: EventRes[];
+  googleMapsApiKey: string;
 }> = ({ initialEvents, googleMapsApiKey }) => {
   const router = useRouter();
   const { user } = useUser();
@@ -177,7 +177,9 @@ const Events: React.FC<{
 
     let url = `/api/events?page=${pageToLoad}&per_page=${PAGE_SIZE}&latitude=${userConfig.latitude}&longitude=${userConfig.longitude}&distance=${userConfig.distance}`;
 
-    if (userConfig?.startUnixTime && userConfig?.endUnixTime) { url += `&startUnixTime=${userConfig.startUnixTime}&endUnixTime=${userConfig.endUnixTime}`; }
+    if (userConfig?.startUnixTime && userConfig?.endUnixTime) {
+      url += `&startUnixTime=${userConfig.startUnixTime}&endUnixTime=${userConfig.endUnixTime}`;
+    }
 
     if (userConfig?.orderBy) url += `&orderBy=${userConfig.orderBy}`;
 
@@ -206,10 +208,10 @@ const Events: React.FC<{
     }
   };
 
-  function getNextWeekend (): {
-    startUnixTime: number
-    endUnixTime: number
-    } {
+  function getNextWeekend(): {
+    startUnixTime: number;
+    endUnixTime: number;
+  } {
     const today = moment();
     const isFriday = today.day() === 5;
     const fridayOfThisWeek = moment().startOf('week').add(4, 'days');
@@ -217,24 +219,24 @@ const Events: React.FC<{
     // If today is before Friday or is Friday, return this week's Friday to Sunday.
     // Otherwise, return the next week's Friday to Sunday.
     const startOfWeekend =
-			today.isBefore(fridayOfThisWeek) || isFriday
-			  ? fridayOfThisWeek
-			  : fridayOfThisWeek.add(1, 'week');
+      today.isBefore(fridayOfThisWeek) || isFriday
+        ? fridayOfThisWeek
+        : fridayOfThisWeek.add(1, 'week');
     const endOfWeekend = startOfWeekend.clone().endOf('day').add(2, 'days'); // End of Sunday
 
     return {
       startUnixTime: startOfWeekend.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
-      endUnixTime: endOfWeekend.valueOf() // Converts the moment object to a Unix timestamp in milliseconds
+      endUnixTime: endOfWeekend.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
     };
   }
 
-  function getCurrentMonth () {
+  function getCurrentMonth() {
     const currentDate = moment();
     const endDate = moment().add(30, 'days');
 
     return {
       startUnixTime: currentDate.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
-      endUnixTime: endDate.valueOf() // Converts the moment object to a Unix timestamp in milliseconds
+      endUnixTime: endDate.valueOf(), // Converts the moment object to a Unix timestamp in milliseconds
     };
   }
 
@@ -262,7 +264,7 @@ const Events: React.FC<{
       setIsSwiped(!isSwiped);
       router.push({
         pathname: '/groups',
-        query: router.query
+        query: router.query,
       });
     }
 
@@ -276,13 +278,13 @@ const Events: React.FC<{
     { id: SELECTED_ITEMS.CHRONOLOGICAL, label: 'Chronologisch' },
     {
       id: SELECTED_ITEMS.POPULAR_WEEKEND,
-      label: 'Beliebt nächstes Wochenende'
+      label: 'Beliebt nächstes Wochenende',
     },
     {
       id: SELECTED_ITEMS.POPULAR_MONTH,
-      label: 'Beliebt in den nächsten 30 Tagen'
+      label: 'Beliebt in den nächsten 30 Tagen',
     },
-    { id: SELECTED_ITEMS.ALL_TIME_POPULAR, label: 'Allzeit beliebt' }
+    { id: SELECTED_ITEMS.ALL_TIME_POPULAR, label: 'Allzeit beliebt' },
   ];
 
   useEffect(() => {
@@ -295,9 +297,9 @@ const Events: React.FC<{
     if (selectedItem && itemRefs[selectedItem] && menuRef.current) {
       const selectedItemRef = itemRefs[selectedItem];
       menuRef.current.scrollLeft =
-				selectedItemRef.offsetLeft -
-				menuRef.current.offsetWidth / 2 +
-				selectedItemRef.offsetWidth / 2;
+        selectedItemRef.offsetLeft -
+        menuRef.current.offsetWidth / 2 +
+        selectedItemRef.offsetWidth / 2;
     }
   }, [selectedItem]);
 
@@ -308,9 +310,9 @@ const Events: React.FC<{
     const selectedItemRef = itemRefs[id];
     if (selectedItemRef && menuRef.current) {
       menuRef.current.scrollLeft =
-				selectedItemRef.offsetLeft -
-				menuRef.current.offsetWidth / 2 +
-				selectedItemRef.offsetWidth / 2;
+        selectedItemRef.offsetLeft -
+        menuRef.current.offsetWidth / 2 +
+        selectedItemRef.offsetWidth / 2;
     }
 
     if (id === SELECTED_ITEMS.POPULAR_WEEKEND) {
@@ -323,7 +325,7 @@ const Events: React.FC<{
         startUnixTime,
         endUnixTime,
         orderBy: OrderBy.POPULARITY,
-        selectedItem: SELECTED_ITEMS.POPULAR_WEEKEND
+        selectedItem: SELECTED_ITEMS.POPULAR_WEEKEND,
       });
     }
 
@@ -337,7 +339,7 @@ const Events: React.FC<{
         startUnixTime,
         endUnixTime,
         orderBy: OrderBy.POPULARITY,
-        selectedItem: SELECTED_ITEMS.POPULAR_MONTH
+        selectedItem: SELECTED_ITEMS.POPULAR_MONTH,
       });
     }
 
@@ -350,7 +352,7 @@ const Events: React.FC<{
         startUnixTime: null,
         endUnixTime: null,
         orderBy: OrderBy.POPULARITY,
-        selectedItem: SELECTED_ITEMS.ALL_TIME_POPULAR
+        selectedItem: SELECTED_ITEMS.ALL_TIME_POPULAR,
       });
     }
 
@@ -363,7 +365,7 @@ const Events: React.FC<{
         startUnixTime: null,
         endUnixTime: null,
         orderBy: OrderBy.CHRONOLOGICAL,
-        selectedItem: SELECTED_ITEMS.CHRONOLOGICAL
+        selectedItem: SELECTED_ITEMS.CHRONOLOGICAL,
       });
     }
 
@@ -373,7 +375,7 @@ const Events: React.FC<{
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
@@ -382,13 +384,15 @@ const Events: React.FC<{
       <TopNav>
         <div
           ref={menuRef}
-          className='sticky top-0 z-30 flex space-x-2 overflow-x-auto bg-zinc-50 px-2 pb-3 pt-2 md:justify-center'
+          className="sticky top-0 z-30 flex space-x-2 overflow-x-auto bg-zinc-50 px-2 pb-3 pt-2 md:justify-center"
         >
           {items.map((item) => (
             <div
               ref={(el) => (itemRefs[item.id] = el)} // Attach the ref to each item
               key={item.id}
-              onClick={() => { handleItemClick(item.id); }}
+              onClick={() => {
+                handleItemClick(item.id);
+              }}
               className={`flex max-w-[12rem] flex-none items-center justify-center rounded-lg bg-white px-3 py-1 text-center ${
                 selectedItem === item.id
                   ? 'border-2 border-blue-500 font-semibold text-blue-500'
@@ -400,7 +404,7 @@ const Events: React.FC<{
           ))}
         </div>
       </TopNav>
-      <main className='mx-auto min-h-screen max-w-screen-xl pb-28 px-safe'>
+      <main className="mx-auto min-h-screen max-w-screen-xl pb-28 px-safe">
         <div className={`${isSwiped && 'slideOutToLeftAnimation'}`}>
           <div
             onTouchStart={onTouchStart}
@@ -412,11 +416,11 @@ const Events: React.FC<{
                 dataLength={events.length}
                 next={loadMoreEvents}
                 hasMore={hasMore}
-                className='pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-4 pt-2'
+                className="pb-50 grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] items-start justify-center gap-4 pt-2"
                 style={{ overflow: 'hidden' }}
                 loader={
-                  <div className='basis-full'>
-                    <div className='loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear'></div>
+                  <div className="basis-full">
+                    <div className="loader mx-auto mt-8 h-12 w-12 rounded-full border-4 border-t-4 border-gray-200 ease-linear"></div>
                   </div>
                 }
               >
@@ -426,6 +430,7 @@ const Events: React.FC<{
                     event={event}
                     upvoted={userUpvotes.includes(event.event_id)}
                     downvoted={userDownvotes.includes(event.event_id)}
+                    details={false}
                   />
                 ))}
               </InfiniteScroll>

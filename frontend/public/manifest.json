@@ -1,30 +1,30 @@
 {
-	"id": "https://sabaki.dance/?source=pwa",
-	"name": "SaBaKi - Salsa, Bachata und Kizomba Events und Gruppen in deiner Stadt",
-	"short_name": "SaBaKi",
-	"description": "Salsa, Bachata und Kizomba Events und Gruppen in deiner Stadt.",
-	"icons": [
-		{
-			"src": "/images/icon-192.png",
-			"type": "image/png",
-			"sizes": "192x192"
-		},
-		{
-			"src": "/images/icon-512.png",
-			"type": "image/png",
-			"sizes": "512x512"
-		},
-		{
-			"src": "/images/maskable-icon-192.png",
-			"type": "image/png",
-			"sizes": "192x192",
-			"purpose": "any maskable"
-		}
-	],
-	"start_url": "https://sabaki.dance/?source=pwa",
-	"background_color": "#1d2020",
-	"orientation": "portrait",
-	"display": "standalone",
-	"scope": "/",
-	"theme_color": "#1d2020"
+  "id": "https://sabaki.dance/?source=pwa",
+  "name": "SaBaKi - Salsa, Bachata und Kizomba Events und Gruppen in deiner Stadt",
+  "short_name": "SaBaKi",
+  "description": "Salsa, Bachata und Kizomba Events und Gruppen in deiner Stadt.",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/images/maskable-icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "https://sabaki.dance/?source=pwa",
+  "background_color": "#1d2020",
+  "orientation": "portrait",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#1d2020"
 }

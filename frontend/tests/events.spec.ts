@@ -1,10 +1,18 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env.local' });
 
 test('test events', async ({ page }) => {
+  // const browser = await chromium.launch();
+  // const context = await browser.newContext();
+  // await context.grantPermissions(['geolocation'], { origin: process.env.TEST_URL });
+  // const page = await context.newPage();
+
   // Go to Page
-  await page.goto(process.env.TEST_URL);
+  await page.goto(
+    process.env.TEST_URL +
+      '?latitude=49.006889&longitude=8.403653&distance=50&city=Karlsruhe&orderBy=chronological&selectedItem=chronological'
+  );
 
   // Accept cookies
   await page.getByRole('button', { name: 'Akzeptieren' }).click();
@@ -28,13 +36,13 @@ test('test events', async ({ page }) => {
   // Continue adding Event
   await page.locator('input[name="event-title"]').fill('Test Title 1');
   await page.click('input[name="event-location"]');
-  await page.keyboard.type('Karlsruhe');
+  await page.keyboard.type('Karlsruh', { delay: 100 });
   await page.getByText('KarlsruheGermany').click();
   await new Promise((res) => setTimeout(res, 1000)); // wait for place_changed event
-  await page
+  await page  
     .getByTestId('input-test-id')
     .setInputFiles(__dirname + '/../public/images/icon-512.png');
-  await page.waitForLoadState('networkidle'); // temporary fix due to unknown bug
+  await new Promise((res) => setTimeout(res, 1000));
   await page.getByTestId('submit').click();
 
   // temporary fix due to unknown bug
@@ -46,7 +54,10 @@ test('test events', async ({ page }) => {
   await page.getByTestId('edit-test-id').first().click();
   await page.locator('input[name="event-title"]').fill('Test Title 2');
   await page.click('input[name="event-location"]');
-  await page.getByText('KarlsruheGermany').click(); // bug fix, otherwise submit button is not clicked for real.
+  await expect(page.getByText('KarlsruheGermany').nth(1)).toBeVisible({
+    timeout: 5000,
+  });
+  await page.getByText('KarlsruheGermany').nth(1).click();
   await new Promise((res) => setTimeout(res, 1000)); // wait for place_changed event
   await page.getByTestId('submit').click();
 

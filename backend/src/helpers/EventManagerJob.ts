@@ -14,36 +14,48 @@ async function delete_old_events() {
   try {
     const data_source = await Database.get_data_source();
 
-    const events = await data_source.getRepository(EventE).createQueryBuilder('event')
-      .where('recurring_pattern = :recurring_pattern', { recurring_pattern: RecurringPattern.NONE })
-      .andWhere('unix_time < :one_week_ago', { one_week_ago: moment().subtract(1, 'week').toDate().getTime() })
+    const events = await data_source
+      .getRepository(EventE)
+      .createQueryBuilder('event')
+      .where('recurring_pattern = :recurring_pattern', {
+        recurring_pattern: RecurringPattern.NONE,
+      })
+      .andWhere('unix_time < :one_week_ago', {
+        one_week_ago: moment().subtract(1, 'week').toDate().getTime(),
+      })
       .getMany();
 
-    for (const i in events){
+    for (const i in events) {
       const event_id = events[i].event_id;
 
       await cloudinary.uploader.destroy(event_id);
 
-      await data_source.createQueryBuilder()
+      await data_source
+        .createQueryBuilder()
         .where('event_id = :event_id', { event_id })
         .delete()
         .from(EventDownvoteE)
         .execute();
 
-      await data_source.createQueryBuilder()
+      await data_source
+        .createQueryBuilder()
         .where('event_id = :event_id', { event_id })
         .delete()
         .from(EventUpvoteE)
         .execute();
     }
 
-    await data_source.createQueryBuilder()
-      .where('recurring_pattern = :recurring_pattern', { recurring_pattern: RecurringPattern.NONE })
-      .andWhere('unix_time < :one_week_ago', { one_week_ago: moment().subtract(1, 'week').toDate().getTime() })
+    await data_source
+      .createQueryBuilder()
+      .where('recurring_pattern = :recurring_pattern', {
+        recurring_pattern: RecurringPattern.NONE,
+      })
+      .andWhere('unix_time < :one_week_ago', {
+        one_week_ago: moment().subtract(1, 'week').toDate().getTime(),
+      })
       .delete()
       .from(EventE)
       .execute();
-
   } catch (error) {
     console.error('Error deleting old events:', error);
   }
@@ -51,26 +63,33 @@ async function delete_old_events() {
 
 async function update_recurrent_weekly_events() {
   try {
-
     const data_source = await Database.get_data_source();
 
-    const events = await data_source.getRepository(EventE).createQueryBuilder('event')
-      .where('event.recurring_pattern = :recurring_pattern', { recurring_pattern: 'WEEKLY' })
-      .andWhere('event.unix_time < :eight_hours_ago', { eight_hours_ago: moment().subtract(8, 'hours').toDate().getTime() })
+    const events = await data_source
+      .getRepository(EventE)
+      .createQueryBuilder('event')
+      .where('event.recurring_pattern = :recurring_pattern', {
+        recurring_pattern: 'WEEKLY',
+      })
+      .andWhere('event.unix_time < :eight_hours_ago', {
+        eight_hours_ago: moment().subtract(8, 'hours').toDate().getTime(),
+      })
       .getMany();
 
-    const updatedEvents = [];
+    const updatedEvents: EventE[] = [];
 
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
 
-      await data_source.createQueryBuilder()
+      await data_source
+        .createQueryBuilder()
         .where('event_id = :event_id', { event_id: event.event_id })
         .delete()
         .from(EventDownvoteE)
         .execute();
 
-      await data_source.createQueryBuilder()
+      await data_source
+        .createQueryBuilder()
         .where('event_id = :event_id', { event_id: event.event_id })
         .delete()
         .from(EventUpvoteE)
@@ -85,7 +104,6 @@ async function update_recurrent_weekly_events() {
     }
 
     await data_source.getRepository(EventE).save(updatedEvents);
-
   } catch (error) {
     console.error('Error updating recurring events:', error);
   }

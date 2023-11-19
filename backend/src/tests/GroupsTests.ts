@@ -1,34 +1,39 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: `${__dirname}/../../.env/.dev_env` });
 import { expect } from 'chai';
-import { BackendClient, GroupRes, GroupReqBody, GroupPatchReqBody, ApiError } from '../helpers-for-tests/backend_client';
+import {
+  BackendClient,
+  GroupRes,
+  GroupReqBody,
+  GroupPatchReqBody,
+  ApiError,
+} from '../helpers-for-tests/backend_client';
 import { get_access_token, get_user_id } from '../helpers-for-tests/auth';
 import { HttpStatusCode } from '../commons/enums';
 import { GroupJoinRes } from 'src/commons/TsoaTypes';
 
 let backend_client: BackendClient;
-const group_ids = [];
+const group_ids: string[] = [];
 let user_id;
 
-describe('Tests for groups endpoints.', function() {
-
-  before(async function() {
+describe('Tests for groups endpoints.', function () {
+  before(async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
-    if (process.env.NODE_ENV==='DEVELOPMENT') {
+    if (process.env.NODE_ENV === 'DEVELOPMENT') {
       const server = require('../index').default;
       await server;
     }
 
     backend_client = new BackendClient({
       BASE: process.env.BU_API_URL,
-      TOKEN: get_access_token
+      TOKEN: get_access_token,
     });
 
     user_id = await get_user_id();
   });
 
-  it('POST /v1/users/{user_id}/groups', async function() {
+  it('POST /v1/users/{user_id}/groups', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
@@ -37,7 +42,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/whatsapp-group',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const response: GroupRes = await backend_client.groups.postGroups(user_id, body);
@@ -49,7 +54,7 @@ describe('Tests for groups endpoints.', function() {
     expect(response.locationUrl).to.equal(body.locationUrl);
   });
 
-  it('get /v1/users/{user_id}/groups/{group_id}', async function() {
+  it('get /v1/users/{user_id}/groups/{group_id}', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
@@ -58,7 +63,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/whatsapp-group',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const { group_id } = await backend_client.groups.postGroups(user_id, body);
@@ -71,7 +76,7 @@ describe('Tests for groups endpoints.', function() {
     expect(response.link).to.equal(body.link);
   });
 
-  it('PATCH /v1/groups/{group_id}', async function() {
+  it('PATCH /v1/groups/{group_id}', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
@@ -80,7 +85,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const response1: GroupRes = await backend_client.groups.postGroups(user_id, body);
@@ -95,7 +100,7 @@ describe('Tests for groups endpoints.', function() {
     expect(response2.title).to.equal(patch.title);
   });
 
-  it('GET /v1/groups/{group_id} and GET /v1/groups', async function() {
+  it('GET /v1/groups/{group_id} and GET /v1/groups', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
@@ -104,7 +109,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const number_of_items = 3;
@@ -139,7 +144,7 @@ describe('Tests for groups endpoints.', function() {
     expect(response_2.total_number_of_items).to.be.above(number_of_items - 1);
   });
 
-  it('GET /v1/groups returns only groups within the specified radius.', async function() {
+  it('GET /v1/groups returns only groups within the specified radius.', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const group_ids_inside: string[] = [];
@@ -196,7 +201,7 @@ describe('Tests for groups endpoints.', function() {
     expect(returnedGroupsOutside.length).to.equal(0);
   });
 
-  it('GET /v1/groups ordered by user_location', async function() {
+  it('GET /v1/groups ordered by user_location', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const COORDINATES = [
@@ -209,7 +214,7 @@ describe('Tests for groups endpoints.', function() {
       [49.0075, 8.4043],
       [49.0076, 8.4044],
       [49.0077, 8.4045],
-      [49.0078, 8.4046]
+      [49.0078, 8.4046],
     ];
 
     const createGroupWithRandomCoordinates = async () => {
@@ -219,7 +224,7 @@ describe('Tests for groups endpoints.', function() {
         link: 'https://example.com/dance-party',
         location: 'City Park',
         locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-        coordinates: COORDINATES[Math.floor(Math.random() * COORDINATES.length)]
+        coordinates: COORDINATES[Math.floor(Math.random() * COORDINATES.length)],
       };
 
       const response = await backend_client.groups.postGroups(user_id, requestBody);
@@ -243,7 +248,7 @@ describe('Tests for groups endpoints.', function() {
     });
   });
 
-  it('DELETE /v1/groups/{group_id}', async function() {
+  it('DELETE /v1/groups/{group_id}', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
@@ -252,7 +257,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/dance-party',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const { group_id }: GroupRes = await backend_client.groups.postGroups(user_id, body);
@@ -270,7 +275,7 @@ describe('Tests for groups endpoints.', function() {
     }
   });
 
-  it('POST and GET /v1/groups/{group_id}/joins', async function() {
+  it('POST and GET /v1/groups/{group_id}/joins', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: GroupReqBody = {
@@ -279,7 +284,7 @@ describe('Tests for groups endpoints.', function() {
       link: 'https://example.com/whatsapp-group',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const { group_id } = await backend_client.groups.postGroups(user_id, body);
@@ -312,9 +317,8 @@ function getDistanceBetweenPoints(point1, point2) {
   const dLon = degToRad(point2[1] - point1[1]); // Difference in longitudes
 
   const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(degToRad(point1[0])) * Math.cos(degToRad(point2[0])) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(degToRad(point1[0])) * Math.cos(degToRad(point2[0])) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; // Distance in kilometers

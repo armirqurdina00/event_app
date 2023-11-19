@@ -7,17 +7,24 @@ export enum SCRAPE_RESULT {
 
 export type FacebookCrawlerConfig = {
   STALE_URL_EXPIRY_TIME_IN_DAYS: number;
+  ERROR_THRESHOLD: number;
 };
 
 export type ScrapeUrlManagerConfig = {
-  MIN_SCRAPE_TIME_DIFF_IN_DAYS: number
+  LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS: number;
   NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: number; // This represents a percentage (e.g., 0.3 for 30%)
+  EVENT_NEXT_SCRAPE_TIME_MULTIPLIER: number;
 };
 
 export type DummyFacebookScraperConfig = {
   NO_EVENTS_FROM_SEARCH_URLS?: boolean;
   NO_EVENTS_FROM_ORGANIZER_URLS?: boolean;
   GENERATE_NEW_EVENT_URLS?: boolean;
+  IS_THROWING_ERRORS?: boolean;
+  IS_THROWING_ERRORS_50_PERCENT_OF_THE_TIME?: boolean;
+  IS_RETURNING_IRRELEVANT_EVENTS?: boolean;
+  EVENTS_ARE_MISSING_CITY?: boolean;
+  EVENTS_ARE_MISSING_COORDINATES?: boolean;
 };
 
 export enum ScrapeUrlStatus {
@@ -25,7 +32,6 @@ export enum ScrapeUrlStatus {
   NOT_PROCESSED = 'NOT_PROCESSED',
   PROCESSED = 'PROCESSED',
   NOT_RELEVANT = 'NOT_RELEVANT',
-  FAILED_TO_PROCESS = 'FAILED_TO_PROCESS',
   STALE = 'STALE',
 }
 

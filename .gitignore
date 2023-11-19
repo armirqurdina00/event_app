@@ -1,19 +1,29 @@
+# General
+*.DS_Store
+**/node_modules
 
-frontend/tsconfig.tsbuildinfo
-
-backend/src/AccessToken.tmp
-
-backend/src/helpers/AccessToken.tmp
-
-backend/.env/.prod_env
-
-backend/.env/.dev_env
-
-frontend/.env.local
-
-.DS_Store
-
-node_modules
-frontend/playwright/.auth/userAuth.json
-
+# Backend specific
+backend/src/**/*.tmp  # Matches all .tmp files in backend/src and subdirectories
+backend/.env/*_env     # Ignores all files in the .env directory
 backend/storage/
+backend/build/
+backend/src/AccessToken.tmp
+backend/src/helpers-for-tests/backend_client
+backend/uploads/
+backend/test-results/
+backend/playwright-report/
+backend/playwright/.cache/
+backend/src/crawling-and-scraping/scraper/*.png
+
+# Frontend specific
+frontend/playwright/.auth/userAuth.json
+frontend/tsconfig.tsbuildinfo
+frontend/.env.local
+frontend/.next/
+frontend/**/public/workbox*  # Matches workbox files in public and subdirectories
+frontend/**/public/sw*       # Matches sw files in public and subdirectories
+frontend/utils/backend_client
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+backend/.env/

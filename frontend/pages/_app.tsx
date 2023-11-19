@@ -14,8 +14,8 @@ const App = ({ Component, pageProps }: AppProps) => {
 
   return (
     <>
-      <Script src='https://www.googletagmanager.com/gtag/js?id=G-GWC7X1TW2N' />
-      <Script id='google-analytics'>
+      <Script src="https://www.googletagmanager.com/gtag/js?id=G-GWC7X1TW2N" />
+      <Script id="google-analytics">
         {`
 				  window.dataLayer = window.dataLayer || [];
 				  function gtag(){dataLayer.push(arguments);}
@@ -26,15 +26,15 @@ const App = ({ Component, pageProps }: AppProps) => {
       <UserProvider>
         <StyledEngineProvider injectFirst>
           <ThemeProvider
-            attribute='class'
-            defaultTheme='system'
+            attribute="class"
+            defaultTheme="system"
             disableTransitionOnChange
           >
             {' '}
             <UserConfigContext.Provider
               value={{
-							  userConfig,
-							  setUserConfig
+                userConfig,
+                setUserConfig,
               }}
             >
               <Meta />

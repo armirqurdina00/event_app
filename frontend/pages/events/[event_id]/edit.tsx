@@ -16,8 +16,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   type EventReqBody,
   BackendClient,
-  RecurringPattern
-} from '../../../utils/backend_client'; 
+  RecurringPattern,
+} from '../../../utils/backend_client';
 import moment from 'moment';
 import axios from 'axios';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -43,7 +43,7 @@ const style = {
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
-  p: 4
+  p: 4,
 };
 
 export const getServerSideProps = withPageAuthRequired({
@@ -51,15 +51,15 @@ export const getServerSideProps = withPageAuthRequired({
     const { event_id } = context.query;
 
     const backend_client = new BackendClient({
-      BASE: process.env.BACKEND_URL
+      BASE: process.env.BACKEND_URL,
     });
 
     const event = await backend_client.events.getEvent(event_id as string);
 
     return {
-      props: { event }
+      props: { event },
     };
-  }
+  },
 });
 
 const EditEvent = ({ event }) => {
@@ -89,7 +89,7 @@ const EditEvent = ({ event }) => {
 
   useEffect(() => {
     const options = {
-      fields: ['address_components', 'geometry', 'name', 'url']
+      fields: ['address_components', 'geometry', 'name', 'url'],
     };
 
     autoCompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -134,13 +134,15 @@ const EditEvent = ({ event }) => {
     time: null,
     title: null,
     location: null,
-    description: null
+    description: null,
   });
 
   const isValidTitle = (title) => {
     const MAX_CHAR = 55;
     if (!title.trim()) return 'Title is required';
-    if (title.length > MAX_CHAR) { return `Title is too long. ${title.length} > ${MAX_CHAR}`; }
+    if (title.length > MAX_CHAR) {
+      return `Title is too long. ${title.length} > ${MAX_CHAR}`;
+    }
     return null;
   };
 
@@ -148,22 +150,28 @@ const EditEvent = ({ event }) => {
     const currentMoment = moment();
     const selectedDateTime = moment(date).set({
       hour: time.get('hour'),
-      minute: time.get('minute')
+      minute: time.get('minute'),
     });
-    if (!date || selectedDateTime.isBefore(currentMoment)) { return 'Invalid date or time'; }
+    if (!date || selectedDateTime.isBefore(currentMoment)) {
+      return 'Invalid date or time';
+    }
     return null;
   };
 
   const isValidLocation = (location) => {
     if (!location.trim()) return 'Location is required';
-    if (!placeFromAutocomplete && location !== event.location) { return 'Please select a city from the autocomplete options.'; }
+    if (!placeFromAutocomplete && location !== event.location) {
+      return 'Please select a city from the autocomplete options.';
+    }
 
     return null;
   };
 
   const isValidDescription = (description) => {
     const MAX_CHAR = 4000;
-    if (description && description.length > MAX_CHAR) { return `Description is too long. ${description.length} > ${MAX_CHAR}`; }
+    if (description && description.length > MAX_CHAR) {
+      return `Description is too long. ${description.length} > ${MAX_CHAR}`;
+    }
     return null;
   };
 
@@ -178,13 +186,13 @@ const EditEvent = ({ event }) => {
       time: dateError, // Note: I'm using the same dateError because it's based on both date and time
       title: titleError,
       location: locationError,
-      description: descriptionError
+      description: descriptionError,
     };
 
     setValidationErrors(errors);
 
     const coordinatesError =
-			coordinates.length === 0 ? 'Coordinates are required' : null;
+      coordinates.length === 0 ? 'Coordinates are required' : null;
     console.error(coordinatesError);
 
     const locationUrlError = !locationUrl.trim()
@@ -195,8 +203,8 @@ const EditEvent = ({ event }) => {
     // Check if any error is present
     return (
       !Object.values(errors).some(Boolean) &&
-			!coordinatesError &&
-			!locationUrlError
+      !coordinatesError &&
+      !locationUrlError
     );
   };
 
@@ -209,7 +217,7 @@ const EditEvent = ({ event }) => {
       delete router.query.event_id;
       router.push({
         pathname: '/events',
-        query: router.query
+        query: router.query,
       });
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -236,7 +244,7 @@ const EditEvent = ({ event }) => {
           location,
           locationUrl,
           coordinates,
-          recurring_pattern
+          recurring_pattern,
         };
 
         setIsLoading(true);
@@ -252,21 +260,21 @@ const EditEvent = ({ event }) => {
             `/api/users/${user.sub}/events/${event.event_id}/images`,
             formData,
             {
-						  headers: {
-						    'Content-Type': 'multipart/form-data'
-						  }
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
             }
           );
 
           await axios.patch(`/api/users/${user.sub}/events/${event.event_id}`, {
-            image_url: response.data.url
+            image_url: response.data.url,
           });
         }
 
         delete router.query.event_id;
         router.push({
           pathname: '/events',
-          query: router.query
+          query: router.query,
         });
       } catch (error) {
         if (error?.response?.status === 413) {
@@ -310,119 +318,131 @@ const EditEvent = ({ event }) => {
   // Error
 
   const [modalOpen, setModalOpen] = useState(false);
-  const handleModalOpen = () => { setModalOpen(true); };
-  const handleModalClose = () => { setModalOpen(false); };
+  const handleModalOpen = () => {
+    setModalOpen(true);
+  };
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
 
   return (
     <Page>
-      <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale='de'>
-        <div className='mx-auto max-w-xl'>
-          <div className='relative mx-3 mt-4'>
+      <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="de">
+        <div className="mx-auto max-w-xl">
+          <div className="relative mx-3 mt-4">
             <Image
               className={'event-img-16-9 rounded-t-xl object-cover'}
               src={image_url}
-              alt='Event Picture'
-              layout='responsive'
+              alt="Event Picture"
+              layout="responsive"
               width={16}
               height={9}
-              objectFit='cover'
+              objectFit="cover"
               quality={100}
-              data-testid='event-picture'
+              data-testid="event-picture"
               unoptimized={true}
               onClick={handle_fullscreen}
             />
             {imageError && (
-              <div className='my-2 rounded-md border border-red-400 bg-red-100 px-4 py-2 text-red-700'>
+              <div className="my-2 rounded-md border border-red-400 bg-red-100 px-4 py-2 text-red-700">
                 {imageError}
               </div>
             )}
             {isFullscreen && (
               <div
-                className='fixed left-0 top-0 z-50 flex h-screen w-screen items-center justify-center overflow-y-auto bg-black bg-opacity-70'
+                className="fixed left-0 top-0 z-50 flex h-screen w-screen items-center justify-center overflow-y-auto bg-black bg-opacity-70"
                 onClick={handle_fullscreen}
               >
-                <img src={image_url} alt='Description' />
+                <img src={image_url} alt="Description" />
               </div>
             )}
-            <div className='absolute left-0 top-0 flex w-full cursor-pointer justify-between p-2'>
+            <div className="absolute left-0 top-0 flex w-full cursor-pointer justify-between p-2">
               <div>
                 <input
                   style={{ display: 'none' }}
                   ref={inputRef}
-                  type='file'
+                  type="file"
                   onChange={handleFileChange}
-                  data-testid='input-test-id'
+                  data-testid="input-test-id"
                 />
               </div>
               <button
-                className='rounded-full bg-black bg-opacity-40 p-1'
+                className="rounded-full bg-black bg-opacity-40 p-1"
                 onClick={handleEdit}
-                data-testid='edit-test-id'
+                data-testid="edit-test-id"
               >
-                <EditIcon color='primary' className='z-20 text-3xl' />
+                <EditIcon color="primary" className="z-20 text-3xl" />
               </button>
             </div>
           </div>
-          <div className='mx-3 mt-8 flex flex-wrap justify-center gap-5'>
-            <div className='flex w-full flex-nowrap justify-between gap-4'>
+          <div className="mx-3 mt-8 flex flex-wrap justify-center gap-5">
+            <div className="flex w-full flex-nowrap justify-between gap-4">
               <DatePicker
                 value={date}
-                onChange={(date) => { setDate(date); }}
-                label='Datum'
+                onChange={(date) => {
+                  setDate(date);
+                }}
+                label="Datum"
                 slotProps={{
-								  textField: {
-								    fullWidth: true,
-								    required: true,
-								    error: validationErrors.date != null,
-								    helperText: validationErrors.date
-								  }
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    error: validationErrors.date != null,
+                    helperText: validationErrors.date,
+                  },
                 }}
               />
               <ToggleButtonGroup
-                color='primary'
+                color="primary"
                 value={recurring_pattern}
                 exclusive
                 onChange={handleRecurringPatternChange}
-                aria-label='Platform'
+                aria-label="Platform"
               >
                 <ToggleButton value={RecurringPattern.WEEKLY}>
-									weekly
+                  weekly
                 </ToggleButton>
               </ToggleButtonGroup>
             </div>
             <MobileTimePicker
               value={time}
-              onChange={(time) => { setTime(time); }}
-              label='Zeit'
+              onChange={(time) => {
+                setTime(time);
+              }}
+              label="Zeit"
               slotProps={{
-							  textField: {
-							    fullWidth: true,
-							    required: true,
-							    error: validationErrors.time != null,
-							    helperText: validationErrors.time
-							  }
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                  error: validationErrors.time != null,
+                  helperText: validationErrors.time,
+                },
               }}
             />
             <TextField
               value={title}
-              onChange={(event) => { setTitle(event.target.value); }}
+              onChange={(event) => {
+                setTitle(event.target.value);
+              }}
               error={validationErrors.title != null}
               helperText={validationErrors.title}
-              id='outlined-basic'
-              name='event-title'
-              label='Titel'
-              variant='outlined'
+              id="outlined-basic"
+              name="event-title"
+              label="Titel"
+              variant="outlined"
               fullWidth
               required
             />
             <TextField
               error={validationErrors.location != null}
               value={location}
-              onChange={(event) => { setLocation(event.target.value); }}
-              id='outlined-basic'
-              name='event-location'
-              label='Ort'
-              variant='outlined'
+              onChange={(event) => {
+                setLocation(event.target.value);
+              }}
+              id="outlined-basic"
+              name="event-location"
+              label="Ort"
+              variant="outlined"
               fullWidth
               required
               inputRef={locInputRef}
@@ -430,60 +450,62 @@ const EditEvent = ({ event }) => {
             />
             <TextField
               value={description}
-              onChange={(e) => { setDescription(e.target.value); }}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
               error={!!validationErrors.description}
               helperText={validationErrors.description}
-              name='group-description'
-              label='Details zu Ticktes, Musik & Workshops eingeben...'
-              variant='outlined'
+              name="group-description"
+              label="Details zu Ticktes, Musik & Workshops eingeben..."
+              variant="outlined"
               multiline
               fullWidth
               rows={15}
             />
             {error && <Error setError={setError} />}
-            <div className='mt-3 flex w-full flex-wrap justify-around'>
+            <div className="mt-3 flex w-full flex-wrap justify-around">
               <Button
-                variant='outlined'
+                variant="outlined"
                 onClick={() => {
-								  delete router.query.event_id;
-								  router.push({
-								    pathname: '/events',
-								    query: router.query
-								  });
+                  delete router.query.event_id;
+                  router.push({
+                    pathname: '/events',
+                    query: router.query,
+                  });
                 }}
               >
                 {' '}
-								Zurück
+                Zurück
               </Button>
               <Button
-                variant='contained'
-                className='bg-blue-500'
+                variant="contained"
+                className="bg-blue-500"
                 endIcon={<SendIcon />}
                 onClick={handle_patch}
                 disabled={is_loading}
-                data-testid='submit'
+                data-testid="submit"
               >
-								Speichern
+                Speichern
               </Button>
             </div>
 
-            <div className='mx-5 flex w-full  items-center px-4 opacity-40'>
-              <div className='flex-1 rounded-full border-t-4 border-red-500'></div>
-              <span className='mx-2 px-2 text-red-500'>
-                <WarningIcon className='text-5xl' />
+            <div className="mx-5 flex w-full  items-center px-4 opacity-40">
+              <div className="flex-1 rounded-full border-t-4 border-red-500"></div>
+              <span className="mx-2 px-2 text-red-500">
+                <WarningIcon className="text-5xl" />
               </span>
-              <div className='flex-1 border-t-4 border-red-500'></div>
+              <div className="flex-1 border-t-4 border-red-500"></div>
             </div>
 
-            <div className='flex justify-center'>
+            <div className="flex justify-center">
               <Button
-                variant='contained'
-                className='bg-red-500'
+                variant="contained"
+                className="bg-red-500"
                 endIcon={<DeleteIcon />}
                 onClick={handleModalOpen}
-                data-testid='delete'
+                data-testid="delete"
               >
-								Löschen
+                Löschen
               </Button>
             </div>
           </div>
@@ -492,22 +514,22 @@ const EditEvent = ({ event }) => {
       <Modal
         open={modalOpen}
         onClose={handleModalClose}
-        aria-labelledby='modal-modal-title'
-        className='z-40'
+        aria-labelledby="modal-modal-title"
+        className="z-40"
       >
         <Box sx={style}>
-          <Typography id='modal-modal-title' variant='h6' component='h2'>
-						Möchtest du das Event wirklich löschen?
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Möchtest du das Event wirklich löschen?
           </Typography>
-          <div className='mt-5 flex justify-center'>
+          <div className="mt-5 flex justify-center">
             <Button
-              variant='contained'
-              className='bg-red-500'
+              variant="contained"
+              className="bg-red-500"
               endIcon={<DeleteIcon />}
               onClick={handle_delete}
-              data-testid='delete-confirmation'
+              data-testid="delete-confirmation"
             >
-							Löschen
+              Löschen
             </Button>
           </div>
         </Box>

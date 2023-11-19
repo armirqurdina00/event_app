@@ -5,14 +5,14 @@ import {
   COOKIE_KEYS,
   MILLISECONDS_IN_10_YEARS,
   DEFAULT_USER_CONFIG,
-  SELECTED_ITEMS
+  SELECTED_ITEMS,
 } from '../utils/constants';
 import { OrderBy } from '@/utils/backend_client';
 
 interface LocationData {
-  latitude: number
-  longitude: number
-  city: string
+  latitude: number;
+  longitude: number;
+  city: string;
 }
 
 export const useUserConfig = (router) => {
@@ -24,7 +24,7 @@ export const useUserConfig = (router) => {
       latitude: urlLatitude,
       longitude: urlLongitude,
       distance: urlDistance,
-      city: urlCity
+      city: urlCity,
     } = router.query;
 
     if (urlLatitude && urlLongitude && urlDistance && urlCity) {
@@ -32,7 +32,7 @@ export const useUserConfig = (router) => {
       update({
         ...router.query,
         orderBy: router.query.orderBy ?? OrderBy.CHRONOLOGICAL,
-        selectedItem: router.query.selectedItem ?? SELECTED_ITEMS.CHRONOLOGICAL
+        selectedItem: router.query.selectedItem ?? SELECTED_ITEMS.CHRONOLOGICAL,
       });
       return;
     }
@@ -60,7 +60,7 @@ export const useUserConfig = (router) => {
         orderBy: cookieOrderBy ? String(cookieOrderBy) : OrderBy.CHRONOLOGICAL,
         selectedItem: cookieSelectedItem
           ? String(cookieSelectedItem)
-          : SELECTED_ITEMS.CHRONOLOGICAL
+          : SELECTED_ITEMS.CHRONOLOGICAL,
       });
       return;
     }
@@ -70,8 +70,8 @@ export const useUserConfig = (router) => {
 
     if (
       deviceLocation?.latitude &&
-			deviceLocation?.longitude &&
-			deviceLocation?.city
+      deviceLocation?.longitude &&
+      deviceLocation?.city
     ) {
       console.log('Retrieved user config from device');
       update({
@@ -80,7 +80,7 @@ export const useUserConfig = (router) => {
         city: deviceLocation.city,
         distance: DEFAULT_USER_CONFIG.distance,
         orderBy: OrderBy.CHRONOLOGICAL,
-        selectedItem: SELECTED_ITEMS.CHRONOLOGICAL
+        selectedItem: SELECTED_ITEMS.CHRONOLOGICAL,
       });
       return;
     }
@@ -97,56 +97,72 @@ export const useUserConfig = (router) => {
 
   const updateUserConfigState = (userConfigUpdate: UserConfig) => {
     if (userConfig) {
-      if (userConfigUpdate.startUnixTime === undefined) { userConfigUpdate.startUnixTime = userConfig.startUnixTime; }
-      if (userConfigUpdate.endUnixTime === undefined) { userConfigUpdate.endUnixTime = userConfig.endUnixTime; }
-      if (userConfigUpdate.orderBy === undefined) { userConfigUpdate.orderBy = userConfig.orderBy; }
-      if (userConfigUpdate.selectedItem === undefined) { userConfigUpdate.selectedItem = userConfig.selectedItem; }
+      if (userConfigUpdate.startUnixTime === undefined) {
+        userConfigUpdate.startUnixTime = userConfig.startUnixTime;
+      }
+      if (userConfigUpdate.endUnixTime === undefined) {
+        userConfigUpdate.endUnixTime = userConfig.endUnixTime;
+      }
+      if (userConfigUpdate.orderBy === undefined) {
+        userConfigUpdate.orderBy = userConfig.orderBy;
+      }
+      if (userConfigUpdate.selectedItem === undefined) {
+        userConfigUpdate.selectedItem = userConfig.selectedItem;
+      }
     }
 
-    if (userConfigUpdate.startUnixTime === null) { delete userConfigUpdate.startUnixTime; }
-    if (userConfigUpdate.endUnixTime === null) { delete userConfigUpdate.endUnixTime; }
+    if (userConfigUpdate.startUnixTime === null) {
+      delete userConfigUpdate.startUnixTime;
+    }
+    if (userConfigUpdate.endUnixTime === null) {
+      delete userConfigUpdate.endUnixTime;
+    }
     if (userConfigUpdate.orderBy === null) delete userConfigUpdate.orderBy;
-    if (userConfigUpdate.selectedItem === null) { delete userConfigUpdate.selectedItem; }
+    if (userConfigUpdate.selectedItem === null) {
+      delete userConfigUpdate.selectedItem;
+    }
 
     setUserConfig(userConfigUpdate);
   };
 
   const updateCookies = (userConfig: UserConfig) => {
-    const expiryDate = new Date(new Date().getTime() + MILLISECONDS_IN_10_YEARS);
+    const expiryDate = new Date(
+      new Date().getTime() + MILLISECONDS_IN_10_YEARS
+    );
     const removeCookie = (name) => {
       document.cookie =
-				name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     };
 
     setCookie(COOKIE_KEYS.LATITUDE, String(userConfig.latitude), {
-      expires: expiryDate
+      expires: expiryDate,
     });
     setCookie(COOKIE_KEYS.LONGITUDE, String(userConfig.longitude), {
-      expires: expiryDate
+      expires: expiryDate,
     });
     setCookie(COOKIE_KEYS.DISTANCE, String(userConfig.distance), {
-      expires: expiryDate
+      expires: expiryDate,
     });
     setCookie(COOKIE_KEYS.CITY, userConfig.city, { expires: expiryDate });
 
     if (userConfig.startUnixTime) {
       setCookie(COOKIE_KEYS.START_UNIX_TIME, String(userConfig.startUnixTime), {
-        expires: expiryDate
+        expires: expiryDate,
       });
     }
     if (userConfig.endUnixTime) {
       setCookie(COOKIE_KEYS.END_UNIX_TIME, String(userConfig.endUnixTime), {
-        expires: expiryDate
+        expires: expiryDate,
       });
     }
     if (userConfig.orderBy) {
       setCookie(COOKIE_KEYS.ORDER_BY, userConfig.orderBy, {
-        expires: expiryDate
+        expires: expiryDate,
       });
     }
     if (userConfig.selectedItem) {
       setCookie(COOKIE_KEYS.SELECTED_ITEM, userConfig.selectedItem, {
-        expires: expiryDate
+        expires: expiryDate,
       });
     }
 
@@ -172,10 +188,16 @@ export const useUserConfig = (router) => {
     router.query.distance = userConfig.distance;
     router.query.city = userConfig.city;
 
-    if (userConfig.startUnixTime) { router.query.startUnixTime = userConfig.startUnixTime; }
-    if (userConfig.endUnixTime) { router.query.endUnixTime = userConfig.endUnixTime; }
+    if (userConfig.startUnixTime) {
+      router.query.startUnixTime = userConfig.startUnixTime;
+    }
+    if (userConfig.endUnixTime) {
+      router.query.endUnixTime = userConfig.endUnixTime;
+    }
     if (userConfig.orderBy) router.query.orderBy = userConfig.orderBy;
-    if (userConfig.selectedItem) { router.query.selectedItem = userConfig.selectedItem; }
+    if (userConfig.selectedItem) {
+      router.query.selectedItem = userConfig.selectedItem;
+    }
 
     if (userConfig.startUnixTime === null) delete router.query.startUnixTime;
     if (userConfig.endUnixTime === null) delete router.query.endUnixTime;
@@ -183,7 +205,7 @@ export const useUserConfig = (router) => {
     if (userConfig.selectedItem === null) delete router.query.selectedItem;
 
     router.push({ pathname: router.pathname, query: router.query }, undefined, {
-      shallow: true
+      shallow: true,
     });
   };
 
@@ -200,8 +222,12 @@ export const useUserConfig = (router) => {
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
-            (position) => { resolve(position); },
-            () => { reject('Unable to retrieve your location'); }
+            (position) => {
+              resolve(position);
+            },
+            () => {
+              reject('Unable to retrieve your location');
+            }
           );
         }
       );
@@ -221,7 +247,7 @@ export const useUserConfig = (router) => {
       return {
         latitude,
         longitude,
-        city
+        city,
       };
     } catch (error) {
       console.error('Error getting current position:', error);
@@ -268,6 +294,6 @@ export const useUserConfig = (router) => {
   return {
     userConfig,
     update,
-    init
+    init,
   };
 };

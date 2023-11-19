@@ -3,7 +3,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next';
 import { BackendClient } from '../../../../../../utils/backend_client';
 import axios from 'axios';
 
-export default async function postDownvotes (
+export default async function postDownvotes(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -12,7 +12,7 @@ export default async function postDownvotes (
 
     const backend_client = new BackendClient({
       BASE: process.env.BACKEND_URL,
-      TOKEN: access_token
+      TOKEN: access_token,
     });
 
     if (req.method === 'POST') {

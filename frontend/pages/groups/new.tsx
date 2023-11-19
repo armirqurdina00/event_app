@@ -37,7 +37,7 @@ const CreateGroup = () => {
   useEffect(() => {
     const options = {
       fields: ['geometry', 'name', 'url'],
-      types: ['locality']
+      types: ['locality'],
     };
 
     autoCompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -62,31 +62,39 @@ const CreateGroup = () => {
     title: null,
     description: null,
     link: null,
-    location: null
+    location: null,
   });
 
   const isValidTitle = (title) => {
     const MAX_CHAR = 55;
     if (!title.trim()) return 'Title is required';
-    if (title.length > MAX_CHAR) { return `Title is too long. ${title.length} > ${MAX_CHAR}`; }
+    if (title.length > MAX_CHAR) {
+      return `Title is too long. ${title.length} > ${MAX_CHAR}`;
+    }
     return null;
   };
 
   const isValidDescription = (description) => {
     const MAX_CHAR = 4000;
-    if (description && description.length > MAX_CHAR) { return `Description is too long. ${description.length} > ${MAX_CHAR}`; }
+    if (description && description.length > MAX_CHAR) {
+      return `Description is too long. ${description.length} > ${MAX_CHAR}`;
+    }
     return null;
   };
 
   const isValidLink = (link) => {
     if (!title.trim()) return 'Link is required';
-    if (link && !/^(http|https):\/\/[^ "]+$/.test(link)) { return 'Invalid link format'; }
+    if (link && !/^(http|https):\/\/[^ "]+$/.test(link)) {
+      return 'Invalid link format';
+    }
     return null;
   };
 
   const isValidLocation = (location) => {
     if (!location.trim()) return 'Location is required';
-    if (!placeFromAutocomplete) { return 'Please select a city from the autocomplete options.'; }
+    if (!placeFromAutocomplete) {
+      return 'Please select a city from the autocomplete options.';
+    }
     return null;
   };
 
@@ -100,13 +108,13 @@ const CreateGroup = () => {
       title: titleError,
       description: descriptionError,
       link: linkError,
-      location: locationError
+      location: locationError,
     };
 
     setValidationErrors(errors);
 
     const coordinatesError =
-			coordinates.length === 0 ? 'Coordinates are required' : null;
+      coordinates.length === 0 ? 'Coordinates are required' : null;
     console.error(coordinatesError);
 
     const locationUrlError = !locationUrl.trim()
@@ -117,8 +125,8 @@ const CreateGroup = () => {
     // Check if any error is present
     return (
       !Object.values(errors).some(Boolean) &&
-			!coordinatesError &&
-			!locationUrlError
+      !coordinatesError &&
+      !locationUrlError
     );
   };
 
@@ -135,14 +143,14 @@ const CreateGroup = () => {
           link,
           location,
           locationUrl,
-          coordinates
+          coordinates,
         };
         if (link.trim()) body.link = link;
         setIsLoading(true);
         await axios.post(`/api/users/${user.sub}/groups`, body);
         router.push({
           pathname: '/groups',
-          query: router.query
+          query: router.query,
         });
       } catch (error) {
         console.error(error);
@@ -155,78 +163,86 @@ const CreateGroup = () => {
 
   return (
     <Page>
-      <div className='mx-auto max-w-xl'>
-        <div className='mx-3 my-7 flex flex-wrap justify-center gap-5'>
-          <h1 className='text-3xl'>Neue Gruppe</h1>
+      <div className="mx-auto max-w-xl">
+        <div className="mx-3 my-7 flex flex-wrap justify-center gap-5">
+          <h1 className="text-3xl">Neue Gruppe</h1>
           <TextField
             value={title}
-            onChange={(e) => { setTitle(e.target.value); }}
+            onChange={(e) => {
+              setTitle(e.target.value);
+            }}
             error={!!validationErrors.title}
             helperText={validationErrors.title}
-            name='group-title'
-            label='Titel'
-            variant='outlined'
+            name="group-title"
+            label="Titel"
+            variant="outlined"
             fullWidth
             required
           />
           <TextField
             value={description}
-            onChange={(e) => { setDescription(e.target.value); }}
+            onChange={(e) => {
+              setDescription(e.target.value);
+            }}
             error={!!validationErrors.description}
             helperText={validationErrors.description}
-            name='group-description'
-            label='Beschreibung'
-            variant='outlined'
+            name="group-description"
+            label="Beschreibung"
+            variant="outlined"
             multiline
             fullWidth
             rows={3}
           />
           <TextField
             value={link}
-            onChange={(e) => { setLink(e.target.value); }}
+            onChange={(e) => {
+              setLink(e.target.value);
+            }}
             error={!!validationErrors.link}
             helperText={validationErrors.link}
-            name='group-link'
-            label='Link'
-            variant='outlined'
+            name="group-link"
+            label="Link"
+            variant="outlined"
             fullWidth
             required
           />
           <TextField
             error={validationErrors.location != null}
             value={location}
-            onChange={(group) => { setLocation(group.target.value); }}
-            id='outlined-basic'
-            name='group-location'
-            label='Ort'
-            variant='outlined'
+            onChange={(group) => {
+              setLocation(group.target.value);
+            }}
+            id="outlined-basic"
+            name="group-location"
+            label="Ort"
+            variant="outlined"
             fullWidth
             required
             inputRef={locInputRef}
             helperText={validationErrors.location}
           />
           {error && <Error setError={setError} />}
-          <div className='mt-3 flex w-full flex-wrap justify-around'>
+          <div className="mt-3 flex w-full flex-wrap justify-around">
             <Button
-              variant='outlined'
+              variant="outlined"
               onClick={() => {
-							  router.push({
-							    pathname: '/events',
-							    query: router.query
-							  });
+                router.push({
+                  pathname: '/events',
+                  query: router.query,
+                });
               }}
             >
-							Zurück
+              Zurück
             </Button>
             <Button
-              variant='contained'
-              className='bg-blue-500'
+              variant="contained"
+              className="bg-blue-500"
               endIcon={<SendIcon />}
               onClick={handle_submit}
               disabled={is_loading}
-              data-testid='submit'
+              data-testid="submit"
             >
-							Senden
+              Senden
             </Button>
           </div>
         </div>

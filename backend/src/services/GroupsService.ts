@@ -9,18 +9,24 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 export async function get_group(group_id: string): Promise<GroupRes> {
   const group = await find_group(group_id);
 
-  if (!group)
-    raise_group_not_found(group_id);
+  if (!group) raise_group_not_found(group_id);
 
-  return as_group_response(group);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return as_group_response(group!);
 }
 
-export async function get_groups(page: number, per_page: number, latitude?: number, longitude?: number, distance?: number, title?: string): Promise<GroupsRes> {
+export async function get_groups(
+  page: number,
+  per_page: number,
+  latitude?: number,
+  longitude?: number,
+  distance?: number,
+  title?: string
+): Promise<GroupsRes> {
   if ((latitude && !longitude) || (longitude && !latitude))
     throw new OperationError('Bad request.', HttpStatusCode.BAD_REQUEST);
 
-  if (distance && (!latitude || !longitude))
-    throw new OperationError('Bad request.', HttpStatusCode.BAD_REQUEST);
+  if (distance && (!latitude || !longitude)) throw new OperationError('Bad request.', HttpStatusCode.BAD_REQUEST);
 
   const groups_e = await find_groups(page, per_page, latitude, longitude, distance, title);
   return await as_groups_response(groups_e, page, per_page);
@@ -34,19 +40,17 @@ export async function post_group(user_id: string, req_body: GroupReqBody): Promi
 export async function patch_group(user_id: string, group_id: string, req_body: GroupPatchReqBody): Promise<GroupRes> {
   let group = await find_group_by_user(user_id, group_id);
 
-  if (!group)
-    raise_group_not_found(group_id);
+  if (!group) raise_group_not_found(group_id);
 
-  group = await save_group(user_id, req_body, group);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  group = await save_group(user_id, req_body, group!);
   return as_group_response(group);
 }
 
-export async function delete_group(user_id: string, group_id: string): Promise<GroupRes> {
-
+export async function delete_group(user_id: string, group_id: string): Promise<undefined> {
   const group = await find_group_by_user(user_id, group_id);
 
-  if (!group)
-    raise_group_not_found(group_id);
+  if (!group) raise_group_not_found(group_id);
 
   await remove_group_and_joins(group_id);
 
@@ -54,43 +58,45 @@ export async function delete_group(user_id: string, group_id: string): Promise<G
 }
 
 export async function get_user_group(user_id: string, group_id: string): Promise<UserGroupRes> {
-
   const group = await find_group_by_user(user_id, group_id);
 
-  if (!group)
-    raise_group_not_found(group_id);
+  if (!group) raise_group_not_found(group_id);
 
-  return as_user_group_response(group);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return as_user_group_response(group!);
 }
 
 export async function post_group_join(user_id: string, group_id: string): Promise<GroupJoinRes> {
   const group = await find_group(group_id);
 
-  if (!group)
-    raise_group_not_found(group_id);
+  if (!group) raise_group_not_found(group_id);
 
   await save_group_join(user_id, group_id);
 
-  return as_group_join_response(user_id, group_id, group.link);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return as_group_join_response(user_id, group_id, group!.link);
 }
 
 export async function get_group_join(user_id: string, group_id: string): Promise<GroupJoinRes> {
   const group = await find_group(group_id);
 
-  if (!group)
-    raise_group_not_found(group_id);
+  if (!group) raise_group_not_found(group_id);
 
   const group_join = await find_group_join_by_user(user_id, group_id);
 
-  if (!group_join)
-    raise_group_join_not_found(user_id, group_id);
+  if (!group_join) raise_group_join_not_found();
 
-  return as_group_join_response(user_id, group_id, group.link);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return as_group_join_response(user_id, group_id, group!.link);
 }
 
 // Helpers
 
-async function save_group(user_id: string, req_body: GroupReqBody | GroupPatchReqBody, group: GroupE = null): Promise<GroupE> {
+async function save_group(
+  user_id: string,
+  req_body: GroupReqBody | GroupPatchReqBody,
+  group?: GroupE
+): Promise<GroupE> {
   group ||= new GroupE();
 
   if (user_id) group.created_by = user_id;
@@ -117,41 +123,38 @@ async function remove_group_and_joins(group_id: string): Promise<void> {
   const data_source = await Database.get_data_source();
 
   await data_source.manager.transaction(async tx_manager => {
-    await tx_manager.createQueryBuilder()
+    await tx_manager
+      .createQueryBuilder()
       .where('group_id = :group_id', { group_id })
       .delete()
       .from(GroupJoinE)
       .execute();
 
-    await tx_manager.createQueryBuilder()
-      .where('group_id = :group_id', { group_id })
-      .delete()
-      .from(GroupE)
-      .execute();
+    await tx_manager.createQueryBuilder().where('group_id = :group_id', { group_id }).delete().from(GroupE).execute();
   });
 }
 
-async function find_group(group_id: string): Promise<GroupE> {
+async function find_group(group_id: string): Promise<GroupE | null> {
   const group_repo = await Database.get_repo(GroupE);
   const group = await group_repo.findOne({
-    where: { group_id }
+    where: { group_id },
   });
   return group;
 }
 
-async function find_group_by_user(user_id: string, group_id: string): Promise<GroupE> {
+async function find_group_by_user(user_id: string, group_id: string): Promise<GroupE | null> {
   const groupRepo = await Database.get_repo(GroupE);
   const group = await groupRepo.findOne({
-    where: { group_id, created_by: user_id }
+    where: { group_id, created_by: user_id },
   });
 
   return group;
 }
 
-async function find_group_join_by_user(user_id: string, group_id: string): Promise<GroupJoinE> {
+async function find_group_join_by_user(user_id: string, group_id: string): Promise<GroupJoinE | null> {
   const groupJoinRepo = await Database.get_repo(GroupJoinE);
   const group_join = await groupJoinRepo.findOne({
-    where: { group_id, user_id }
+    where: { group_id, user_id },
   });
   return group_join;
 }
@@ -177,11 +180,7 @@ async function find_groups(
     query = query.andWhere('group.title LIKE :title', { title: `%${title}%` });
   }
 
-  const groups = await query
-    .limit(perPage)
-    .offset(offset)
-    .addOrderBy('updated_at', 'DESC')
-    .getMany();
+  const groups = await query.limit(perPage).offset(offset).addOrderBy('updated_at', 'DESC').getMany();
 
   return groups;
 }
@@ -190,10 +189,17 @@ function initBaseGroupQuery(groupRepo: Repository<GroupE>): SelectQueryBuilder<G
   return groupRepo.createQueryBuilder('group');
 }
 
-function applyLocationFilters(query: SelectQueryBuilder<GroupE>, latitude: number, longitude: number, distance?: number): SelectQueryBuilder<GroupE> {
+function applyLocationFilters(
+  query: SelectQueryBuilder<GroupE>,
+  latitude: number,
+  longitude: number,
+  distance?: number
+): SelectQueryBuilder<GroupE> {
   if (distance) {
     const distance_in_m = distance * 1000;
-    query = query.where(`ST_DWithin(location_point, ST_SetSRID(ST_MakePoint(${longitude},${latitude}),4326)::geography, ${distance_in_m})`);
+    query = query.where(
+      `ST_DWithin(location_point, ST_SetSRID(ST_MakePoint(${longitude},${latitude}),4326)::geography, ${distance_in_m})`
+    );
   }
   return query.orderBy(`location_point <-> 'SRID=4326;POINT(${longitude} ${latitude})'`);
 }
@@ -211,9 +217,7 @@ function get_group_type(link: string): GroupType {
 async function get_number_of_groups(): Promise<number> {
   const group_repo = await Database.get_repo(GroupE);
 
-  const query_result = await group_repo.createQueryBuilder('group')
-    .select('COUNT(*)', 'count')
-    .getRawOne();
+  const query_result = await group_repo.createQueryBuilder('group').select('COUNT(*)', 'count').getRawOne();
 
   return Number(query_result.count);
 }
@@ -223,7 +227,7 @@ async function save_group_join(user_id: string, group_id: string): Promise<void>
 
   await GroupJoinRepo.save({
     user_id,
-    group_id
+    group_id,
   });
 
   const data_source = await Database.get_data_source();
@@ -239,7 +243,6 @@ async function save_group_join(user_id: string, group_id: string): Promise<void>
 }
 
 function as_user_group_response(group_e: GroupE): UserGroupRes {
-
   const result = <UserGroupRes>as_group_response(group_e);
 
   result.link = group_e.link;
@@ -283,7 +286,7 @@ async function as_groups_response(groups_e: GroupE[], page: number, per_page: nu
     page,
     per_page,
     total_number_of_items: await get_number_of_groups(),
-    items: groups_e.map(g => as_group_response(g))
+    items: groups_e.map(g => as_group_response(g)),
   };
 }
 
@@ -291,6 +294,6 @@ function raise_group_not_found(group_id) {
   throw new OperationError(`Group with id '${group_id}' not found.`, HttpStatusCode.NOT_FOUND);
 }
 
-function raise_group_join_not_found(user_id:string, group_id:string) {
+function raise_group_join_not_found() {
   throw new OperationError('User has not yet joined this group.', HttpStatusCode.NOT_FOUND);
 }

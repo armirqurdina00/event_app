@@ -16,7 +16,9 @@ const EditLocation = ({ lastRoute }) => {
   const router = useRouter();
   const { userConfig, update } = useUserConfig(router);
   const [error, setError] = useState(false);
-  const [latitude, setLatitude] = useState<number>(userConfig?.latitude || null);
+  const [latitude, setLatitude] = useState<number>(
+    userConfig?.latitude || null
+  );
   const [longitude, setLongitude] = useState<number>(
     userConfig?.longitude || null
   );
@@ -37,7 +39,7 @@ const EditLocation = ({ lastRoute }) => {
   useEffect(() => {
     const options = {
       fields: ['geometry', 'name', 'url'],
-      types: ['locality']
+      types: ['locality'],
     };
 
     autoCompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -57,7 +59,7 @@ const EditLocation = ({ lastRoute }) => {
 
   const [validationErrors, setValidationErrors] = useState({
     distance: null,
-    city: null
+    city: null,
   });
 
   const isValidCity = (city) => {
@@ -76,7 +78,7 @@ const EditLocation = ({ lastRoute }) => {
 
     const errors = {
       distance: distanceError,
-      city: cityError
+      city: cityError,
     };
 
     setValidationErrors(errors);
@@ -99,7 +101,7 @@ const EditLocation = ({ lastRoute }) => {
       if (!cityFromAutocomplete && city !== userConfig.city) {
         setValidationErrors({
           ...validationErrors,
-          city: 'Please select a city from the autocomplete options.'
+          city: 'Please select a city from the autocomplete options.',
         });
         return;
       }
@@ -107,55 +109,45 @@ const EditLocation = ({ lastRoute }) => {
         latitude,
         longitude,
         distance: Number(distance),
-        city
+        city,
       });
       router.push({
         pathname: lastRoute,
-        query: router.query
+        query: router.query,
       });
-      const city_obj = { city, latitude, longitude };
-      if (!window.localStorage.getItem('recent_cities')) {
-        const cities = [city_obj];
-        window.localStorage.setItem('recent_cities', JSON.stringify(cities));
-      }
-      else {
-        const recent_cities = JSON.parse(window.localStorage.getItem('recent_cities'));
-        if (recent_cities.length == 5) {
-          recent_cities.shift();
-        }
-        if (recent_cities.some(item => item.latitude === latitude)) { return; }
-        recent_cities.push(city_obj);
-        window.localStorage.setItem('recent_cities', JSON.stringify(recent_cities));
-      }
     }
   };
 
   return (
     <Page>
-      <div className='mx-auto max-w-xl'>
-        <div className='mx-3 my-7 flex flex-wrap justify-center gap-5'>
-          <h1 className='text-3xl'>Aktualisiere deinen Ort</h1>
+      <div className="mx-auto max-w-xl">
+        <div className="mx-3 my-7 flex flex-wrap justify-center gap-5">
+          <h1 className="text-3xl">Aktualisiere deinen Ort</h1>
           <TextField
             error={validationErrors.city != null}
             value={city}
-            onChange={(e) => { setCity(e.target.value); }}
-            id='outlined-basic'
-            name='location'
-            label='Ort'
-            variant='outlined'
+            onChange={(e) => {
+              setCity(e.target.value);
+            }}
+            id="outlined-basic"
+            name="location"
+            label="Ort"
+            variant="outlined"
             fullWidth
             required
             inputRef={locInputRef}
             helperText={validationErrors.city}
           />
           <FormControl fullWidth>
-            <InputLabel id='distance-select-label'>Suchradius</InputLabel>
+            <InputLabel id="distance-select-label">Suchradius</InputLabel>
             <Select
-              labelId='distance-select-label'
-              id='distance-select'
+              labelId="distance-select-label"
+              id="distance-select"
               value={distance}
-              label='Suchradius'
-              onChange={(e) => { setDistance(e.target.value); }}
+              label="Suchradius"
+              onChange={(e) => {
+                setDistance(e.target.value);
+              }}
             >
               <MenuItem value={5}>5km</MenuItem>
               <MenuItem value={10}>10km</MenuItem>
@@ -173,24 +165,24 @@ const EditLocation = ({ lastRoute }) => {
             </Select>
           </FormControl>
           {error && <Error setError={setError} />}
-          <div className='mt-3 flex w-full flex-wrap justify-around'>
+          <div className="mt-3 flex w-full flex-wrap justify-around">
             <Button
-              variant='outlined'
+              variant="outlined"
               onClick={() => {
                 router.push({
                   pathname: lastRoute,
-                  query: router.query
+                  query: router.query,
                 });
               }}
             >
               Zurück
             </Button>
             <Button
-              variant='contained'
-              className='bg-blue-500'
+              variant="contained"
+              className="bg-blue-500"
               endIcon={<SendIcon />}
               onClick={onSubmit}
-              data-testid='submit'
+              data-testid="submit"
             >
               Speichern
             </Button>

@@ -2,21 +2,21 @@ import { FieldErrors } from 'tsoa';
 import { GroupType } from './enums';
 
 export class GroupJoinRes {
-  user_id: string
-  group_id: string
-  link: string
+  user_id: string;
+  group_id: string;
+  link: string;
 }
 
-export type EventUpvoteRes = EventVoteRes
+export type EventUpvoteRes = EventVoteRes;
 
-export type EventDownvoteRes = EventVoteRes
+export type EventDownvoteRes = EventVoteRes;
 
 export interface EventVoteRes {
-  event_id: string,
-  user_id: string
+  event_id: string;
+  user_id: string;
 }
 
-export type RecurringPattern = 'WEEKLY' | 'NONE'
+export type RecurringPattern = 'WEEKLY' | 'NONE';
 
 export interface ImageRes {
   url: string;

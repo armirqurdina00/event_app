@@ -2,17 +2,17 @@ import Document, { Html, Head, Main, NextScript } from 'next/document';
 import Script from 'next/script';
 
 class MyDocument extends Document {
-  render () {
+  render() {
     return (
-      <Html lang='en'>
+      <Html translate="no">
         <Head>
           <link
-            rel='stylesheet'
-            href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap'
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
           />
           <link
-            rel='stylesheet'
-            href='https://fonts.googleapis.com/icon?family=Material+Icons'
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
           />
         </Head>
         <body>

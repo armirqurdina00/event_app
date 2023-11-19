@@ -4,7 +4,12 @@ import { useUser } from '@auth0/nextjs-auth0/client';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
-import { Dialog, DialogActions, DialogContent, Typography } from '@mui/material';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 
 const BottomNav = () => {
@@ -12,12 +17,12 @@ const BottomNav = () => {
   const { user } = useUser();
   const [openJoinDialog, setOpenJoinDialog] = useState(false);
 
-  function handle (href) {
+  function handle(href) {
     delete router.query.event_id;
     delete router.query.group_id;
     router.push({
       pathname: href,
-      query: router.query
+      query: router.query,
     });
   }
 
@@ -36,26 +41,28 @@ const BottomNav = () => {
       delete router.query.group_id;
       router.push({
         pathname: '/groups/new',
-        query: router.query
+        query: router.query,
       });
     } else if (/^\/events*/.test(router.pathname)) {
       delete router.query.event_id;
       delete router.query.group_id;
       router.push({
         pathname: '/events/new',
-        query: router.query
+        query: router.query,
       });
     }
   };
 
   return (
-    <div className=''>
-      <nav className='fixed bottom-0 z-30 w-full border-t bg-zinc-100 pb-safe'>
-        <div className='mx-auto flex h-14 max-w-md items-center justify-between px-6'>
+    <div className="">
+      <nav className="fixed bottom-0 z-30 w-full border-t bg-zinc-100 pb-safe">
+        <div className="mx-auto flex h-14 max-w-md items-center justify-between px-6">
           <Button
-            className='flex h-full w-[40%] flex-col items-center justify-center'
-            key='Events'
-            onClick={() => { handle('/events'); }}
+            className="flex h-full w-[40%] flex-col items-center justify-center"
+            key="Events"
+            onClick={() => {
+              handle('/events');
+            }}
           >
             <EventIcon
               className={`text-4xl ${
@@ -73,14 +80,14 @@ const BottomNav = () => {
 
           <Button
             onClick={add}
-            className='flex h-full w-[40%] flex-col items-center justify-center'
-            key='Add'
-            data-testid='add-group-or-event'
+            className="flex h-full w-[40%] flex-col items-center justify-center"
+            key="Add"
+            data-testid="add-group-or-event"
           >
             <AddCircleOutlineIcon
               className={`text-5xl ${
                 router.pathname == '/groups/new' ||
-								router.pathname === '/events/new'
+                router.pathname === '/events/new'
                   ? 'text-blue-600'
                   : 'text-zinc-600'
               }`}
@@ -88,9 +95,11 @@ const BottomNav = () => {
           </Button>
 
           <Button
-            className='flex h-full w-[40%] flex-col items-center justify-center'
-            key='Gruppen'
-            onClick={() => { handle('/groups'); }}
+            className="flex h-full w-[40%] flex-col items-center justify-center"
+            key="Gruppen"
+            onClick={() => {
+              handle('/groups');
+            }}
           >
             <GroupsIcon
               className={`text-4xl ${
@@ -107,25 +116,35 @@ const BottomNav = () => {
           </Button>
         </div>
       </nav>
-      <Dialog open={openJoinDialog} onClose={() => { setOpenJoinDialog(false); }}>
+      <Dialog
+        open={openJoinDialog}
+        onClose={() => {
+          setOpenJoinDialog(false);
+        }}
+      >
         <DialogContent>
           {/* Hier können Sie den Text und die Erklärung für die Anmeldung anzeigen */}
-          <Typography variant='h6'>Anmeldung erforderlich</Typography>
+          <Typography variant="h6">Anmeldung erforderlich</Typography>
           <Typography>
-						Um Events und Gruppen zu speichern musst du dich anmelden. Das
-						klappt mit einem Klick via Google Anmeldung.
+            Um Events und Gruppen zu speichern musst du dich anmelden. Das
+            klappt mit einem Klick via Google Anmeldung.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setOpenJoinDialog(false); }} color='primary'>
-						Schließen
+          <Button
+            onClick={() => {
+              setOpenJoinDialog(false);
+            }}
+            color="primary"
+          >
+            Schließen
           </Button>
           <Button
             onClick={handleLogIn}
-            color='primary'
-            data-testid='login-test-id'
+            color="primary"
+            data-testid="login-test-id"
           >
-						Jetzt anmelden
+            Jetzt anmelden
           </Button>
         </DialogActions>
       </Dialog>

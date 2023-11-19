@@ -4,19 +4,18 @@ import { start_managing_events, Database } from '../helpers';
 import { EventDownvoteE, EventE, EventUpvoteE } from '../commons/typeorm_entities';
 import moment from 'moment';
 
-describe('Tests for RecurringEventsJob.', function() {
-
-  before(async function() {
+describe('Tests for RecurringEventsJob.', function () {
+  before(async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
-    if (process.env.NODE_ENV ==='DEVELOPMENT') {
+    if (process.env.NODE_ENV === 'DEVELOPMENT') {
       start_managing_events();
     } else {
-      throw new Error('This test file can only be executed in \'DEVELOPMENT\' environment.');
+      throw new Error("This test file can only be executed in 'DEVELOPMENT' environment.");
     }
   });
 
-  it('Delete old events.', async function() {
+  it('Delete old events.', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     // Setup
@@ -31,8 +30,7 @@ describe('Tests for RecurringEventsJob.', function() {
     await waitForEventDeletion(EventRepo, UpvoteRepo, DownvoteRepo, event.event_id);
   });
 
-
-  it('Update timestamp of weekly event.', async function() {
+  it('Update timestamp of weekly event.', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     // Setup
@@ -45,9 +43,8 @@ describe('Tests for RecurringEventsJob.', function() {
     await addVote(DownvoteRepo, event.event_id);
 
     // Test condition
-    await waitForEventUpdate(EventRepo, UpvoteRepo,DownvoteRepo, event.event_id, event.unix_time);
+    await waitForEventUpdate(EventRepo, UpvoteRepo, DownvoteRepo, event.event_id, event.unix_time);
   });
-
 });
 
 async function createEvent(EventRepo) {
@@ -56,11 +53,10 @@ async function createEvent(EventRepo) {
   event.title = 'test-title';
   event.unix_time = moment().subtract(1, 'week').toDate().getTime();
   event.location = 'test-location';
-  event.locationUrl = 'https://www.google.com/maps?cid=8926798613940117231',
-  event.recurring_pattern = 'NONE';
+  (event.locationUrl = 'https://www.google.com/maps?cid=8926798613940117231'), (event.recurring_pattern = 'NONE');
   event.location_point = {
     type: 'Point',
-    coordinates:  [8.4037, 49.0069]
+    coordinates: [8.4037, 49.0069],
   };
 
   const { event_id } = await EventRepo.save(event);
@@ -74,11 +70,10 @@ async function createWeeklyEvent(EventRepo) {
   event.title = 'test-title';
   event.unix_time = moment().subtract(1, 'week').toDate().getTime();
   event.location = 'test-location';
-  event.locationUrl = 'https://www.google.com/maps?cid=8926798613940117231',
-  event.recurring_pattern = 'WEEKLY';
+  (event.locationUrl = 'https://www.google.com/maps?cid=8926798613940117231'), (event.recurring_pattern = 'WEEKLY');
   event.location_point = {
     type: 'Point',
-    coordinates:  [8.4037, 49.0069]
+    coordinates: [8.4037, 49.0069],
   };
 
   const { event_id } = await EventRepo.save(event);
@@ -89,7 +84,7 @@ async function createWeeklyEvent(EventRepo) {
 async function addVote(Repo, event_id) {
   return await Repo.save({
     event_id,
-    user_id: 'placeholder'
+    user_id: 'placeholder',
   });
 }
 

@@ -7,7 +7,7 @@ const fileConsumer = (acc) => {
     write: (chunk, _enc, next) => {
       acc.push(chunk);
       next();
-    }
+    },
   });
 
   return writable;
@@ -15,8 +15,12 @@ const fileConsumer = (acc) => {
 
 export const parseForm = async (
   req: NextApiRequest
-): Promise<{ fields: formidable.Fields, files: formidable.Files, chunks: Uint8Array[] }> => {
-  return await new Promise( (resolve, reject) => {
+): Promise<{
+  fields: formidable.Fields;
+  files: formidable.Files;
+  chunks: Uint8Array[];
+}> => {
+  return await new Promise((resolve, reject) => {
     const chunks = [];
 
     const form = formidable({
@@ -25,8 +29,10 @@ export const parseForm = async (
       fileWriteStreamHandler: () => fileConsumer(chunks),
 
       filter: (part) => {
-        return part.name === 'media' && (part.mimetype?.includes('image') || false);
-      }
+        return (
+          part.name === 'media' && (part.mimetype?.includes('image') || false)
+        );
+      },
     });
 
     form.parse(req, function (err, fields, files) {

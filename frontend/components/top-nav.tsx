@@ -32,10 +32,12 @@ const useScrollControl = () => {
         setSticky(false);
         setScrollDownDistance(0);
         setScrollUpDistance(0);
-      } else if (currentScrollY > lastScrollY.current) { // scroll down
+      } else if (currentScrollY > lastScrollY.current) {
+        // scroll down
         setScrollUpDistance(0);
 
-        if (scrollDownDistance > LONG_SCROLL_DOWN) { // scroll down long enough
+        if (scrollDownDistance > LONG_SCROLL_DOWN) {
+          // scroll down long enough
           setSticky(false);
         } else {
           setScrollDownDistance(
@@ -43,8 +45,10 @@ const useScrollControl = () => {
               prevDistance + (currentScrollY - lastScrollY.current)
           );
         }
-      } else { // scroll up
-        if (scrollUpDistance > LONG_SCROLL_UP) { // scroll up long enough
+      } else {
+        // scroll up
+        if (scrollUpDistance > LONG_SCROLL_UP) {
+          // scroll up long enough
           setScrollDownDistance(0);
           setSticky(true);
         } else {
@@ -72,7 +76,7 @@ const useScrollControl = () => {
   return { scrollUpDistance, scrollDownDistance, sticky };
 };
 
-function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
+function ResponsiveAppBar({ children }: { children?: React.ReactNode }) {
   const { user } = useUser();
   const router = useRouter();
   const { userConfig } = useUserConfig(router);
@@ -92,7 +96,7 @@ function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
   const handle_imprint = () => {
     router.push({
       pathname: '/imprint',
-      query: router.query
+      query: router.query,
     });
   };
 
@@ -100,12 +104,12 @@ function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
     if (router.pathname.includes('/groups')) {
       router.push({
         pathname: '/groups/location',
-        query: router.query
+        query: router.query,
       });
     } else {
       router.push({
         pathname: '/events/location',
-        query: router.query
+        query: router.query,
       });
     }
   };
@@ -124,23 +128,24 @@ function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
 
   return (
     <AppBar
-      className={`bg-zinc-100 text-zinc-600 static ${sticky &&
-			'sticky transition-transform duration-1000 ease-in-out -translate-y-0'
+      className={`static bg-zinc-100 text-zinc-600 ${
+        sticky &&
+        'sticky -translate-y-0 transition-transform duration-1000 ease-in-out'
       } ${scrollDownDistance > LONG_SCROLL_DOWN && '-translate-y-full'}`}
     >
-      <Container maxWidth='xs'>
+      <Container maxWidth="xs">
         <Toolbar
           disableGutters
-          className='flex justify-between'
-          variant='dense'
+          className="flex justify-between"
+          variant="dense"
         >
           <div
-            className='flex flex-grow items-center text-xl'
+            className="flex flex-grow items-center text-xl"
             onClick={handle_location}
           >
             <LocationOnIcon />
             {userConfig?.city && (
-              <p className='ml-2 mr-2 cursor-pointer'>
+              <p className="ml-2 mr-2 cursor-pointer">
                 {userConfig.city} &middot; {userConfig.distance}
                 {'km'}
               </p>
@@ -148,9 +153,9 @@ function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
           </div>
           <Box>
             <IconButton
-              id='basic-button'
+              id="basic-button"
               aria-controls={open ? 'basic-menu' : undefined}
-              aria-haspopup='true'
+              aria-haspopup="true"
               aria-expanded={open ? 'true' : undefined}
               onClick={handleClick}
             >
@@ -158,26 +163,24 @@ function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
             </IconButton>
 
             <Menu
-              id='basic-menu'
+              id="basic-menu"
               anchorEl={anchorEl}
               open={open}
               onClose={handle_close}
               MenuListProps={{
-							  'aria-labelledby': 'basic-button'
+                'aria-labelledby': 'basic-button',
               }}
             >
               <MenuItem onClick={handle_feedback}>
-                <span className='mr-1'>Feedback</span>
+                <span className="mr-1">Feedback</span>
                 <WhatsAppIcon style={{ color: '#25d366', fontSize: '20px' }} />
               </MenuItem>
               <MenuItem onClick={handle_imprint}>Impressum</MenuItem>
-              {!user
-							  ? (
-                  <MenuItem onClick={handle_login}>Login</MenuItem>
-							    )
-							  : (
-                  <MenuItem onClick={handle_logout}>Logout</MenuItem>
-							    )}
+              {!user ? (
+                <MenuItem onClick={handle_login}>Login</MenuItem>
+              ) : (
+                <MenuItem onClick={handle_logout}>Logout</MenuItem>
+              )}
             </Menu>
           </Box>
         </Toolbar>
@@ -188,7 +191,7 @@ function ResponsiveAppBar ({ children }: { children?: React.ReactNode }) {
 }
 export default ResponsiveAppBar;
 
-function throttle (func, wait) {
+function throttle(func, wait) {
   let context, args, timeout, result;
   let previous = 0;
 

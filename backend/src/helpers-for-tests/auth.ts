@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import axios from 'axios';
 import jwt_decode from 'jwt-decode';
@@ -39,9 +38,7 @@ function does_local_token_exist() {
 }
 
 function get_local_token() {
-  return JSON.parse(
-    fs.readFileSync(`${__dirname}/../${ACCESS_TOKEN_FILENAME}`, 'utf-8')
-  );
+  return JSON.parse(fs.readFileSync(`${__dirname}/../${ACCESS_TOKEN_FILENAME}`, 'utf-8'));
 }
 
 async function get_token_from_auth0() {
@@ -65,8 +62,5 @@ async function get_token_from_auth0() {
 }
 
 async function save_access_token(accessToken) {
-  fs.writeFileSync(
-    `${__dirname}/../${ACCESS_TOKEN_FILENAME}`,
-    JSON.stringify(accessToken)
-  );
+  fs.writeFileSync(`${__dirname}/../${ACCESS_TOKEN_FILENAME}`, JSON.stringify(accessToken));
 }

@@ -9,22 +9,15 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
   ],
   "rules": {
     "no-console": ["warn", { "allow": ["error", "info"] }],
-    "indent": ["error", 2],
-    "semi": ["error", "always"],
-    "no-trailing-spaces": ["error"],
-    "no-multi-spaces": ["error"],
-    "quotes": ["error", "single"],
     "no-var": "off",
     "no-async-promise-executor": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "no-constant-condition": "off",
-    "@typescript-eslint/no-var-requires": "off",
-    "object-curly-spacing": ["error", "always"],
-    "array-bracket-spacing": ["error", "never"],
-    "space-in-parens": ["error", "never"]
+    "@typescript-eslint/no-var-requires": "off"
   }
 }

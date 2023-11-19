@@ -1,43 +1,55 @@
 import { EventData } from 'facebook-event-scraper/dist/types';
 import IFacebookScraper from './IFacebookScraper';
 import moment from 'moment';
-import { DummyFacebookScraperConfig, FacebookCrawlerConfig } from '../../commons/enums';
+import { DummyFacebookScraperConfig } from '../../commons/enums';
 
 export default class DummyFacebookScraper implements IFacebookScraper {
-  private NO_EVENTS_FROM_SEARCH_URLS: boolean
-  private NO_EVENTS_FROM_ORGANIZER_URLS: boolean
-  private GENERATE_NEW_EVENT_URLS: boolean
-  private sampleEventData: EventData
-  private i = 0
+  private NO_EVENTS_FROM_SEARCH_URLS: boolean;
+  private NO_EVENTS_FROM_ORGANIZER_URLS: boolean;
+  private GENERATE_NEW_EVENT_URLS: boolean;
+  private sampleEventData: EventData;
+  private IS_THROWING_ERRORS: boolean;
+  private IS_THROWING_ERRORS_50_PERCENT_OF_THE_TIME: boolean;
+  private IS_RETURNING_IRRELEVANT_EVENTS: boolean;
+  private EVENTS_ARE_MISSING_COORDINATES: boolean;
+  private EVENTS_ARE_MISSING_CITY: boolean;
+  private i = 0;
+  private j = 0;
+  private k = 0;
 
   constructor(config?: DummyFacebookScraperConfig) {
     this.NO_EVENTS_FROM_SEARCH_URLS = config?.NO_EVENTS_FROM_SEARCH_URLS ?? false;
     this.NO_EVENTS_FROM_ORGANIZER_URLS = config?.NO_EVENTS_FROM_ORGANIZER_URLS ?? false;
     this.GENERATE_NEW_EVENT_URLS = config?.GENERATE_NEW_EVENT_URLS ?? false;
+    this.IS_THROWING_ERRORS = config?.IS_THROWING_ERRORS ?? false;
+    this.IS_THROWING_ERRORS_50_PERCENT_OF_THE_TIME = config?.IS_THROWING_ERRORS_50_PERCENT_OF_THE_TIME ?? false;
+    this.IS_RETURNING_IRRELEVANT_EVENTS = config?.IS_RETURNING_IRRELEVANT_EVENTS ?? false;
+    this.EVENTS_ARE_MISSING_COORDINATES = config?.EVENTS_ARE_MISSING_COORDINATES ?? false;
+    this.EVENTS_ARE_MISSING_CITY = config?.EVENTS_ARE_MISSING_CITY ?? false;
 
     const currentMoment = moment();
-    const futureMoment = currentMoment.add(1, 'week');
+    const futureMoment = currentMoment.add(6, 'month');
     const futureTimestampInSeconds = futureMoment.unix();
 
     this.sampleEventData = {
-      id: 'event123',
-      name: 'Sample Event',
+      id: `event${++this.k}`,
+      name: 'Sample Salsa Event',
       description: 'This is a mock salsa event description.',
       location: {
-        name: 'Sample Location',
+        name: 'Anna Lauter Straße 3, Karlsruhe, Germany',
         description: 'This is a sample location description.',
         url: 'https://example.com/location',
         coordinates: {
-          latitude: 40.7128,
-          longitude: -74.0060,
+          latitude: 49.001991,
+          longitude: 8.4149801,
         },
         countryCode: 'US',
         id: 'location123',
         type: 'PLACE',
         address: '123 Sample St, Sample City',
         city: {
-          name: 'Sample City',
-          id: 'city123',
+          name: 'Karlsruhe',
+          id: 'KarlsruheID',
         },
       },
       hosts: [
@@ -77,48 +89,69 @@ export default class DummyFacebookScraper implements IFacebookScraper {
       usersGoing: 200,
       usersInterested: 500,
     };
+
+    if (this.IS_RETURNING_IRRELEVANT_EVENTS)
+      this.sampleEventData = {
+        ...this.sampleEventData,
+        name: 'Sample Irrelevant Event',
+        description: 'This is a mock irrelevant event description.',
+      };
+
+    if (this.EVENTS_ARE_MISSING_COORDINATES) this.sampleEventData.location!.coordinates = null;
+    if (this.EVENTS_ARE_MISSING_CITY) this.sampleEventData.location!.city = null;
   }
 
-  setConfig(config: DummyFacebookScraperConfig) {
-    if (config?.NO_EVENTS_FROM_SEARCH_URLS !== undefined)
-      this.NO_EVENTS_FROM_SEARCH_URLS = config?.NO_EVENTS_FROM_SEARCH_URLS;
-    if (config?.NO_EVENTS_FROM_ORGANIZER_URLS !== undefined)
-      this.NO_EVENTS_FROM_ORGANIZER_URLS = config?.NO_EVENTS_FROM_ORGANIZER_URLS;
-    if (config?.GENERATE_NEW_EVENT_URLS !== undefined)
-      this.GENERATE_NEW_EVENT_URLS = config?.GENERATE_NEW_EVENT_URLS;
+  throwErrorIfConfigured() {
+    this.j++;
+    if (this.IS_THROWING_ERRORS_50_PERCENT_OF_THE_TIME && this.j % 2 === 0) {
+      throw new Error('Configured to throw errors sometimes.');
+    }
+    if (this.IS_THROWING_ERRORS) {
+      throw new Error('Configured to throw errors.');
+    }
   }
 
-  async fetchEventUrlsFromSearchUrl(url: string): Promise<string[]> {
-    if (this.NO_EVENTS_FROM_SEARCH_URLS)
-      return [];
+  async fetchEventUrlsFromSearchUrl(): Promise<string[]> {
+    this.throwErrorIfConfigured();
+
+    if (this.NO_EVENTS_FROM_SEARCH_URLS) return [];
     else if (this.GENERATE_NEW_EVENT_URLS) {
       return [`https://example.com/event${++this.i}`];
-    }
-    else
-      return ['https://example.com/eventX', 'https://example.com/eventY'];
+    } else return ['https://example.com/eventX', 'https://example.com/eventY'];
   }
 
-  async fetchEventUrlsFromOrganizerUrl(url: string): Promise<string[]> {
-    if (this.NO_EVENTS_FROM_ORGANIZER_URLS)
-      return [];
-    else
-      return ['https://example.com/organizerEventX', 'https://example.com/organizerEventY'];
+  async fetchEventUrlsFromOrganizerUrl(): Promise<string[]> {
+    this.throwErrorIfConfigured();
+
+    if (this.NO_EVENTS_FROM_ORGANIZER_URLS) return [];
+    else return ['https://example.com/organizerEventX', 'https://example.com/organizerEventY'];
   }
 
-  async fetchRepeatingEventURLsFromEvent(url: string): Promise<string[]> {
-    return ['https://example.com/eventX', 'https://example.com/eventY', 'https://example.com/repeatingEvent1', 'https://example.com/repeatingEvent2'];
+  async fetchRepeatingEventURLsFromEvent(): Promise<string[]> {
+    this.throwErrorIfConfigured();
+
+    return [
+      'https://example.com/eventX',
+      'https://example.com/eventY',
+      'https://example.com/repeatingEvent1',
+      'https://example.com/repeatingEvent2',
+    ];
   }
 
-  async fetchOrganizerUrlFromEvent(url: string): Promise<string> {
+  async fetchOrganizerUrlFromEvent(): Promise<string> {
+    this.throwErrorIfConfigured();
+
     return 'https://example.com/organizer';
   }
 
-  async fetchEventData(url: string): Promise<EventData> {
+  async fetchEventData(): Promise<EventData> {
+    this.throwErrorIfConfigured();
+    this.sampleEventData.id = `event${++this.k}`;
     return this.sampleEventData;
   }
 
   updateSampleEventData(updates: Partial<EventData>): void {
-    Object.keys(updates).forEach((key) => {
+    Object.keys(updates).forEach(key => {
       const updateValue = updates[key as keyof EventData];
 
       if (updateValue !== undefined) {

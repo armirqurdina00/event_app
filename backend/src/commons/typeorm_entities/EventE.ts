@@ -13,13 +13,13 @@ export class EventE {
   unix_time: number;
 
   @Column({ default: 'NONE' })
-  recurring_pattern: RecurringPattern
+  recurring_pattern!: RecurringPattern;
 
   @Column()
   title: string;
 
-  @Column({ nullable: true })
-  description: string;
+  @Column({ type: 'varchar', nullable: true })
+  description: string | null;
 
   @Column()
   location: string;
@@ -27,18 +27,20 @@ export class EventE {
   @Column()
   locationUrl: string;
 
-  @Column({ nullable: true })
-  url: string;
+  @Column({ type: 'varchar', nullable: true })
+  url: string | null;
 
   @Index({ spatial: true })
   @Column({
     type: 'geography',
     spatialFeatureType: 'Point',
-    srid: 4326
+    srid: 4326,
   })
-  location_point: Point
+  location_point: Point;
 
-  @Column({ default: 'https://res.cloudinary.com/dqolsfqjt/image/upload/v1692633904/placeholder-16x9-1_vp8x60.webp' })
+  @Column({
+    default: 'https://res.cloudinary.com/dqolsfqjt/image/upload/v1692633904/placeholder-16x9-1_vp8x60.webp',
+  })
   image_url: string;
 
   @Column({ default: 0 })
@@ -56,8 +58,8 @@ export class EventE {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({ nullable: true })
-  updated_by: string;
+  @Column({ type: 'varchar', nullable: true })
+  updated_by: string | null;
 
   @UpdateDateColumn()
   updated_at: Date;

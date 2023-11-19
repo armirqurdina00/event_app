@@ -18,14 +18,14 @@ export default withApiAuthRequired(
 
         formData.append('file', contents, {
           filename: path.basename(files.media[0].filepath),
-          contentType: 'image/jpg'
+          contentType: 'image/jpg',
         });
 
         const { accessToken: access_token } = await getAccessToken(req, res);
 
         const headers = {
           Authorization: `Bearer ${access_token}`,
-          ...formData.getHeaders()
+          ...formData.getHeaders(),
         };
 
         const response2: AxiosResponse<ImageRes> = await axios.post(
@@ -34,7 +34,7 @@ export default withApiAuthRequired(
           }/events/${String(req.query.event_id)}/images`,
           formData,
           {
-					  headers
+            headers,
           }
         );
 
@@ -58,6 +58,6 @@ export default withApiAuthRequired(
 
 export const config = {
   api: {
-    bodyParser: false
-  }
+    bodyParser: false,
+  },
 };

@@ -26,9 +26,9 @@ export class GroupE {
   @Column({
     type: 'geography',
     spatialFeatureType: 'Point',
-    srid: 4326
+    srid: 4326,
   })
-  location_point: Point
+  location_point: Point;
 
   @Column({ default: 1 })
   number_of_joins: number;

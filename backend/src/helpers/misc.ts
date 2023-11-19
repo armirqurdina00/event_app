@@ -31,19 +31,15 @@ export class OperationError extends Error {
 export function log(message?: any, ...optionalParams: any[]) {
   const date = `${new Date().toLocaleDateString('de-DE')}, ${new Date().toLocaleTimeString('de-DE')}`;
 
-  if (optionalParams.length !== 0)
-    console.info(LOG_COLORS.FGGREEN, `[${date}, LOG]`, message, optionalParams);
-  else
-    console.info(LOG_COLORS.FGGREEN, `[${date}, LOG]`, message);
+  if (optionalParams.length !== 0) console.info(LOG_COLORS.FGGREEN, `[${date}, LOG]`, message, optionalParams);
+  else console.info(LOG_COLORS.FGGREEN, `[${date}, LOG]`, message);
 }
 
 export function log_error(message?: any, ...optionalParams: any[]) {
   const date = `${new Date().toLocaleDateString('de-DE')}, ${new Date().toLocaleTimeString('de-DE')}`;
 
-  if (optionalParams.length !== 0)
-    console.info(LOG_COLORS.FGRED, `[${date}, ERROR]`, message, optionalParams);
-  else
-    console.info(LOG_COLORS.FGRED, `[${date}, ERROR]`, message);
+  if (optionalParams.length !== 0) console.info(LOG_COLORS.FGRED, `[${date}, ERROR]`, message, optionalParams);
+  else console.info(LOG_COLORS.FGRED, `[${date}, ERROR]`, message);
 }
 
 // ########################################

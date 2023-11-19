@@ -1,7 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: `${__dirname}/../../.env/.dev_env` });
 import { expect } from 'chai';
-import { BackendClient, EventRes, EventReqBody, EventPatchReqBody, ImageRes, RecurringPattern, ApiError } from '../helpers-for-tests/backend_client';
+import {
+  BackendClient,
+  EventRes,
+  EventReqBody,
+  EventPatchReqBody,
+  ImageRes,
+  RecurringPattern,
+  ApiError,
+} from '../helpers-for-tests/backend_client';
 import { get_access_token, get_user_id } from '../helpers-for-tests/auth';
 import axios, { AxiosResponse } from 'axios';
 import path from 'path';
@@ -11,28 +19,27 @@ import moment from 'moment';
 import { HttpStatusCode } from '../commons/enums';
 
 let backend_client: BackendClient;
-const event_ids = [];
+const event_ids: string[] = [];
 let user_id;
 
-describe('Tests for events endpoints.', function() {
-
-  before(async function() {
+describe('Tests for events endpoints.', function () {
+  before(async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
-    if (process.env.NODE_ENV==='DEVELOPMENT') {
+    if (process.env.NODE_ENV === 'DEVELOPMENT') {
       const server = require('../index').default;
       await server;
     }
 
     backend_client = new BackendClient({
       BASE: process.env.BU_API_URL,
-      TOKEN: get_access_token
+      TOKEN: get_access_token,
     });
 
     user_id = await get_user_id();
   });
 
-  it('POST /v1/events', async function() {
+  it('POST /v1/events', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: EventReqBody = {
@@ -43,7 +50,7 @@ describe('Tests for events endpoints.', function() {
       image_url: 'http://res.cloudinary.com/dqolsfqjt/image/upload/v1691513488/vt97k2aqwhhf85njpucg.jpg',
       url: 'https://www.facebook.com/events/985182309362614/',
       recurring_pattern: RecurringPattern.WEEKLY,
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const response: EventRes = await backend_client.events.postEvents(user_id, body);
@@ -65,7 +72,7 @@ describe('Tests for events endpoints.', function() {
     expect(response.recurring_pattern).to.equal(body.recurring_pattern);
   });
 
-  it('PATCH /v1/events/{event_id}', async function() {
+  it('PATCH /v1/events/{event_id}', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: EventReqBody = {
@@ -73,7 +80,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const response1: EventRes = await backend_client.events.postEvents(user_id, body);
@@ -88,7 +95,7 @@ describe('Tests for events endpoints.', function() {
     expect(response2.title).to.equal(patch.title);
   });
 
-  it('GET /v1/events/{event_id} and GET /v1/events', async function() {
+  it('GET /v1/events/{event_id} and GET /v1/events', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: EventReqBody = {
@@ -96,7 +103,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const number_of_items = 3;
@@ -132,7 +139,7 @@ describe('Tests for events endpoints.', function() {
     expect(response_2.total_number_of_items).to.be.above(number_of_items - 1);
   });
 
-  it('GET /v1/events returns only events within the specified radius.', async function() {
+  it('GET /v1/events returns only events within the specified radius.', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const event_ids_inside: string[] = [];
@@ -190,7 +197,7 @@ describe('Tests for events endpoints.', function() {
     expect(returnedEventsOutside.length).to.equal(0);
   });
 
-  it('DELETE /v1/events/{event_id}', async function() {
+  it('DELETE /v1/events/{event_id}', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: EventReqBody = {
@@ -198,7 +205,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const { event_id }: EventRes = await backend_client.events.postEvents(user_id, body);
@@ -216,7 +223,7 @@ describe('Tests for events endpoints.', function() {
     }
   });
 
-  it('POST /v1/events/{event_id}/images', async function() {
+  it('POST /v1/events/{event_id}/images', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const access_token = await get_access_token();
@@ -227,7 +234,7 @@ describe('Tests for events endpoints.', function() {
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
       recurring_pattern: RecurringPattern.NONE,
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const { event_id } = await backend_client.events.postEvents(user_id, body);
@@ -243,18 +250,22 @@ describe('Tests for events endpoints.', function() {
     });
 
     const headers = {
-      'Authorization': `Bearer ${access_token}`,
+      Authorization: `Bearer ${access_token}`,
       ...formData.getHeaders(), // Include the Content-Type header for multipart/form-data
     };
 
-    const response2: AxiosResponse<ImageRes> = await axios.post(`http://localhost:8080/v1/users/${user_id}/events/${event_id}/images`, formData, {
-      headers: headers,
-    });
+    const response2: AxiosResponse<ImageRes> = await axios.post(
+      `http://localhost:8080/v1/users/${user_id}/events/${event_id}/images`,
+      formData,
+      {
+        headers: headers,
+      }
+    );
 
     expect(response2.data.url).to.include('cloudinary');
   });
 
-  it('POST /v1/events/{event_id}/upvotes and POST /v1/events/{event_id}/downvotes', async function() {
+  it('POST /v1/events/{event_id}/upvotes and POST /v1/events/{event_id}/downvotes', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: EventReqBody = {
@@ -262,7 +273,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates: [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const { event_id } = await backend_client.events.postEvents(user_id, body);
@@ -277,7 +288,7 @@ describe('Tests for events endpoints.', function() {
     try {
       await backend_client.events.postUpvotes(user_id, event_id);
       throw new Error('postUpvotes should fail');
-    } catch(err: any) {
+    } catch (err: any) {
       expect(err?.status === 400);
     }
 
@@ -296,7 +307,7 @@ describe('Tests for events endpoints.', function() {
     await backend_client.events.deleteDownvotes(user_id, event_id);
   });
 
-  it('GET /v1/users/events/upvotes and GET /v1/users/events/downvotes', async function() {
+  it('GET /v1/users/events/upvotes and GET /v1/users/events/downvotes', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const body: EventReqBody = {
@@ -304,7 +315,7 @@ describe('Tests for events endpoints.', function() {
       title: 'Street Salsa',
       location: 'City Park',
       locationUrl: 'https://www.google.com/maps?cid=8926798613940117231',
-      coordinates:  [8.4037, 49.0069]
+      coordinates: [8.4037, 49.0069],
     };
 
     const { event_id } = await backend_client.events.postEvents(user_id, body);

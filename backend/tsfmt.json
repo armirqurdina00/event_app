@@ -1,5 +1,5 @@
 {
-    "indentSize": 2,
-    "tabSize": 2,
-    "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis?": false
+  "indentSize": 2,
+  "tabSize": 2,
+  "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis?": false
 }

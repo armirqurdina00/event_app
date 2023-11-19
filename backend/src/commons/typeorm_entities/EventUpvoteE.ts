@@ -17,6 +17,9 @@ export class EventUpvoteE {
   number_of_votes: number;
 
   @ManyToOne(() => EventE, 'upvotes')
-  @JoinColumn({ name: 'event_id', foreignKeyConstraintName: 'event_constraint' })
+  @JoinColumn({
+    name: 'event_id',
+    foreignKeyConstraintName: 'event_constraint',
+  })
   event: EventE;
 }

@@ -4,7 +4,7 @@
   },
   "scripts": {
     "start": "docker-compose up --build",
-    "test": "docker-compose up --build -d && ./wait-for-it.sh localhost:3000 -- npm run test --prefix frontend; docker compose down",
+    "test": "npm run test --prefix backend && docker-compose up --build -d && ./wait-for-it.sh localhost:3000 -- npm run test --prefix frontend; docker compose down",
     "test-prod": "TEST_URL=https://sabaki.dance npm run test --prefix frontend"
   },
   "devDependencies": {

@@ -12,8 +12,8 @@ const eventsFilePath = __dirname + '/../../../scraping/european_events_from_lati
 let backend_client: BackendClient;
 let user_id: string;
 
-describe('Add Events.', function() {
-  before(async function() {
+describe('Add Events.', function () {
+  before(async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
 
     const server = require('../index').default;
@@ -21,13 +21,13 @@ describe('Add Events.', function() {
 
     backend_client = new BackendClient({
       BASE: process.env.BU_API_URL,
-      TOKEN: get_access_token
+      TOKEN: get_access_token,
     });
 
     user_id = await get_user_id();
   });
 
-  it.skip('debug', async function() {
+  it.skip('debug', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 10000);
 
     const response = await getEventsFromAllEventsIn('salsa', 'Munich', 11.5819806, 48.1351253);
@@ -40,7 +40,7 @@ describe('Add Events.', function() {
     console.log(events[2].eventname);
   });
 
-  it('Scrape and Add Events from https://allevents.in', async function() {
+  it('Scrape and Add Events from https://allevents.in', async function () {
     this.timeout(60 * 60 * 1000);
 
     const groupLocations = await getMostPopularGroupLocations(200);
@@ -70,7 +70,7 @@ describe('Add Events.', function() {
 
             try {
               await backend_client.events.postEvents(user_id, eventData);
-            } catch (error:any) {
+            } catch (error: any) {
               if (error.status === 400) {
                 console.error(`Event already exists: ${eventData.title}`);
               } else {
@@ -81,10 +81,11 @@ describe('Add Events.', function() {
         } catch (error) {
           console.error(`Error retrieving events for ${groupLocations[i].location}:`, error);
         }
-      }}
+      }
+    }
   });
 
-  it.skip('Add Events via POST /v1/users/{user_id}/events from file', async function() {
+  it.skip('Add Events via POST /v1/users/{user_id}/events from file', async function () {
     this.timeout(Number(process.env.TESTS_TIMEOUT_IN_SECONDS) * 1000);
     const jsonData = readFileSync(eventsFilePath, 'utf-8');
     const allEventsData: EventReqBody[] = JSON.parse(jsonData);
@@ -160,10 +161,11 @@ type RecurringEventDetails = {
   has_slots: boolean;
 };
 
-async function getMostPopularGroupLocations(limit:number) {
+async function getMostPopularGroupLocations(limit: number) {
   const groupRepo = await Database.get_repo(GroupE);
 
-  const rawGroupLocations = await groupRepo.createQueryBuilder('group')
+  const rawGroupLocations = await groupRepo
+    .createQueryBuilder('group')
     .select(['ST_AsGeoJSON(group.location_point) as location_point', 'group.location']) // Using ST_AsGeoJSON
     .addSelect('SUM(group.number_of_joins)', 'total_joins')
     .groupBy('group.location_point')
@@ -176,33 +178,39 @@ async function getMostPopularGroupLocations(limit:number) {
   const groupLocations = rawGroupLocations.map(group => ({
     location_point: JSON.parse(group.location_point),
     location: group.group_location,
-    total_joins: group.total_joins
+    total_joins: group.total_joins,
   }));
 
   return groupLocations;
 }
 
-async function getEventsFromAllEventsIn(query: string, city: string, longitude: number, latitude: number): Promise<AxiosResponse<ResponseData>> {
+async function getEventsFromAllEventsIn(
+  query: string,
+  city: string,
+  longitude: number,
+  latitude: number
+): Promise<AxiosResponse<ResponseData>> {
   const url = 'https://allevents.in/api/index.php/events/web/qs/search';
 
   // Define the request headers
   const headers = {
-    'Accept': 'application/json, text/plain, */*',
+    Accept: 'application/json, text/plain, */*',
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
     'Cache-Control': 'no-cache',
     'Content-Type': 'application/json;charset=UTF-8',
-    'Origin': 'https://allevents.in',
-    'Pragma': 'no-cache',
-    'Referer': 'https://allevents.in/karlsruhe?ref=home-page',
+    Origin: 'https://allevents.in',
+    Pragma: 'no-cache',
+    Referer: 'https://allevents.in/karlsruhe?ref=home-page',
     'Sec-Ch-Ua': '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
     'Sec-Ch-Ua-Mobile': '?0',
     'Sec-Ch-Ua-Platform': '"macOS"',
     'Sec-Fetch-Dest': 'empty',
     'Sec-Fetch-Mode': 'cors',
     'Sec-Fetch-Site': 'same-origin',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-    'Cookie': '_pk_id.1.6c4e=5abaaa3f561b73ae.1693208321.; WZRK_G=95c109b232654d118a602d89df18e6c7; ...', // Shortened for brevity
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+    Cookie: '_pk_id.1.6c4e=5abaaa3f561b73ae.1693208321.; WZRK_G=95c109b232654d118a602d89df18e6c7; ...', // Shortened for brevity
   };
 
   // Define the request payload
@@ -224,20 +232,26 @@ async function getEventsFromAllEventsIn(query: string, city: string, longitude: 
   // const data_3 = { 'query':'salsa','latitude':'49.002061','longitude':'8.4150049','city':'Freiburg Im Breisgau','country':'Germany','region_code':'BW' };
 
   try {
-    const response = await axios.post<any,AxiosResponse<ResponseData>>(url, data, { headers: headers });
+    const response = await axios.post<any, AxiosResponse<ResponseData>>(url, data, { headers: headers });
     return response;
   } catch (error) {
     console.error('Error fetching events:', error);
+    throw error;
   }
 }
 
 // create events
 async function createEvents(eventsData: EventReqBody[]): Promise<void> {
-  const eventPromises = eventsData.map(async (eventData) => {
-
+  const eventPromises = eventsData.map(async eventData => {
     try {
-
-      const existingEvent = await backend_client.events.getEvents(1, 10, null, null, null, eventData.title);
+      const existingEvent = await backend_client.events.getEvents(
+        1,
+        10,
+        undefined,
+        undefined,
+        undefined,
+        eventData.title
+      );
       if (existingEvent.items?.length > 0) {
         console.log(`Event with title ${eventData.title} already exists.`);
         return;
@@ -249,12 +263,12 @@ async function createEvents(eventsData: EventReqBody[]): Promise<void> {
       const body: EventReqBody = {
         ...eventData,
         coordinates,
-        unix_time: eventData.unix_time * 1000
+        unix_time: eventData.unix_time * 1000,
       };
 
       await backend_client.events.postEvents(user_id, body);
       console.log(`Event ${eventData.title} created successfully.`);
-    } catch (error:any) {
+    } catch (error: any) {
       if (error.status === 400) {
         return;
       }
@@ -267,7 +281,9 @@ async function createEvents(eventsData: EventReqBody[]): Promise<void> {
 }
 
 async function getLocationCoordinates(location: string): Promise<[number, number]> {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${
+    process.env.GOOGLE_MAPS_API_KEY
+  }`;
   try {
     const { data } = await axios.get(url);
     if (data.results && data.results.length > 0) {
@@ -283,7 +299,7 @@ async function getLocationCoordinates(location: string): Promise<[number, number
   }
 }
 
-async function getAddressAndLinkFromCoordinates(lat: number, lng: number): Promise<{ address: string, link: string }> {
+async function getAddressAndLinkFromCoordinates(lat: number, lng: number): Promise<{ address: string; link: string }> {
   const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
 
   try {
@@ -316,7 +332,7 @@ async function getAddressAndLinkFromCoordinates(lat: number, lng: number): Promi
 
     return {
       address: fullAddress,
-      link: `https://www.google.com/maps/place/${encodedAddress}`
+      link: `https://www.google.com/maps/place/${encodedAddress}`,
     };
   } catch (error) {
     console.error(`Error fetching address details for coordinates ${lat}, ${lng}:`, error);
@@ -329,23 +345,23 @@ function formatAddress(address) {
   let result = '';
 
   // Check for city
-  if(parts.length >= 3) {
+  if (parts.length >= 3) {
     result += parts[2].trim();
   }
 
   // Check for name or place
-  if(parts[0]) {
+  if (parts[0]) {
     result += ', ' + parts[0].trim();
   }
 
   // Check for street and street number
-  if(parts.length >= 2) {
+  if (parts.length >= 2) {
     result += ', ' + parts[1].trim();
   }
 
   // Check for extra parts (for some addresses)
-  if(parts.length > 3) {
-    for(let i = 3; i < parts.length; i++) {
+  if (parts.length > 3) {
+    for (let i = 3; i < parts.length; i++) {
       result += ', ' + parts[i].trim();
     }
   }

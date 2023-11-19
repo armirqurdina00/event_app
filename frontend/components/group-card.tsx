@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { type GroupJoinRes, type GroupRes, GroupType } from '../utils/backend_client';
+import {
+  type GroupJoinRes,
+  type GroupRes,
+  GroupType,
+} from '../utils/backend_client';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -13,7 +17,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  Typography
+  Typography,
 } from '@mui/material';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -29,10 +33,10 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
 
   // Handle groups
 
-  function handleEdit () {
+  function handleEdit() {
     router.push({
       pathname: `/groups/${group.group_id}`,
-      query: router.query
+      query: router.query,
     });
   }
 
@@ -55,7 +59,7 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
 
     if (
       group.type === GroupType.WHATSAPP &&
-			!localStorage.getItem('whatsAppLinkHintShown')
+      !localStorage.getItem('whatsAppLinkHintShown')
     ) {
       setOpenWhatsAppDialog(true);
       return;
@@ -89,7 +93,7 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
 
   // Render
 
-  function getGroupIcon (type: GroupType) {
+  function getGroupIcon(type: GroupType) {
     if (type == GroupType.TELEGRAM) {
       return <TelegramIcon style={{ color: '#0088cc', fontSize: '30px' }} />;
     } else if (type == GroupType.WHATSAPP) {
@@ -99,52 +103,50 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
     }
   }
   const EditButton = ({ group, user, handleEdit }) =>
-    group.created_by === user?.sub
-      ? (
-        <button
-          className='rounded-full bg-black bg-opacity-40 p-1'
-          onClick={handleEdit}
-          data-testid='edit-test-id'
-        >
-          <EditIcon color='primary' className='z-20 text-3xl' />
-        </button>
-      )
-      : null;
+    group.created_by === user?.sub ? (
+      <button
+        className="rounded-full bg-black bg-opacity-40 p-1"
+        onClick={handleEdit}
+        data-testid="edit-test-id"
+      >
+        <EditIcon color="primary" className="z-20 text-3xl" />
+      </button>
+    ) : null;
 
   const GroupEdit = ({ group, user, handleEdit }) => (
-    <div className='absolute left-0 top-0 flex w-full justify-between p-2'>
+    <div className="absolute left-0 top-0 flex w-full justify-between p-2">
       <div />
-      <div className='flex cursor-pointer gap-3 '>
+      <div className="flex cursor-pointer gap-3 ">
         <EditButton group={group} user={user} handleEdit={handleEdit} />
       </div>
     </div>
   );
 
   const GroupContent = ({ group }) => (
-    <div className='flex h-full flex-col justify-between gap-2 px-4 py-2'>
-      <div className='flex items-center gap-2'>
+    <div className="flex h-full flex-col justify-between gap-2 px-4 py-2">
+      <div className="flex items-center gap-2">
         {getGroupIcon(group.type)}
-        <h5 className='text-xl font-semibold tracking-tight text-gray-900'>
+        <h5 className="text-xl font-semibold tracking-tight text-gray-900">
           {group.title}
         </h5>
       </div>
 
       <div>
-        <div className='flex items-center gap-1 font-medium text-gray-500'>
-          <LocationOnIcon className='text-md' />
-          <p className='text-md'>{group.location}</p>
+        <div className="flex items-center gap-1 font-medium text-gray-500">
+          <LocationOnIcon className="text-md" />
+          <p className="text-md">{group.location}</p>
         </div>
-        <span className='text-sm text-gray-500'>
+        <span className="text-sm text-gray-500">
           {group.number_of_joins} sind hierüber beigetreten
         </span>
-        <div className='flex gap-3'>
-          <div className='flex-grow'>
+        <div className="flex gap-3">
+          <div className="flex-grow">
             <Button
-              data-testid='join-button-id'
-              className='mt-1 w-full !bg-gray-300 text-black'
+              data-testid="join-button-id"
+              className="mt-1 w-full !bg-gray-300 text-black"
               onClick={handleJoin}
             >
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <GroupAddIcon />
                 <span>Beitreten</span>
               </div>
@@ -152,34 +154,36 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
           </div>
           {group.description && (
             <div>
-              {showDescription
-							  ? (
-                  <Button
-                    className='mt-1 w-full !bg-blue-100 text-blue-600'
-                    onClick={() => { setShowDescription(!showDescription); }}
-                  >
-                    <div className='flex items-center gap-2'>
-                      <ExpandMoreIcon color='primary' />
-                    </div>
-                  </Button>
-							    )
-							  : (
-                  <Button
-                    className='mt-1 w-full !bg-gray-300 text-black'
-                    onClick={() => { setShowDescription(!showDescription); }}
-                  >
-                    <div className='flex items-center gap-2'>
-                      <ExpandMoreIcon />
-                    </div>
-                  </Button>
-							    )}
+              {showDescription ? (
+                <Button
+                  className="mt-1 w-full !bg-blue-100 text-blue-600"
+                  onClick={() => {
+                    setShowDescription(!showDescription);
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <ExpandMoreIcon color="primary" />
+                  </div>
+                </Button>
+              ) : (
+                <Button
+                  className="mt-1 w-full !bg-gray-300 text-black"
+                  onClick={() => {
+                    setShowDescription(!showDescription);
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <ExpandMoreIcon />
+                  </div>
+                </Button>
+              )}
             </div>
           )}
         </div>
       </div>
       {showDescription && group.description && (
         <div>
-          <Typography variant='body1' className='mx-3 mb-3 mt-3 select-text'>
+          <Typography variant="body1" className="mx-3 mb-3 mt-3 select-text">
             {formatTextForDisplay(group.description)}
           </Typography>
         </div>
@@ -204,7 +208,7 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
 
         // Add the link
         result.push(
-          <Link className='break-words text-blue-500' href={match} key={match}>
+          <Link className="break-words text-blue-500" href={match} key={match}>
             {match}
           </Link>
         );
@@ -230,49 +234,61 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
   };
 
   return (
-    <div className='relative mx-5 rounded-xl border border-gray-200 bg-white shadow'>
+    <div className="relative mx-5 rounded-xl border border-gray-200 bg-white shadow">
       <GroupEdit group={group} user={user} handleEdit={handleEdit} />
       <GroupContent group={group} />
-      <Dialog open={openJoinDialog} onClose={() => { setOpenJoinDialog(false); }}>
+      <Dialog
+        open={openJoinDialog}
+        onClose={() => {
+          setOpenJoinDialog(false);
+        }}
+      >
         <DialogContent>
           {/* Hier können Sie den Text und die Erklärung für die Anmeldung anzeigen */}
-          <Typography variant='h6'>Anmeldung erforderlich</Typography>
+          <Typography variant="h6">Anmeldung erforderlich</Typography>
           <Typography>
-						Ansonten haben wir sehr schnell Spam-Bots in den Gruppen ;).
+            Ansonten haben wir sehr schnell Spam-Bots in den Gruppen ;).
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setOpenJoinDialog(false); }} color='primary'>
-						Schließen
+          <Button
+            onClick={() => {
+              setOpenJoinDialog(false);
+            }}
+            color="primary"
+          >
+            Schließen
           </Button>
           <Button
             onClick={handleLogIn}
-            color='primary'
-            data-testid='login-test-id'
+            color="primary"
+            data-testid="login-test-id"
           >
-						Jetzt anmelden
+            Jetzt anmelden
           </Button>
         </DialogActions>
       </Dialog>
       <Dialog
         open={openWhatsAppDialog}
-        onClose={() => { setOpenWhatsAppDialog(false); }}
+        onClose={() => {
+          setOpenWhatsAppDialog(false);
+        }}
       >
         <DialogContent>
-          <Typography variant='h6'>WhatsApp Link Hinweis</Typography>
+          <Typography variant="h6">WhatsApp Link Hinweis</Typography>
           <Typography>
-						Bei Android kann es vorkommen, dass WhatsApp-Links beim ersten Mal
-						nicht direkt funktionieren. Sollte das der Fall sein, einfach
-						nochmal probieren.
+            Bei Android kann es vorkommen, dass WhatsApp-Links beim ersten Mal
+            nicht direkt funktionieren. Sollte das der Fall sein, einfach
+            nochmal probieren.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button
-            data-testid='confirm-whatsapp-test-id'
+            data-testid="confirm-whatsapp-test-id"
             onClick={handleCloseWhatsAppDialog}
-            color='primary'
+            color="primary"
           >
-						Verstanden
+            Verstanden
           </Button>
         </DialogActions>
       </Dialog>

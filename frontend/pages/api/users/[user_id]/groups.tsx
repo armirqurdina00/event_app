@@ -3,7 +3,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next';
 import { BackendClient } from '../../../../utils/backend_client';
 import axios from 'axios';
 
-export default async function postUserGroups (
+export default async function postUserGroups(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -13,7 +13,7 @@ export default async function postUserGroups (
 
       const backend_client = new BackendClient({
         BASE: process.env.BACKEND_URL,
-        TOKEN: access_token
+        TOKEN: access_token,
       });
 
       const response = await backend_client.groups.postGroups(

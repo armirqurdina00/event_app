@@ -19,13 +19,13 @@
     "strict": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "strictNullChecks": false,
-    "noUnusedParameters": false
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false
   },
   "formatCodeOptions": {
     "indentSize": 2,
     "tabSize": 2
   },
   "include": ["src/**/*", "src/helpers-for-tests"],
-  "exclude": ["**/node_modules", "**/tmp*"]
+  "exclude": ["**/node_modules"]
 }

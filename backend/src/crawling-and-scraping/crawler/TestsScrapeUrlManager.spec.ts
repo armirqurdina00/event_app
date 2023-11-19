@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon, { SinonStubbedInstance } from 'sinon';
 import { Repository } from 'typeorm';
 import { ScrapeUrlE } from '../../commons/typeorm_entities';
-import { SCRAPE_RESULT, ScrapeUrlManagerConfig, ScrapeUrlStatus, UrlType, } from '../../commons/enums';
+import { SCRAPE_RESULT, ScrapeUrlManagerConfig, ScrapeUrlStatus, UrlType } from '../../commons/enums';
 import ScrapeUrlManager from './ScrapeUrlManager';
 import TimeManager from './TimeManager';
 import moment from 'moment';
@@ -19,8 +19,9 @@ describe('ScrapeUrlManager Functionality', function () {
     scrapeUrlRepositoryStubs = sinon.createStubInstance<any>(Repository<ScrapeUrlE>);
     timeManager = new TimeManager();
     scrapeUrlManagerConfig = {
-      MIN_SCRAPE_TIME_DIFF_IN_DAYS: 2,
+      LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS: 2,
       NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: 0.3,
+      EVENT_NEXT_SCRAPE_TIME_MULTIPLIER: 0.9,
     };
     scrapeUrlManager = new ScrapeUrlManager(timeManager, scrapeUrlRepositoryStubs, scrapeUrlManagerConfig);
   });
@@ -39,10 +40,10 @@ describe('ScrapeUrlManager Functionality', function () {
       city: 'Karlsruhe',
       scrapeUrlStatus: ScrapeUrlStatus.PROCESSED,
       expiry: moment().add(30, 'days').toDate(),
-      lastFound: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
-      lastScrape: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      lastFound: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
+      lastScrape: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
       nextScrape: new Date(),
-      createdAt: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      createdAt: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
     };
 
     scrapeUrlRepositoryStubs.findOne.resolves(existingScrapeUrl);
@@ -52,14 +53,18 @@ describe('ScrapeUrlManager Functionality', function () {
 
     const actualArgs1 = scrapeUrlRepositoryStubs.update.getCall(0).args;
     const scrapeUrlEntity1 = actualArgs1[1];
-    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(moment(scrapeUrlEntity1.lastScrape as Date), 'seconds');
+    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(
+      moment(scrapeUrlEntity1.lastScrape as Date),
+      'seconds'
+    );
 
     const lastScrapeTime1 = moment(scrapeUrlEntity1.lastScrape as Date);
     const nextScrapeTime1 = moment(scrapeUrlEntity1.nextScrape as Date);
 
     expect(lastScrapeTime1.isSame(moment(), 'second')).to.be.true;
-    expect(nextScrapeTime1.isAfter(moment().add(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days'))).to.be.true;
-    expect(scrapeInterval1).to.be.greaterThan(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS * 24 * 60 * 60);
+    expect(nextScrapeTime1.isAfter(moment().add(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days'))).to.be
+      .true;
+    expect(scrapeInterval1).to.be.greaterThan(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS * 24 * 60 * 60);
   });
 
   it('After scraping a search url and finding new events, the next scrape should be done earlier.', async function () {
@@ -71,10 +76,10 @@ describe('ScrapeUrlManager Functionality', function () {
       city: 'Karlsruhe',
       scrapeUrlStatus: ScrapeUrlStatus.PROCESSED,
       expiry: moment().add(30, 'days').toDate(),
-      lastFound: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
-      lastScrape: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      lastFound: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
+      lastScrape: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
       nextScrape: new Date(),
-      createdAt: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      createdAt: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
     };
 
     scrapeUrlRepositoryStubs.findOne.resolves(existingScrapeUrl);
@@ -84,14 +89,18 @@ describe('ScrapeUrlManager Functionality', function () {
 
     const actualArgs1 = scrapeUrlRepositoryStubs.update.getCall(0).args;
     const scrapeUrlEntity1 = actualArgs1[1];
-    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(moment(scrapeUrlEntity1.lastScrape as Date), 'seconds');
+    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(
+      moment(scrapeUrlEntity1.lastScrape as Date),
+      'seconds'
+    );
 
     const lastScrapeTime1 = moment(scrapeUrlEntity1.lastScrape as Date);
     const nextScrapeTime1 = moment(scrapeUrlEntity1.nextScrape as Date);
 
     expect(lastScrapeTime1.isSame(moment(), 'second')).to.be.true;
-    expect(nextScrapeTime1.isBefore(moment().add(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days'))).to.be.true;
-    expect(scrapeInterval1).to.be.lessThan(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS * 24 * 60 * 60);
+    expect(nextScrapeTime1.isBefore(moment().add(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days'))).to.be
+      .true;
+    expect(scrapeInterval1).to.be.lessThan(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS * 24 * 60 * 60);
   });
 
   it('After scraping a organizer url and not finding new events, the next scrape should be done later.', async function () {
@@ -103,10 +112,10 @@ describe('ScrapeUrlManager Functionality', function () {
       city: 'Karlsruhe',
       scrapeUrlStatus: ScrapeUrlStatus.PROCESSED,
       expiry: moment().add(30, 'days').toDate(),
-      lastFound: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
-      lastScrape: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      lastFound: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
+      lastScrape: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
       nextScrape: new Date(),
-      createdAt: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      createdAt: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
     };
 
     scrapeUrlRepositoryStubs.findOne.resolves(existingScrapeUrl);
@@ -116,14 +125,18 @@ describe('ScrapeUrlManager Functionality', function () {
 
     const actualArgs1 = scrapeUrlRepositoryStubs.update.getCall(0).args;
     const scrapeUrlEntity1 = actualArgs1[1];
-    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(moment(scrapeUrlEntity1.lastScrape as Date), 'seconds');
+    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(
+      moment(scrapeUrlEntity1.lastScrape as Date),
+      'seconds'
+    );
 
     const lastScrapeTime1 = moment(scrapeUrlEntity1.lastScrape as Date);
     const nextScrapeTime1 = moment(scrapeUrlEntity1.nextScrape as Date);
 
     expect(lastScrapeTime1.isSame(moment(), 'second')).to.be.true;
-    expect(nextScrapeTime1.isAfter(moment().add(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days'))).to.be.true;
-    expect(scrapeInterval1).to.be.greaterThan(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS * 24 * 60 * 60);
+    expect(nextScrapeTime1.isAfter(moment().add(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days'))).to.be
+      .true;
+    expect(scrapeInterval1).to.be.greaterThan(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS * 24 * 60 * 60);
   });
 
   it('After scraping a organizer url and finding new events, the next scrape should be done earlier.', async function () {
@@ -135,10 +148,10 @@ describe('ScrapeUrlManager Functionality', function () {
       city: 'Karlsruhe',
       scrapeUrlStatus: ScrapeUrlStatus.PROCESSED,
       expiry: moment().add(30, 'days').toDate(),
-      lastFound: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
-      lastScrape: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      lastFound: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
+      lastScrape: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
       nextScrape: new Date(),
-      createdAt: moment().subtract(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days').toDate(),
+      createdAt: moment().subtract(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days').toDate(),
     };
 
     scrapeUrlRepositoryStubs.findOne.resolves(existingScrapeUrl);
@@ -148,19 +161,24 @@ describe('ScrapeUrlManager Functionality', function () {
 
     const actualArgs1 = scrapeUrlRepositoryStubs.update.getCall(0).args;
     const scrapeUrlEntity1 = actualArgs1[1];
-    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(moment(scrapeUrlEntity1.lastScrape as Date), 'seconds');
+    const scrapeInterval1 = moment(scrapeUrlEntity1.nextScrape as Date).diff(
+      moment(scrapeUrlEntity1.lastScrape as Date),
+      'seconds'
+    );
 
     const lastScrapeTime1 = moment(scrapeUrlEntity1.lastScrape as Date);
     const nextScrapeTime1 = moment(scrapeUrlEntity1.nextScrape as Date);
 
     expect(lastScrapeTime1.isSame(moment(), 'second')).to.be.true;
-    expect(nextScrapeTime1.isBefore(moment().add(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS, 'days'))).to.be.true;
-    expect(scrapeInterval1).to.be.lessThan(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS * 24 * 60 * 60);
+    expect(nextScrapeTime1.isBefore(moment().add(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS, 'days'))).to.be
+      .true;
+    expect(scrapeInterval1).to.be.lessThan(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS * 24 * 60 * 60);
   });
 
   it('After scraping an event for the first time, the next scrape time should be set to half the time until the event starts.', async function () {
+    const daysTillEventStarts = 90;
     const eventUrl = 'https://www.facebook.com/events/1234567890/';
-    const eventStart = moment().add(30, 'days').toDate();
+    const eventStart = moment().add(daysTillEventStarts, 'days').toDate();
     const city = 'Karlsruhe';
 
     await scrapeUrlManager.saveEventUrl(eventUrl, city, eventStart, ScrapeUrlStatus.PROCESSED);
@@ -176,7 +194,10 @@ describe('ScrapeUrlManager Functionality', function () {
     const actualLastScrapeTime = moment(scrapeUrlEntity.lastScrape as Date);
     const actualNextScrapeTime = moment(scrapeUrlEntity.nextScrape as Date);
     const expectedLastScrapeTime = moment();
-    const expectedNextScrapeTime = moment().add(15, 'days');
+    const expectedNextScrapeTime = moment().add(
+      daysTillEventStarts * scrapeUrlManagerConfig.EVENT_NEXT_SCRAPE_TIME_MULTIPLIER,
+      'days'
+    );
 
     expect(actualLastScrapeTime.isSame(expectedLastScrapeTime, 'day')).to.be.true;
     expect(actualNextScrapeTime.isSame(expectedNextScrapeTime, 'day')).to.be.true;
@@ -208,19 +229,20 @@ describe('ScrapeUrlManager Functionality', function () {
     const eventStart = moment().add(6, 'days').toDate();
     const city = 'Karlsruhe';
 
-    await scrapeUrlManager.saveEventUrl(eventUrl, city, eventStart, ScrapeUrlStatus.FAILED_TO_PROCESS);
+    await scrapeUrlManager.saveEventUrl(eventUrl, city, eventStart, ScrapeUrlStatus.NOT_RELEVANT);
 
     expect(scrapeUrlRepositoryStubs.save.calledOnce).to.be.true;
 
     const actualArgs = scrapeUrlRepositoryStubs.save.getCall(0).args;
     const scrapeUrlEntity = actualArgs[0];
 
-    expect(scrapeUrlEntity.scrapeUrlStatus).to.equal(ScrapeUrlStatus.FAILED_TO_PROCESS);
+    expect(scrapeUrlEntity.scrapeUrlStatus).to.equal(ScrapeUrlStatus.NOT_RELEVANT);
   });
 
   it('After scraping an event, the next scrape time should be set to half the time until the event starts.', async function () {
+    const daysTillEventStarts = 90;
     const eventUrl = 'https://www.facebook.com/events/1234567890/';
-    const eventStart = moment().add(30, 'days').toDate();
+    const eventStart = moment().add(daysTillEventStarts, 'days').toDate();
 
     await scrapeUrlManager.updateEventUrl(eventUrl, eventStart, ScrapeUrlStatus.PROCESSED);
 
@@ -232,7 +254,10 @@ describe('ScrapeUrlManager Functionality', function () {
     const actualLastScrapeTime = moment(scrapeUrlEntity.lastScrape as Date);
     const actualNextScrapeTime = moment(scrapeUrlEntity.nextScrape as Date);
     const expectedLastScrapeTime = moment();
-    const expectedNextScrapeTime = moment().add(15, 'days');
+    const expectedNextScrapeTime = moment().add(
+      daysTillEventStarts * scrapeUrlManagerConfig.EVENT_NEXT_SCRAPE_TIME_MULTIPLIER,
+      'days'
+    );
 
     expect(actualLastScrapeTime.isSame(expectedLastScrapeTime, 'day')).to.be.true;
     expect(actualNextScrapeTime.isSame(expectedNextScrapeTime, 'day')).to.be.true;
@@ -261,20 +286,22 @@ describe('ScrapeUrlManager Functionality', function () {
     const eventUrl = 'https://www.facebook.com/events/1234567890/';
     const eventStart = moment().add(6, 'days').toDate();
 
-    await scrapeUrlManager.updateEventUrl(eventUrl, eventStart, ScrapeUrlStatus.FAILED_TO_PROCESS);
+    await scrapeUrlManager.updateEventUrl(eventUrl, eventStart, ScrapeUrlStatus.PROCESSED);
 
     expect(scrapeUrlRepositoryStubs.save.calledOnce).to.be.true;
 
     const actualArgs = scrapeUrlRepositoryStubs.save.getCall(0).args;
     const scrapeUrlEntity = actualArgs[0];
 
-    expect(scrapeUrlEntity.scrapeUrlStatus).to.equal(ScrapeUrlStatus.FAILED_TO_PROCESS);
+    expect(scrapeUrlEntity.scrapeUrlStatus).to.equal(ScrapeUrlStatus.PROCESSED);
   });
 
   it('After scraping an event shortly before start, the next scrape time should be set to null.', async function () {
     const city = 'Karlsruhe';
     const eventUrl = 'https://www.facebook.com/events/1234567890/';
-    const eventStart = moment().add(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS * 1.9 * 24 * 60 * 60 * 1000, 'milliseconds').toDate();
+    const eventStart = moment()
+      .add(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS * 1.9 * 24 * 60 * 60 * 1000, 'milliseconds')
+      .toDate();
 
     await scrapeUrlManager.saveEventUrl(eventUrl, city, eventStart, ScrapeUrlStatus.PROCESSED);
 
@@ -283,7 +310,9 @@ describe('ScrapeUrlManager Functionality', function () {
 
     expect(scrapeUrlEntity.nextScrape).to.be.null;
 
-    const eventStart2 = moment().add(scrapeUrlManagerConfig.MIN_SCRAPE_TIME_DIFF_IN_DAYS * 2.1 * 24 * 60 * 60 * 1000, 'milliseconds').toDate();
+    const eventStart2 = moment()
+      .add(scrapeUrlManagerConfig.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS * 2.1 * 24 * 60 * 60 * 1000, 'milliseconds')
+      .toDate();
 
     await scrapeUrlManager.saveEventUrl(eventUrl, city, eventStart2, ScrapeUrlStatus.PROCESSED);
 

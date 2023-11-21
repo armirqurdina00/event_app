@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, Index } from 'typeorm';
 import { RecurringPattern } from '../TsoaTypes';
 import { EventUpvoteE } from './EventUpvoteE';
 import { EventDownvoteE } from './EventDownvoteE';
@@ -63,6 +63,9 @@ export class EventE {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date;
 
   @OneToMany(() => EventUpvoteE, 'event')
   upvotes: EventUpvoteE[];

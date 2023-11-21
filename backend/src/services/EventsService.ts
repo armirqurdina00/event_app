@@ -332,24 +332,8 @@ export async function save_event(
 
 async function remove_event_and_votes(event_id: string): Promise<void> {
   const data_source = await Database.get_data_source();
-
-  await data_source.manager.transaction(async tx_manager => {
-    await tx_manager
-      .createQueryBuilder()
-      .where('event_id = :event_id', { event_id })
-      .delete()
-      .from(EventDownvoteE)
-      .execute();
-
-    await tx_manager
-      .createQueryBuilder()
-      .where('event_id = :event_id', { event_id })
-      .delete()
-      .from(EventUpvoteE)
-      .execute();
-
-    await tx_manager.createQueryBuilder().where('event_id = :event_id', { event_id }).delete().from(EventE).execute();
-  });
+  
+  await data_source.createQueryBuilder().where('event_id = :event_id', { event_id }).softDelete().from(EventE).execute();
 }
 
 function as_event_response(event_e: EventE): EventRes {

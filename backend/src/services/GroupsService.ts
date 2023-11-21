@@ -122,16 +122,7 @@ async function save_group(
 async function remove_group_and_joins(group_id: string): Promise<void> {
   const data_source = await Database.get_data_source();
 
-  await data_source.manager.transaction(async tx_manager => {
-    await tx_manager
-      .createQueryBuilder()
-      .where('group_id = :group_id', { group_id })
-      .delete()
-      .from(GroupJoinE)
-      .execute();
-
-    await tx_manager.createQueryBuilder().where('group_id = :group_id', { group_id }).delete().from(GroupE).execute();
-  });
+  await data_source.createQueryBuilder().where('group_id = :group_id', { group_id }).softDelete().from(GroupE).execute();
 }
 
 async function find_group(group_id: string): Promise<GroupE | null> {

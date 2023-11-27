@@ -1,0 +1,12 @@
+{
+    "new-event": {
+        "title": "New Event",
+        "form-date": "Date",
+        "form-time": "Time",
+        "form-title": "Title",
+        "form-location": "Location",
+        "form-details": "Enter details about tickets, music & workshops...",
+        "go-back-btn": "Go back",
+        "send-btn": "Send"
+    }
+}

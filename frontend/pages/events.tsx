@@ -3,19 +3,19 @@ import EventCard from '@/components/event-card';
 import {
   type EventsRes,
   type EventRes,
-  type EventIds,
   OrderBy,
 } from '../utils/backend_client';
 import { useRouter } from 'next/router';
-import { useUser } from '@auth0/nextjs-auth0/client';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import axios, { type AxiosResponse } from 'axios';
 import { useUserConfig } from '@/hooks/useUserConfig';
 import { COOKIE_KEYS, SELECTED_ITEMS } from '../utils/constants';
 import cookie from 'cookie';
 import moment from 'moment';
 import TopNav from '@/components/top-nav';
 import BottomNav from '@/components/bottom-nav';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { i18n } from 'next-i18next';
+import { useTranslation } from 'next-i18next';
 
 const PAGE_SIZE = 20;
 const PAGE = 1;
@@ -88,11 +88,9 @@ export const getServerSideProps = async (context) => {
   const { startUnixTime, endUnixTime, orderBy } =
     getFilterDataFromCookies(cookies);
 
-  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
-
   if (!latitude || !longitude || !distance) {
     return {
-      props: { initialEvents: [], googleMapsApiKey },
+      props: { initialEvents: [] },
     };
   }
 
@@ -105,20 +103,26 @@ export const getServerSideProps = async (context) => {
     orderBy
   );
 
+  if (process.env.NODE_ENV === "development") {
+    await i18n?.reloadResources();
+  }
+
+  const translations = await serverSideTranslations(context.locale, [
+    'common'
+  ]);
+
   return {
     props: {
       initialEvents,
-      googleMapsApiKey,
+      ...translations
     },
   };
 };
 
 const Events: React.FC<{
   initialEvents: EventRes[];
-  googleMapsApiKey: string;
-}> = ({ initialEvents, googleMapsApiKey }) => {
+}> = ({ initialEvents }) => {
   const router = useRouter();
-  const { user } = useUser();
   const { userConfig, init, update } = useUserConfig(router);
   const [page, setPage] = useState(initialEvents.length === 0 ? 1 : 2);
   const [loading, setLoading] = useState(false);
@@ -126,36 +130,18 @@ const Events: React.FC<{
     initialEvents.length === 0 || initialEvents.length == PAGE_SIZE
   );
   const [events, setEvents] = useState(initialEvents);
-  const [userUpvotes, setUserUpvotes] = useState<EventIds>([]);
-  const [userDownvotes, setUserDownvotes] = useState<EventIds>([]);
   const [isSwiped, setIsSwiped] = useState(false);
   const menuRef = useRef(null);
-  const itemRefs = {}; // To store references to each item
-  const [selectedItem, setSelectedItem] = useState(null); // initially set to null
+  const itemRefs = {};
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
-    if (!userConfig) init(googleMapsApiKey);
+    if (!userConfig) init();
   }, []);
 
   useEffect(() => {
     loadFirstEvents();
   }, [userConfig]);
-
-  useEffect(() => {
-    if (user?.sub) loadUserVotes();
-  }, [user]);
-
-  const loadUserVotes = async function () {
-    const upvotes: AxiosResponse<string[]> = await axios.get(
-      `/api/users/${user.sub}/events/upvotes`
-    );
-    setUserUpvotes(upvotes.data);
-
-    const downvotes: AxiosResponse<string[]> = await axios.get(
-      `/api/users/${user.sub}/events/downvotes`
-    );
-    setUserDownvotes(downvotes.data);
-  };
 
   const loadMoreEvents = async () => {
     if (!hasMore) return;
@@ -274,17 +260,19 @@ const Events: React.FC<{
 
   // userConfig Menu
 
+  const { t } = useTranslation('common');
+
   const items = [
-    { id: SELECTED_ITEMS.CHRONOLOGICAL, label: 'Chronologisch' },
+    { id: SELECTED_ITEMS.CHRONOLOGICAL, label: t('nav_item1') },
     {
       id: SELECTED_ITEMS.POPULAR_WEEKEND,
-      label: 'Beliebt nächstes Wochenende',
+      label: t('nav_item2'),
     },
     {
       id: SELECTED_ITEMS.POPULAR_MONTH,
-      label: 'Beliebt in den nächsten 30 Tagen',
+      label: t('nav_item3'),
     },
-    { id: SELECTED_ITEMS.ALL_TIME_POPULAR, label: 'Allzeit beliebt' },
+    { id: SELECTED_ITEMS.ALL_TIME_POPULAR, label: t('nav_item4') },
   ];
 
   useEffect(() => {
@@ -425,13 +413,7 @@ const Events: React.FC<{
                 }
               >
                 {events.map((event, index) => (
-                  <EventCard
-                    key={index}
-                    event={event}
-                    upvoted={userUpvotes.includes(event.event_id)}
-                    downvoted={userDownvotes.includes(event.event_id)}
-                    details={false}
-                  />
+                  <EventCard key={index} event={event} details={false} />
                 ))}
               </InfiniteScroll>
             </div>

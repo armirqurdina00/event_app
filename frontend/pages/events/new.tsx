@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   type EventReqBody,
   RecurringPattern,
+  Coordinates,
 } from '../../utils/backend_client';
 import moment from 'moment';
 import axios from 'axios';
@@ -21,8 +22,24 @@ import Spinner from '@/components/spinner';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 
-export const getServerSideProps = withPageAuthRequired();
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+
+export async function getServerSideProps({ locale }) {
+  withPageAuthRequired()
+
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'events', 'common',
+      ])),
+      // Will be passed to the page component as props
+    },
+  }
+}
+
+// export const getServerSideProps = withPageAuthRequired();
 
 const CreateEvent = ({ user }) => {
   const router = useRouter();
@@ -51,7 +68,7 @@ const CreateEvent = ({ user }) => {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [locationUrl, setLocationUrl] = useState('');
-  const [coordinates, setCoordinates] = useState<number[]>([]);
+  const [coordinates, setCoordinates] = useState<Coordinates>(null);
   const [description, setDescription] = useState('');
   const [recurring_pattern, setRecurringPattern] = useState<RecurringPattern>(
     RecurringPattern.NONE
@@ -95,9 +112,9 @@ const CreateEvent = ({ user }) => {
       setLocation(combinedName);
       setLocationUrl(place.url);
 
-      const lat = place.geometry.location.lat();
-      const lng = place.geometry.location.lng();
-      setCoordinates([lng, lat]);
+      const latitude = place.geometry.location.lat();
+      const longitude = place.geometry.location.lng();
+      setCoordinates({ latitude, longitude });
       setPlaceFromAutocomplete(true);
     });
   }, []);
@@ -166,7 +183,7 @@ const CreateEvent = ({ user }) => {
     setValidationErrors(errors);
 
     const coordinatesError =
-      coordinates.length === 0 ? 'Coordinates are required' : null;
+      coordinates === null ? 'Coordinates are required' : null;
     console.error(coordinatesError);
 
     const locationUrlError = !locationUrl.trim()
@@ -207,6 +224,8 @@ const CreateEvent = ({ user }) => {
         if (recurring_pattern) body.recurring_pattern = recurring_pattern;
 
         setIsLoading(true);
+        console.log('body', body);
+        console.log('body.coordinates', body.coordinates);
         const response = await axios.post(
           `/api/users/${user.sub}/events`,
           body
@@ -271,12 +290,14 @@ const CreateEvent = ({ user }) => {
     setIsFullscreen(!isFullscreen);
   };
 
+  const { t } = useTranslation(['common', 'events']);
+
   return (
     <Page>
       <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="de">
         <div className="mx-auto max-w-xl">
           <div className="my-7 flex justify-center">
-            <h1 className="text-3xl">Neues Event</h1>
+            <h1 className="text-3xl">{t('events:new-event.title')}</h1>
           </div>
           <div className="relative mx-3">
             <Image
@@ -326,7 +347,7 @@ const CreateEvent = ({ user }) => {
                 onChange={(date) => {
                   setDate(date);
                 }}
-                label="Datum"
+                label={t('events:new-event.form-date')}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -353,7 +374,7 @@ const CreateEvent = ({ user }) => {
               onChange={(time) => {
                 setTime(time);
               }}
-              label="Zeit"
+              label={t('events:new-event.form-time')}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -371,7 +392,7 @@ const CreateEvent = ({ user }) => {
               }}
               id="outlined-basic"
               name="event-title"
-              label="Titel"
+              label={t('events:new-event.form-title')}
               variant="outlined"
               fullWidth
               required
@@ -385,7 +406,7 @@ const CreateEvent = ({ user }) => {
               }}
               id="outlined-basic"
               name="event-location"
-              label="Ort"
+              label={t('events:new-event.form-location')}
               variant="outlined"
               fullWidth
               required
@@ -400,7 +421,7 @@ const CreateEvent = ({ user }) => {
               error={!!validationErrors.description}
               helperText={validationErrors.description}
               name="group-description"
-              label="Details zu Tickets, Musik & Workshops eingeben..."
+              label={t('events:new-event.form-details')}
               variant="outlined"
               multiline
               fullWidth
@@ -418,7 +439,7 @@ const CreateEvent = ({ user }) => {
                 }}
               >
                 {' '}
-                Zurück
+                {t('events:new-event.go-back-btn')}
               </Button>
               <Button
                 variant="contained"
@@ -428,7 +449,7 @@ const CreateEvent = ({ user }) => {
                 disabled={is_loading}
                 data-testid="submit"
               >
-                Senden
+                {t('events:new-event.send-btn')}
               </Button>
             </div>
           </div>

@@ -1,0 +1,12 @@
+{
+    "new-event": {
+        "title": "Neues Event",
+        "form-date": "Datum",
+        "form-time": "Zeit",
+        "form-title": "Titel",
+        "form-location": "Ort",
+        "form-details": "Details zu Tickets, Musik & Workshops eingeben...",
+        "go-back-btn": "Zurück",
+        "send-btn": "Senden"
+    }
+}

@@ -22,20 +22,8 @@ import Spinner from '@/components/spinner';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import Image from 'next/image';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next';
 
-export async function getServerSideProps({ locale }) {
-  withPageAuthRequired();
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, [
-        'common',
-        'events',
-      ])),
-    },
-  }
-}
+export const getServerSideProps = withPageAuthRequired();
 
 const CreateEvent = ({ user }) => {
   const router = useRouter();
@@ -286,14 +274,12 @@ const CreateEvent = ({ user }) => {
     setIsFullscreen(!isFullscreen);
   };
 
-  const { t } = useTranslation(['common', 'events']);
-
   return (
     <Page>
       <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="de">
         <div className="mx-auto max-w-xl">
           <div className="my-7 flex justify-center">
-            <h1 className="text-3xl">{t('events:new-event.title')}</h1>
+            <h1 className="text-3xl">Neues Event</h1>
           </div>
           <div className="relative mx-3">
             <Image
@@ -343,7 +329,7 @@ const CreateEvent = ({ user }) => {
                 onChange={(date) => {
                   setDate(date);
                 }}
-                label={t('events:new-event.date-label')}
+                label="Datum"
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -370,7 +356,7 @@ const CreateEvent = ({ user }) => {
               onChange={(time) => {
                 setTime(time);
               }}
-              label={t('events:new-event.time-label')}
+              label="Zeit"
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -388,7 +374,7 @@ const CreateEvent = ({ user }) => {
               }}
               id="outlined-basic"
               name="event-title"
-              label={t('events:new-event.title-label')}
+              label="Titel"
               variant="outlined"
               fullWidth
               required
@@ -402,7 +388,7 @@ const CreateEvent = ({ user }) => {
               }}
               id="outlined-basic"
               name="event-location"
-              label={t('events:new-event.location-label')}
+              label="Ort"
               variant="outlined"
               fullWidth
               required
@@ -417,7 +403,7 @@ const CreateEvent = ({ user }) => {
               error={!!validationErrors.description}
               helperText={validationErrors.description}
               name="group-description"
-              label={t('events:new-event.details-label')}
+              label="Details zu Tickets, Musik & Workshops eingeben..."
               variant="outlined"
               multiline
               fullWidth
@@ -435,7 +421,7 @@ const CreateEvent = ({ user }) => {
                 }}
               >
                 {' '}
-                {t('events:new-event.go-back-btn')}
+                Zurück
               </Button>
               <Button
                 variant="contained"
@@ -445,7 +431,7 @@ const CreateEvent = ({ user }) => {
                 disabled={is_loading}
                 data-testid="submit"
               >
-                {t('events:new-event.send-btn')}
+                Senden
               </Button>
             </div>
           </div>

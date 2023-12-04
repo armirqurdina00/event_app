@@ -11,11 +11,10 @@ export const dataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   synchronize: process.env.NODE_ENV === NodeEnv.development ? true : false,
-  ssl: false,
-  // ssl: {
-  //   rejectUnauthorized: false,
-  //   ca: fs.readFileSync(__dirname + '/ca-certificate.crt').toString(),
-  // },
+  ssl: {
+    rejectUnauthorized: false,
+    ca: fs.readFileSync(__dirname + '/ca-certificate.crt').toString(),
+  },
   entities: [join(__dirname, '..', 'commons', '/typeorm_entities/**/*')],
   extra: { max: Number(process.env.NUMBER_OF_DB_CONNECTIONS) },
 });

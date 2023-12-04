@@ -1,8 +1,0 @@
-build
-node_modules
-AccessTokenForTests.tmp
-backend_client
-uploads
-/test-results/
-/playwright-report/
-/playwright/.cache/

@@ -11,7 +11,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import { useTranslation } from 'next-i18next';
 
 const BottomNav = () => {
   const router = useRouter();
@@ -54,8 +53,6 @@ const BottomNav = () => {
     }
   };
 
-  const { t } = useTranslation('common');
-
   return (
     <div className="">
       <nav className="fixed bottom-0 z-30 w-full border-t bg-zinc-100 pb-safe">
@@ -77,7 +74,7 @@ const BottomNav = () => {
                 router.pathname == '/events' ? 'text-blue-600' : 'text-zinc-600'
               }`}
             >
-              {t('footer_item1')}
+              {'Events'}
             </span>
           </Button>
 
@@ -114,7 +111,7 @@ const BottomNav = () => {
                 router.pathname == '/groups' ? 'text-blue-600' : 'text-zinc-600'
               }`}
             >
-              {t('footer_item2')}
+              {'Gruppen'}
             </span>
           </Button>
         </div>
@@ -127,9 +124,10 @@ const BottomNav = () => {
       >
         <DialogContent>
           {/* Hier können Sie den Text und die Erklärung für die Anmeldung anzeigen */}
-          <Typography variant="h6">{t('dialog-content.title')}</Typography>
+          <Typography variant="h6">Anmeldung erforderlich</Typography>
           <Typography>
-            {t('dialog-content.description')}
+            Um Events und Gruppen zu speichern musst du dich anmelden. Das
+            klappt mit einem Klick via Google Anmeldung.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -139,14 +137,14 @@ const BottomNav = () => {
             }}
             color="primary"
           >
-            {t('dialog-content.close-btn')}
+            Schließen
           </Button>
           <Button
             onClick={handleLogIn}
             color="primary"
             data-testid="login-test-id"
           >
-            {t('dialog-content.register-btn')}
+            Jetzt anmelden
           </Button>
         </DialogActions>
       </Dialog>

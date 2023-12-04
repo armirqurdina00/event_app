@@ -5,15 +5,27 @@ export enum SCRAPE_RESULT {
   STALE = 'STALE',
 }
 
+export enum LocationType {
+  CITY = 'CITY',
+  ADDRESS = 'ADDRESS',
+}
+
 export type FacebookCrawlerConfig = {
   STALE_URL_EXPIRY_TIME_IN_DAYS: number;
   ERROR_THRESHOLD: number;
+  EVENT_GROUP_PROXIMITY_DISTANCE_IN_KM: number;
+};
+
+export type SchedulerConfig = {
+  RUNTIME_ADJUSTMENT_FACTOR: number;
+  DEFAULT_INTERVAL_IN_SECONDS: number;
 };
 
 export type ScrapeUrlManagerConfig = {
   LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS: number;
   NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: number; // This represents a percentage (e.g., 0.3 for 30%)
   EVENT_NEXT_SCRAPE_TIME_MULTIPLIER: number;
+  SECOND_TRY_TO_SCRAPE_EVENT_IN_DAYS: number;
 };
 
 export type DummyFacebookScraperConfig = {
@@ -25,13 +37,19 @@ export type DummyFacebookScraperConfig = {
   IS_RETURNING_IRRELEVANT_EVENTS?: boolean;
   EVENTS_ARE_MISSING_CITY?: boolean;
   EVENTS_ARE_MISSING_COORDINATES?: boolean;
+  EVENTS_ARE_IN_ETTLINGEN?: boolean;
 };
 
 export enum ScrapeUrlStatus {
-  IN_PAST = 'IN_PAST',
   NOT_PROCESSED = 'NOT_PROCESSED',
   PROCESSED = 'PROCESSED',
+  MISSING_LOCATION = 'MISSING_LOCATION',
+  FIRST_TIME_FAILED_TO_SCRAPE = 'FIRST_TIME_FAILED_TO_SCRAPE',
+  FAILED_TO_SCRAPE = 'FAILED_TO_SCRAPE',
   NOT_RELEVANT = 'NOT_RELEVANT',
+  IN_PAST = 'IN_PAST',
+  MISSING_COORDINATES = 'MISSING_COORDINATES',
+  OUTSIDE_GROUP_PROXIMITY = 'OUTSIDE_GROUP_PROXIMITY',
   STALE = 'STALE',
 }
 
@@ -53,9 +71,8 @@ export enum OrderBy {
 }
 
 export enum NodeEnv {
-  'DEVELOPMENT' = 'DEVELOPMENT',
-  'TEST' = 'TEST',
-  'PRODUCTION' = 'PRODUCTION',
+  'development' = 'development',
+  'production' = 'production',
 }
 
 export enum GroupType {

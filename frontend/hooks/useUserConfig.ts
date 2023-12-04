@@ -7,7 +7,8 @@ import {
   DEFAULT_USER_CONFIG,
   SELECTED_ITEMS,
 } from '../utils/constants';
-import { OrderBy } from '@/utils/backend_client';
+import { CityRes, OrderBy } from '@/utils/backend_client';
+import axios, { AxiosResponse } from 'axios';
 
 interface LocationData {
   latitude: number;
@@ -18,7 +19,7 @@ interface LocationData {
 export const useUserConfig = (router) => {
   const { userConfig, setUserConfig } = useContext(UserConfigContext);
 
-  const init = async (googleMapsApiKey: string) => {
+  const init = async () => {
     console.log('Try to extract user config from URL');
     const {
       latitude: urlLatitude,
@@ -66,7 +67,7 @@ export const useUserConfig = (router) => {
     }
 
     console.log('Try to extract user config from device');
-    const deviceLocation = await getLocationFromDevice(googleMapsApiKey);
+    const deviceLocation = await getLocationFromDevice();
 
     if (
       deviceLocation?.latitude &&
@@ -209,9 +210,7 @@ export const useUserConfig = (router) => {
     });
   };
 
-  const getLocationFromDevice = async (
-    googleMapsApiKey: string
-  ): Promise<LocationData | null> => {
+  const getLocationFromDevice = async (): Promise<LocationData | null> => {
     if (!navigator.geolocation) {
       console.log('Geolocation not supported.');
       return null;
@@ -237,11 +236,7 @@ export const useUserConfig = (router) => {
         `Current position: Latitude: ${latitude}, Longitude: ${longitude}`
       );
 
-      const city = await getCityByCoordinates(
-        longitude,
-        latitude,
-        googleMapsApiKey
-      );
+      const city = await getCityByCoordinates(longitude, latitude);
       console.log(`City found: ${city}`);
 
       return {
@@ -257,38 +252,13 @@ export const useUserConfig = (router) => {
 
   const getCityByCoordinates = async (
     longitude: number,
-    latitude: number,
-    googleMapsApiKey: string
+    latitude: number
   ): Promise<string> => {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleMapsApiKey}`;
+    const res: AxiosResponse<CityRes> = await axios.get(
+      `/api/locations/city?lat=${latitude}&lng=${longitude}`
+    );
 
-    try {
-      if (!googleMapsApiKey) throw new Error('Missing Google Maps API Key.');
-
-      console.log(`Fetching city for coordinates: ${latitude}, ${longitude}`);
-      const response = await fetch(url);
-      const data = await response.json();
-
-      const city = data.results?.[0]?.address_components?.find((component) =>
-        component.types.includes('locality')
-      )?.long_name;
-
-      if (city) {
-        console.log(
-          `City found for coordinates: ${latitude}, ${longitude}: ${city}`
-        );
-        return city;
-      }
-
-      console.warn(`No city found for coordinates: ${latitude}, ${longitude}`);
-      return 'Unknown';
-    } catch (error) {
-      console.error(
-        `Error fetching city for coordinates: ${latitude}, ${longitude}:`,
-        error
-      );
-      throw error;
-    }
+    return res.data.name;
   };
 
   return {

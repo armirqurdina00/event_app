@@ -10,7 +10,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 import React, { useEffect, useRef, useState } from 'react';
 import Spinner from '@/components/spinner';
-import { type GroupReqBody } from '@/utils/backend_client';
+import { type GroupReqBody, Coordinates } from '@/utils/backend_client';
 import axios from 'axios';
 import Error from '@/components/error';
 import { useUser } from '@auth0/nextjs-auth0/client';
@@ -30,7 +30,7 @@ const CreateGroup = () => {
   const [link, setLink] = useState('');
   const [location, setLocation] = useState('');
   const [locationUrl, setLocationUrl] = useState('');
-  const [coordinates, setCoordinates] = useState<number[]>([]);
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
   const [error, setError] = useState(false);
   const [placeFromAutocomplete, setPlaceFromAutocomplete] = useState(false);
 
@@ -49,9 +49,9 @@ const CreateGroup = () => {
       setLocation(place.name);
       setLocationUrl(place.url);
 
-      const lat = place.geometry.location.lat();
-      const lng = place.geometry.location.lng();
-      setCoordinates([lng, lat]);
+      const latitude = place.geometry.location.lat();
+      const longitude = place.geometry.location.lng();
+      setCoordinates({ latitude, longitude });
       setPlaceFromAutocomplete(true);
     });
   }, []);
@@ -114,7 +114,7 @@ const CreateGroup = () => {
     setValidationErrors(errors);
 
     const coordinatesError =
-      coordinates.length === 0 ? 'Coordinates are required' : null;
+      coordinates === null ? 'Coordinates are required' : null;
     console.error(coordinatesError);
 
     const locationUrlError = !locationUrl.trim()

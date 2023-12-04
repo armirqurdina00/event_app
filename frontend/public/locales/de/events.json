@@ -1,11 +1,15 @@
 {
+    "nav_item1": "Chronologisch",
+    "nav_item2": "Beliebt nächstes Wochenende",
+    "nav_item3": "Beliebt in den nächsten 30 Tagen",
+    "nav_item4": "Allzeit beliebt",
     "new-event": {
         "title": "Neues Event",
-        "form-date": "Datum",
-        "form-time": "Zeit",
-        "form-title": "Titel",
-        "form-location": "Ort",
-        "form-details": "Details zu Tickets, Musik & Workshops eingeben...",
+        "date-label": "Datum",
+        "time-label": "Zeit",
+        "title-label": "Titel",
+        "location-label": "Ort",
+        "details-label": "Details zu Tickets, Musik & Workshops eingeben...",
         "go-back-btn": "Zurück",
         "send-btn": "Senden"
     }

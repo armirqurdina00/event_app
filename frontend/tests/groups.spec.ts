@@ -1,16 +1,14 @@
 import { expect, test } from '@playwright/test';
 import dotenv from 'dotenv';
+import { dataSource } from './DataSource';
 dotenv.config({ path: './.env.local' });
 
 test('test groups', async ({ page }) => {
-  // const browser = await chromium.launch();
-  // const context = await browser.newContext();
-  // await context.grantPermissions(['geolocation'], {
-  //   origin: process.env.TEST_URL,
-  // });
-  // const page = await context.newPage();
+  await dataSource.initialize();
+  await dataSource.query('DELETE FROM group_join_e;');
+  await dataSource.query('DELETE FROM group_e;');
+  await dataSource.query('DELETE FROM location_e;');
 
-  // Go to Page
   await page.goto(
     `${process.env.TEST_URL}/groups` +
       '?latitude=49.006889&longitude=8.403653&distance=50&city=Karlsruhe&orderBy=chronological&selectedItem=chronological'

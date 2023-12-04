@@ -13,9 +13,6 @@ import cookie from 'cookie';
 import moment from 'moment';
 import TopNav from '@/components/top-nav';
 import BottomNav from '@/components/bottom-nav';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { i18n } from 'next-i18next';
-import { useTranslation } from 'next-i18next';
 
 const PAGE_SIZE = 20;
 const PAGE = 1;
@@ -103,18 +100,9 @@ export const getServerSideProps = async (context) => {
     orderBy
   );
 
-  if (process.env.NODE_ENV === "development") {
-    await i18n?.reloadResources();
-  }
-
-  const translations = await serverSideTranslations(context.locale, [
-    'common'
-  ]);
-
   return {
     props: {
       initialEvents,
-      ...translations
     },
   };
 };
@@ -260,19 +248,17 @@ const Events: React.FC<{
 
   // userConfig Menu
 
-  const { t } = useTranslation('common');
-
   const items = [
-    { id: SELECTED_ITEMS.CHRONOLOGICAL, label: t('nav_item1') },
+    { id: SELECTED_ITEMS.CHRONOLOGICAL, label: 'Chronologisch' },
     {
       id: SELECTED_ITEMS.POPULAR_WEEKEND,
-      label: t('nav_item2'),
+      label: 'Beliebt nächstes Wochenende',
     },
     {
       id: SELECTED_ITEMS.POPULAR_MONTH,
-      label: t('nav_item3'),
+      label: 'Beliebt in den nächsten 30 Tagen',
     },
-    { id: SELECTED_ITEMS.ALL_TIME_POPULAR, label: t('nav_item4') },
+    { id: SELECTED_ITEMS.ALL_TIME_POPULAR, label: 'Allzeit beliebt' },
   ];
 
   useEffect(() => {

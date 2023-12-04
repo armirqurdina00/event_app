@@ -1,0 +1,1 @@
+launchctl unload ~/Library/LaunchAgents/dance.sabaki.plist && launchctl load ~/Library/LaunchAgents/dance.sabaki.plist

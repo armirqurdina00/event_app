@@ -3,20 +3,41 @@ import { ScrapeUrlManagerConfig, SCRAPE_RESULT, ScrapeUrlStatus, UrlType } from 
 import TimeManager from './TimeManager';
 import { ScrapeUrlE } from '../../commons/typeorm_entities';
 import { In, LessThanOrEqual, Repository } from 'typeorm';
+import { ScrapeUrlUpdate } from '../../commons/TsoaTypes';
 
 class ScrapeUrlManager {
-  private TimeManager: TimeManager;
+  private timeManager: TimeManager;
   private config: ScrapeUrlManagerConfig;
-  private Repo: Repository<ScrapeUrlE>;
+  private repo: Repository<ScrapeUrlE>;
+  private statusForConstruction = new Set<ScrapeUrlStatus>([
+    ScrapeUrlStatus.PROCESSED,
+    ScrapeUrlStatus.FIRST_TIME_FAILED_TO_SCRAPE,
+    ScrapeUrlStatus.MISSING_LOCATION,
+    ScrapeUrlStatus.NOT_RELEVANT,
+    ScrapeUrlStatus.IN_PAST,
+    ScrapeUrlStatus.MISSING_COORDINATES,
+    ScrapeUrlStatus.OUTSIDE_GROUP_PROXIMITY,
+  ]);
+  private statusForUpdate = new Set<ScrapeUrlStatus>([
+    ScrapeUrlStatus.PROCESSED,
+    ScrapeUrlStatus.FAILED_TO_SCRAPE,
+    ScrapeUrlStatus.MISSING_LOCATION,
+  ]);
+  private statusForNextScrape = new Set<ScrapeUrlStatus>([
+    ScrapeUrlStatus.PROCESSED,
+    ScrapeUrlStatus.FIRST_TIME_FAILED_TO_SCRAPE,
+    ScrapeUrlStatus.MISSING_LOCATION,
+  ]);
 
-  constructor(TimeManager, ScrapeUrlRepository, config) {
-    this.TimeManager = TimeManager;
-    this.Repo = ScrapeUrlRepository;
+  constructor(repo: Repository<ScrapeUrlE>, timeManager: TimeManager, config: ScrapeUrlManagerConfig) {
+    this.timeManager = timeManager;
+    this.repo = repo;
     this.config = config;
   }
 
   public async getScrapeUrls(scrapeUrls: string[]): Promise<ScrapeUrlE[]> {
-    const scrapeUrlsE = await this.Repo.createQueryBuilder('scrapeUrls')
+    const scrapeUrlsE = await this.repo
+      .createQueryBuilder('scrapeUrls')
       .select('scrapeUrls.url')
       .whereInIds(scrapeUrls)
       .getMany();
@@ -24,10 +45,10 @@ class ScrapeUrlManager {
     return scrapeUrlsE;
   }
 
-  public async getEligibleScrapeUrls(city: string, urlType: UrlType): Promise<ScrapeUrlE[]> {
-    const now = this.TimeManager.getCurrentTime();
+  public async getNextScrapeUrls(city: string, urlType: UrlType): Promise<ScrapeUrlE[]> {
+    const now = this.timeManager.getCurrentTime();
 
-    const scrapedEventUrls = await this.Repo.find({
+    const scrapedEventUrls = await this.repo.find({
       where: [
         {
           city,
@@ -37,7 +58,7 @@ class ScrapeUrlManager {
         {
           city,
           urlType: urlType,
-          scrapeUrlStatus: In([ScrapeUrlStatus.PROCESSED]),
+          scrapeUrlStatus: In([...this.statusForNextScrape]),
           nextScrape: LessThanOrEqual(now),
         },
       ],
@@ -52,11 +73,11 @@ class ScrapeUrlManager {
       urlType: UrlType.SEARCH_URL,
       city,
       scrapeUrlStatus: ScrapeUrlStatus.NOT_PROCESSED,
-      nextScrape: this.TimeManager.getCurrentTime(),
+      nextScrape: this.timeManager.getCurrentTime(),
       lastScrape: null,
       lastFound: null,
       expiry: null,
-      createdAt: this.TimeManager.getCurrentTime(),
+      createdAt: this.timeManager.getCurrentTime(),
     };
     return await this.saveScrapeUrl(scrapeUrlE);
   }
@@ -67,18 +88,13 @@ class ScrapeUrlManager {
       urlType: UrlType.ORGANIZER_URL,
       city,
       scrapeUrlStatus: ScrapeUrlStatus.NOT_PROCESSED,
-      nextScrape: this.TimeManager.getCurrentTime(),
+      nextScrape: this.timeManager.getCurrentTime(),
       lastScrape: null,
       lastFound: null,
       expiry: null,
-      createdAt: this.TimeManager.getCurrentTime(),
+      createdAt: this.timeManager.getCurrentTime(),
     };
     return await this.saveScrapeUrl(scrapeUrlE);
-  }
-
-  public async saveEventUrl(url: string, city: string, eventStart: Date | null, scrapeUrlStatus: ScrapeUrlStatus) {
-    const scrapeUrlE = await this.constructEventUrl(url, city, eventStart, scrapeUrlStatus);
-    await this.Repo.save(scrapeUrlE);
   }
 
   public async updateSearchUrl(url: string, scrapeResult: SCRAPE_RESULT) {
@@ -89,15 +105,21 @@ class ScrapeUrlManager {
     return this.updateUrlStatusBasedOnResult(url, scrapeResult);
   }
 
-  public async updateEventUrl(url: string, eventStart: Date | null, scrapeUrlStatus: ScrapeUrlStatus) {
-    const scrapeUrlE = await this.constructEventUrlUpdate(url, eventStart, scrapeUrlStatus);
-    await this.Repo.save(scrapeUrlE);
+  public async saveEventUrl(url: string, city: string, scrapeUrlStatus: ScrapeUrlStatus, eventStart?: Date) {
+    const scrapeUrlE = await this.constructEventUrl(url, city, scrapeUrlStatus, eventStart);
+    await this.repo.save(scrapeUrlE);
+  }
+
+  public async updateEventUrl(url: string, scrapeUrlStatus: ScrapeUrlStatus, eventStart?: Date) {
+    const scrapeUrlE = await this.constructEventUrlUpdate(url, scrapeUrlStatus, eventStart);
+    await this.repo.save(scrapeUrlE);
   }
 
   public async updateAllExpiredEventUrlStatus(city) {
-    const currentTime = this.TimeManager.getCurrentTime();
+    const currentTime = this.timeManager.getCurrentTime();
 
-    await this.Repo.createQueryBuilder()
+    await this.repo
+      .createQueryBuilder()
       .update(ScrapeUrlE)
       .set({ scrapeUrlStatus: ScrapeUrlStatus.IN_PAST })
       .where('expiry <= :currentTime AND scrapeUrlStatus != :statusAlreadyInPast AND city = :city', {
@@ -113,46 +135,70 @@ class ScrapeUrlManager {
   private constructEventUrl(
     url: string,
     city: string,
-    eventStart: Date | null,
-    scrapeUrlStatus: ScrapeUrlStatus
+    scrapeUrlStatus: ScrapeUrlStatus,
+    eventStart?: Date
   ): ScrapeUrlE {
-    const now = this.TimeManager.getCurrentTime();
+    if (!this.statusForConstruction.has(scrapeUrlStatus))
+      throw new Error(`Unallowed scrapeUrlStatus: ${scrapeUrlStatus}`);
 
-    const ScrapeUrl = new ScrapeUrlE();
-    ScrapeUrl.url = url;
-    ScrapeUrl.city = city;
-    ScrapeUrl.urlType = UrlType.EVENT_URL;
-    ScrapeUrl.expiry = eventStart;
-    ScrapeUrl.scrapeUrlStatus = scrapeUrlStatus;
+    const now = this.timeManager.getCurrentTime();
 
-    if (scrapeUrlStatus === ScrapeUrlStatus.PROCESSED && eventStart !== null) {
-      ScrapeUrl.lastFound = now;
-      ScrapeUrl.lastScrape = now;
-      ScrapeUrl.nextScrape = this.calculateNextScrapeTime(now, eventStart);
-    } else if (scrapeUrlStatus === ScrapeUrlStatus.IN_PAST || scrapeUrlStatus === ScrapeUrlStatus.NOT_RELEVANT) {
-      ScrapeUrl.lastScrape = now;
-      ScrapeUrl.nextScrape = null;
+    const urlType = UrlType.EVENT_URL;
+    let nextScrape: Date | null;
+    let lastScrape: Date | undefined;
+
+    if (
+      (this.statusForNextScrape.has(scrapeUrlStatus) &&
+        scrapeUrlStatus === ScrapeUrlStatus.FIRST_TIME_FAILED_TO_SCRAPE) ||
+      eventStart === undefined
+    ) {
+      nextScrape = moment(now).add(this.config.SECOND_TRY_TO_SCRAPE_EVENT_IN_DAYS, 'days').toDate();
+    } else if (this.statusForNextScrape.has(scrapeUrlStatus)) {
+      lastScrape = now;
+      nextScrape = this.calculateNextScrapeTime(now, eventStart);
+    } else {
+      lastScrape = now;
+      nextScrape = null;
     }
 
-    return ScrapeUrl;
+    const scrapeUrlE: ScrapeUrlE = {
+      url,
+      scrapeUrlStatus,
+      nextScrape,
+      urlType,
+      city,
+      expiry: eventStart ?? null,
+      lastScrape: lastScrape ?? null,
+      lastFound: lastScrape ?? null,
+      createdAt: now,
+    };
+
+    return scrapeUrlE;
   }
 
-  private constructEventUrlUpdate(url: string, eventStart: Date | null, scrapeUrlStatus: ScrapeUrlStatus): ScrapeUrlE {
-    const now = this.TimeManager.getCurrentTime();
+  private constructEventUrlUpdate(url: string, scrapeUrlStatus: ScrapeUrlStatus, eventStart?: Date): ScrapeUrlUpdate {
+    if (!this.statusForUpdate.has(scrapeUrlStatus)) throw new Error(`Unallowed scrapeUrlStatus: ${scrapeUrlStatus}`);
 
-    const scrapeUrlR = new ScrapeUrlE();
+    const now = this.timeManager.getCurrentTime();
 
-    scrapeUrlR.url = url;
-    scrapeUrlR.scrapeUrlStatus = scrapeUrlStatus;
+    let nextScrape: Date | null;
+    let lastScrape: Date | undefined;
 
-    if (scrapeUrlStatus === ScrapeUrlStatus.PROCESSED && eventStart !== null) {
-      scrapeUrlR.lastScrape = now;
-      scrapeUrlR.nextScrape = this.calculateNextScrapeTime(now, eventStart);
+    if (this.statusForNextScrape.has(scrapeUrlStatus) && eventStart !== undefined) {
+      lastScrape = now;
+      nextScrape = this.calculateNextScrapeTime(now, eventStart);
     } else {
-      scrapeUrlR.nextScrape = null;
+      nextScrape = null;
     }
 
-    return scrapeUrlR;
+    const scrapeUrlUpdate: ScrapeUrlUpdate = {
+      url,
+      scrapeUrlStatus,
+      nextScrape,
+    };
+    if (lastScrape !== undefined) scrapeUrlUpdate.lastScrape = lastScrape;
+
+    return scrapeUrlUpdate;
   }
 
   private calculateNextScrapeTime(now: Date, eventStart: Date): Date | null {
@@ -181,19 +227,19 @@ class ScrapeUrlManager {
   }
 
   private isInPast(date: Date): boolean {
-    const now = this.TimeManager.getCurrentTime();
+    const now = this.timeManager.getCurrentTime();
     return moment(now).isAfter(date);
   }
 
   private wasScrapedRecently(nextScrape: Date): boolean {
-    const now = this.TimeManager.getCurrentTime();
+    const now = this.timeManager.getCurrentTime();
     const diff = moment(nextScrape).diff(now, 'milliseconds');
     return diff < this.config.LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS * 24 * 60 * 60 * 1000;
   }
 
   private async saveScrapeUrl(scrapeUrl: ScrapeUrlE): Promise<ScrapeUrlE | null> {
     try {
-      return await this.Repo.save(scrapeUrl);
+      return await this.repo.save(scrapeUrl);
     } catch (error: any) {
       if (error.code === '23505') {
         console.error(`Scrape URL ${scrapeUrl.url} already exists`);
@@ -203,35 +249,35 @@ class ScrapeUrlManager {
     }
   }
 
-  async updateUrlStatusBasedOnResult(url, scrapeResult) {
-    const updateData = await this.constructUpdateData(url, scrapeResult);
+  async updateUrlStatusBasedOnResult(url, scrapeResult: SCRAPE_RESULT) {
+    const urlUpdate = await this.constructUrlUpdate(url, scrapeResult);
 
-    await this.Repo.update({ url }, updateData);
+    await this.repo.update({ url }, urlUpdate);
   }
 
-  private async constructUpdateData(url, scrapeResult: SCRAPE_RESULT) {
-    const currentTime = this.TimeManager.getCurrentTime();
-    const updateData: Partial<ScrapeUrlE> = {
+  private async constructUrlUpdate(url, scrapeResult: SCRAPE_RESULT) {
+    const currentTime = this.timeManager.getCurrentTime();
+    const urlUpdate: Partial<ScrapeUrlE> = {
       lastScrape: currentTime,
     };
 
     if (scrapeResult !== SCRAPE_RESULT.STALE) {
-      updateData.scrapeUrlStatus = ScrapeUrlStatus.PROCESSED;
-      updateData.nextScrape = await this.determineNextScrape(url, scrapeResult);
+      urlUpdate.scrapeUrlStatus = ScrapeUrlStatus.PROCESSED;
+      urlUpdate.nextScrape = await this.determineNextScrape(url, scrapeResult);
       if (scrapeResult === SCRAPE_RESULT.EVENTS_FOUND) {
-        updateData.lastFound = currentTime;
+        urlUpdate.lastFound = currentTime;
       }
     } else {
-      updateData.scrapeUrlStatus = ScrapeUrlStatus.STALE;
+      urlUpdate.scrapeUrlStatus = ScrapeUrlStatus.STALE;
     }
 
-    return updateData;
+    return urlUpdate;
   }
 
   // Todo: I am not sure why originalInterval got negative sometimes. I added Math.abs() to fix it. Temporary fix.
   private async determineNextScrape(url, scrapeResult) {
-    const currentTime = this.TimeManager.getCurrentTime();
-    const scrapeUrl = await this.Repo.findOne({ where: { url } });
+    const currentTime = this.timeManager.getCurrentTime();
+    const scrapeUrl = await this.repo.findOne({ where: { url } });
 
     if (scrapeUrl === null) throw new Error(`ScrapeUrl ${url} not found`);
 

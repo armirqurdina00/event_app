@@ -22,24 +22,8 @@ import Spinner from '@/components/spinner';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import Image from 'next/image';
-import { useTranslation } from 'next-i18next';
 
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-
-export async function getServerSideProps({ locale }) {
-  withPageAuthRequired()
-
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, [
-        'events', 'common',
-      ])),
-      // Will be passed to the page component as props
-    },
-  }
-}
-
-// export const getServerSideProps = withPageAuthRequired();
+export const getServerSideProps = withPageAuthRequired();
 
 const CreateEvent = ({ user }) => {
   const router = useRouter();
@@ -290,14 +274,12 @@ const CreateEvent = ({ user }) => {
     setIsFullscreen(!isFullscreen);
   };
 
-  const { t } = useTranslation(['common', 'events']);
-
   return (
     <Page>
       <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="de">
         <div className="mx-auto max-w-xl">
           <div className="my-7 flex justify-center">
-            <h1 className="text-3xl">{t('events:new-event.title')}</h1>
+            <h1 className="text-3xl">Neues Event</h1>
           </div>
           <div className="relative mx-3">
             <Image
@@ -347,7 +329,7 @@ const CreateEvent = ({ user }) => {
                 onChange={(date) => {
                   setDate(date);
                 }}
-                label={t('events:new-event.form-date')}
+                label="Datum"
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -374,7 +356,7 @@ const CreateEvent = ({ user }) => {
               onChange={(time) => {
                 setTime(time);
               }}
-              label={t('events:new-event.form-time')}
+              label="Zeit"
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -392,7 +374,7 @@ const CreateEvent = ({ user }) => {
               }}
               id="outlined-basic"
               name="event-title"
-              label={t('events:new-event.form-title')}
+              label="Titel"
               variant="outlined"
               fullWidth
               required
@@ -406,7 +388,7 @@ const CreateEvent = ({ user }) => {
               }}
               id="outlined-basic"
               name="event-location"
-              label={t('events:new-event.form-location')}
+              label="Ort"
               variant="outlined"
               fullWidth
               required
@@ -421,7 +403,7 @@ const CreateEvent = ({ user }) => {
               error={!!validationErrors.description}
               helperText={validationErrors.description}
               name="group-description"
-              label={t('events:new-event.form-details')}
+              label="Details zu Tickets, Musik & Workshops eingeben..."
               variant="outlined"
               multiline
               fullWidth
@@ -439,7 +421,7 @@ const CreateEvent = ({ user }) => {
                 }}
               >
                 {' '}
-                {t('events:new-event.go-back-btn')}
+                Zurück
               </Button>
               <Button
                 variant="contained"
@@ -449,7 +431,7 @@ const CreateEvent = ({ user }) => {
                 disabled={is_loading}
                 data-testid="submit"
               >
-                {t('events:new-event.send-btn')}
+                Senden
               </Button>
             </div>
           </div>

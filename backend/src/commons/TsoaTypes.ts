@@ -1,20 +1,12 @@
 import { FieldErrors } from 'tsoa';
-import { GroupType } from './enums';
+import { GroupType, ScrapeUrlStatus } from './enums';
 
-export class GroupJoinRes {
-  user_id: string;
-  group_id: string;
-  link: string;
-}
-
-export type EventUpvoteRes = EventVoteRes;
-
-export type EventDownvoteRes = EventVoteRes;
-
-export interface EventVoteRes {
-  event_id: string;
-  user_id: string;
-}
+export type ScrapeUrlUpdate = {
+  url: string;
+  scrapeUrlStatus: ScrapeUrlStatus;
+  nextScrape: Date | null;
+  lastScrape?: Date;
+};
 
 export type RecurringPattern = 'WEEKLY' | 'NONE';
 
@@ -28,7 +20,7 @@ export interface GroupReqBody {
   link?: string;
   location: string;
   locationUrl: string;
-  coordinates: Array<number>;
+  coordinates: Coordinates;
 }
 
 export interface GroupPatchReqBody {
@@ -37,24 +29,7 @@ export interface GroupPatchReqBody {
   link?: string;
   location?: string;
   locationUrl?: string;
-  coordinates?: Array<number>;
-}
-
-export type UserGroupRes = GroupRes & { link: string };
-
-export class GroupRes {
-  group_id: string;
-  title: string;
-  description?: string;
-  type: GroupType;
-  location: string;
-  locationUrl: string;
-  coordinates: Array<number>;
-  number_of_joins: number;
-  created_by: string;
-  created_at: Date;
-  updated_by: string;
-  updated_at: Date;
+  coordinates?: Coordinates;
 }
 
 export interface GroupsRes {
@@ -67,6 +42,22 @@ export interface GroupsRes {
   items: GroupRes[];
 }
 
+export class GroupRes {
+  group_id: string;
+  title: string;
+  description?: string;
+  type: GroupType;
+  location: string;
+  locationUrl: string;
+  coordinates: Coordinates;
+  link: string;
+  numberOfJoins: number;
+  created_by: string;
+  created_at: Date;
+  updated_by: string;
+  updated_at: Date;
+}
+
 export interface EventReqBody {
   unix_time: UnixTime;
   recurring_pattern?: RecurringPattern;
@@ -74,7 +65,7 @@ export interface EventReqBody {
   description?: string;
   location: string;
   locationUrl: string;
-  coordinates: Array<number>;
+  coordinates: Coordinates;
   image_url?: string;
   url?: string;
 }
@@ -88,7 +79,21 @@ export interface EventPatchReqBody {
   locationUrl?: string;
   image_url?: string | null;
   url?: string | null;
-  coordinates?: Array<number>;
+  coordinates?: Coordinates;
+}
+
+export class Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export class CoordinatesRes extends Coordinates {
+  fromCache: boolean;
+}
+
+export class CityRes {
+  name: string;
+  fromCache: boolean;
 }
 
 export class EventRes {
@@ -99,12 +104,10 @@ export class EventRes {
   description?: string;
   location: string;
   locationUrl: string;
-  coordinates: Array<number>;
+  coordinates: Coordinates;
   image_url?: string | null;
   url?: string | null;
-  upvotes_sum: number;
-  downvotes_sum: number;
-  votes_diff: number;
+  numberOfInterests: number;
   created_by: string;
   created_at: Date;
   updated_by: string;
@@ -119,6 +122,12 @@ export interface EventsRes {
    */
   total_number_of_items: number;
   items: EventRes[];
+}
+
+export interface LocationReqBody {
+  address: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface HttpError {

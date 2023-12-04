@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
-import {
-  type GroupJoinRes,
-  type GroupRes,
-  GroupType,
-} from '../utils/backend_client';
+import React, { useEffect, useState } from 'react';
+import { type GroupRes, GroupType } from '../utils/backend_client';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { useRouter } from 'next/router';
-import axios, { type AxiosResponse } from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -22,14 +17,27 @@ import {
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Link from 'next/link';
+import axios from 'axios';
 
 const GroupCard = ({ group }: { group: GroupRes }) => {
   const router = useRouter();
   const { user } = useUser();
   const [showDescription, setShowDescription] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [openJoinDialog, setOpenJoinDialog] = useState(false);
   const [openWhatsAppDialog, setOpenWhatsAppDialog] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
+  const [numberOfJoins, setNumberOfJoins] = useState(null);
+
+  useEffect(() => {
+    if (group) setNumberOfJoins(group.numberOfJoins);
+  }, [group]);
+
+  useEffect(() => {
+    if (sessionStorage) {
+      const sessionItem: string | null = sessionStorage.getItem(group.group_id);
+      if (sessionItem !== null) setHasJoined(true);
+    }
+  }, [processing]);
 
   // Handle groups
 
@@ -40,11 +48,6 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
     });
   }
 
-  const handleLogIn = async () => {
-    setOpenJoinDialog(false);
-    router.push('/api/auth/login');
-  };
-
   const handleCloseWhatsAppDialog = () => {
     localStorage.setItem('whatsAppLinkHintShown', 'true');
     setOpenWhatsAppDialog(false);
@@ -52,11 +55,7 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
   };
 
   const handleJoin = async () => {
-    if (!user) {
-      setOpenJoinDialog(true);
-      return;
-    }
-
+    // show dialog for whatsapp group join bug on android
     if (
       group.type === GroupType.WHATSAPP &&
       !localStorage.getItem('whatsAppLinkHintShown')
@@ -65,30 +64,32 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
       return;
     }
 
-    try {
-      let res;
+    // restrict join to three times per session
+    const sessionItem: string | null = sessionStorage.getItem(group.group_id);
 
-      if (processing) return;
-      setProcessing(true);
-
-      try {
-        res = await axios.get<unknown, AxiosResponse<GroupJoinRes>>(
-          `/api/users/${user.sub}/groups/${group.group_id}/joins`
-        );
-      } catch (err) {
-        if (err.response?.status === 404) {
-          res = await axios.post<unknown, AxiosResponse<GroupJoinRes>>(
-            `/api/users/${user.sub}/groups/${group.group_id}/joins`
-          );
-        } else {
-          throw err;
-        }
-      }
-
-      router.push(res.data.link);
-    } finally {
-      setProcessing(false);
+    if (sessionItem !== null) {
+      router.push(group.link);
+      return;
+    } else {
+      sessionStorage.setItem(group.group_id, '1');
     }
+
+    if (processing) return;
+    setProcessing(true);
+
+    // incremet number of joins
+    try {
+      await axios.post(`/api/groups/${group.group_id}/joins`);
+    } catch (err) {
+      console.error(err);
+    }
+
+    setNumberOfJoins((preValue) => preValue + 1); // Note: null + 1 = 1 in js
+
+    // open group link to join
+    router.push(group.link);
+
+    setProcessing(false);
   };
 
   // Render
@@ -102,6 +103,7 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
       return <GroupsIcon style={{ color: '#0088cc', fontSize: '30px' }} />;
     }
   }
+
   const EditButton = ({ group, user, handleEdit }) =>
     group.created_by === user?.sub ? (
       <button
@@ -122,7 +124,7 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
     </div>
   );
 
-  const GroupContent = ({ group }) => (
+  const GroupContent = ({ group }: { group: GroupRes }) => (
     <div className="flex h-full flex-col justify-between gap-2 px-4 py-2">
       <div className="flex items-center gap-2">
         {getGroupIcon(group.type)}
@@ -130,27 +132,39 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
           {group.title}
         </h5>
       </div>
-
       <div>
         <div className="flex items-center gap-1 font-medium text-gray-500">
           <LocationOnIcon className="text-md" />
           <p className="text-md">{group.location}</p>
         </div>
         <span className="text-sm text-gray-500">
-          {group.number_of_joins} sind hierüber beigetreten
+          {numberOfJoins} sind hierüber beigetreten
         </span>
         <div className="flex gap-3">
           <div className="flex-grow">
-            <Button
-              data-testid="join-button-id"
-              className="mt-1 w-full !bg-gray-300 text-black"
-              onClick={handleJoin}
-            >
-              <div className="flex items-center gap-2">
-                <GroupAddIcon />
-                <span>Beitreten</span>
-              </div>
-            </Button>
+            {!hasJoined ? (
+              <Button
+                data-testid="join-button-id"
+                className="mt-1 w-full !bg-gray-300 text-black"
+                onClick={handleJoin}
+              >
+                <div className="flex items-center gap-2">
+                  <GroupAddIcon />
+                  <span>Beitreten</span>
+                </div>
+              </Button>
+            ) : (
+              <Button
+                data-testid="join-button-id"
+                className="mt-1 w-full cursor-default !bg-blue-100 text-blue-600"
+                onClick={handleJoin}
+              >
+                <div className="flex items-center gap-2">
+                  <GroupAddIcon />
+                  <span>Beigetreten</span>
+                </div>
+              </Button>
+            )}
           </div>
           {group.description && (
             <div>
@@ -237,37 +251,6 @@ const GroupCard = ({ group }: { group: GroupRes }) => {
     <div className="relative mx-5 rounded-xl border border-gray-200 bg-white shadow">
       <GroupEdit group={group} user={user} handleEdit={handleEdit} />
       <GroupContent group={group} />
-      <Dialog
-        open={openJoinDialog}
-        onClose={() => {
-          setOpenJoinDialog(false);
-        }}
-      >
-        <DialogContent>
-          {/* Hier können Sie den Text und die Erklärung für die Anmeldung anzeigen */}
-          <Typography variant="h6">Anmeldung erforderlich</Typography>
-          <Typography>
-            Ansonten haben wir sehr schnell Spam-Bots in den Gruppen ;).
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setOpenJoinDialog(false);
-            }}
-            color="primary"
-          >
-            Schließen
-          </Button>
-          <Button
-            onClick={handleLogIn}
-            color="primary"
-            data-testid="login-test-id"
-          >
-            Jetzt anmelden
-          </Button>
-        </DialogActions>
-      </Dialog>
       <Dialog
         open={openWhatsAppDialog}
         onClose={() => {

@@ -1,58 +1,35 @@
 import { FacebookCrawlerConfig, ScrapeUrlManagerConfig, UrlType } from '../commons/enums';
-import { GroupE, ScrapeUrlE } from '../commons/typeorm_entities';
-import { Database } from '../helpers';
+import { ScrapeUrlE } from '../commons/typeorm_entities';
+import { dataSource } from '../helpers';
 import FacebookCrawler from './crawler/FacebookCrawler';
 import TimeManager from './crawler/TimeManager';
 import ScrapeUrlManager from './crawler/ScrapeUrlManager';
 import FacebookScraper from './scraper/FacebookScraper';
 
-const CRAWLER_CONFIG: FacebookCrawlerConfig = {
-  STALE_URL_EXPIRY_TIME_IN_DAYS: 90,
-  ERROR_THRESHOLD: 15,
-};
 const URL_MANAGER_CONFIG: ScrapeUrlManagerConfig = {
   LATEST_SCRAPE_TIME_BEFORE_EVENT_STARTS: 2,
-  NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: 0.5,
+  NEXT_SCRAPE_TIME_ADJUSTMENT_FACTOR: 0.3,
   EVENT_NEXT_SCRAPE_TIME_MULTIPLIER: 0.75,
+  SECOND_TRY_TO_SCRAPE_EVENT_IN_DAYS: 1,
+};
+const CRAWLER_CONFIG: FacebookCrawlerConfig = {
+  STALE_URL_EXPIRY_TIME_IN_DAYS: 90,
+  ERROR_THRESHOLD: 5,
+  EVENT_GROUP_PROXIMITY_DISTANCE_IN_KM: 50,
 };
 
 (async () => {
-  await start();
-})();
+  try {
+    await dataSource.initialize();
 
-export async function start() {
-  const citiesToScrape = await fetchCitiesToBeScraped();
+    const scrapeUrlRepo = dataSource.getRepository(ScrapeUrlE);
+    const timeManager = new TimeManager();
+    const scraper = new FacebookScraper();
+    const scrapeUrlManager = new ScrapeUrlManager(scrapeUrlRepo, timeManager, URL_MANAGER_CONFIG);
+    const crawler = new FacebookCrawler(dataSource, scraper, scrapeUrlManager, timeManager, CRAWLER_CONFIG);
 
-  for (const city of citiesToScrape) {
-    await crawl(city);
+    await crawler.run();
+  } finally {
+    await dataSource.destroy();
   }
-}
-
-async function crawl(city: string) {
-  const MyTimeManager = new TimeManager();
-  const MyScraper = new FacebookScraper();
-  const MyScrapeUrlRepo = (await Database.get_data_source()).getRepository(ScrapeUrlE);
-  const MyScrapeUrlManager = new ScrapeUrlManager(MyTimeManager, MyScrapeUrlRepo, URL_MANAGER_CONFIG);
-  const MyCrawler = new FacebookCrawler(MyScraper, MyScrapeUrlManager, MyTimeManager, CRAWLER_CONFIG);
-
-  await MyCrawler.scrapeEventsViaSearch(city);
-  await MyCrawler.scrapeEventsViaOrganizer(city);
-  await MyCrawler.updateEvents(city);
-}
-
-async function fetchCitiesToBeScraped(): Promise<string[]> {
-  const data_source = await Database.get_data_source();
-
-  let allCities = await data_source
-    .getRepository(GroupE)
-    .createQueryBuilder('group')
-    .select('group.location AS city')
-    .addSelect('SUM(group.number_of_joins) AS joinCount')
-    .groupBy('group.location')
-    .orderBy('joinCount', 'DESC')
-    .getRawMany();
-
-  allCities = allCities.map(e => e.city);
-
-  return allCities;
-}
+})();

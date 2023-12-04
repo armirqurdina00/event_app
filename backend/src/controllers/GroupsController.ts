@@ -21,25 +21,22 @@ import {
   GroupPatchReqBody,
   HttpError,
   HttpBadRequestError,
-  GroupJoinRes,
-  UserGroupRes,
 } from '../commons/TsoaTypes';
-import {
-  get_group,
-  get_groups,
-  post_group,
-  patch_group,
-  delete_group,
-  post_group_join,
-  get_group_join,
-  get_user_group,
-} from '../services/GroupsService';
-import { OperationError, log_error } from '../helpers';
+import { dataSource, OperationError, log_error } from '../helpers';
 import { HttpStatusCode } from '../commons/enums';
+import { GroupsService } from '../services/GroupsService';
 
 @Route('/v1/')
 @Tags('Groups')
 export class GroupsController extends Controller {
+  private groupsService: GroupsService;
+
+  constructor() {
+    super();
+
+    this.groupsService = new GroupsService(dataSource);
+  }
+
   /**
    * Fetches groups possibly filtered by geo-coordinates and a distance.
    *
@@ -69,7 +66,8 @@ export class GroupsController extends Controller {
     @Query() title?: string
   ): Promise<GroupsRes> {
     try {
-      return await get_groups(page, per_page, latitude, longitude, distance, title);
+      const service = await this.groupsService;
+      return await service.get_groups(page, per_page, latitude, longitude, distance, title);
     } catch (err) {
       log_error(err);
       throw err;
@@ -83,7 +81,22 @@ export class GroupsController extends Controller {
   @Response<HttpError>('500', 'Internal Server Error')
   public async get_group(@Path() group_id: string): Promise<GroupRes> {
     try {
-      return await get_group(group_id);
+      const service = await this.groupsService;
+      return await service.get_group(group_id);
+    } catch (err) {
+      log_error(err);
+      throw err;
+    }
+  }
+
+  @SuccessResponse('200', 'Successful')
+  @Response<HttpBadRequestError>('400', 'Bad Request')
+  @Response<HttpError>('500', 'Internal Server Error')
+  @Post('/groups/{group_id}/joins')
+  public async post_groups_joins(@Path() group_id: string): Promise<GroupRes> {
+    try {
+      const service = await this.groupsService;
+      return service.post_groups_joins(group_id);
     } catch (err) {
       log_error(err);
       throw err;
@@ -103,9 +116,9 @@ export class GroupsController extends Controller {
     @Body() req_body: GroupReqBody
   ): Promise<GroupRes> {
     try {
-      if (request.user.sub !== user_id) raise_forbidden();
-
-      return await post_group(request.user.sub, req_body);
+      if (request.user.sub !== user_id) this.raise_forbidden();
+      const service = await this.groupsService;
+      return service.post_group(request.user.sub, req_body);
     } catch (err) {
       log_error(err);
       throw err;
@@ -127,9 +140,9 @@ export class GroupsController extends Controller {
     @Body() req_body: GroupPatchReqBody
   ): Promise<GroupRes> {
     try {
-      if (request.user.sub !== user_id) raise_forbidden();
-
-      return await patch_group(request.user.sub, group_id, req_body);
+      if (request.user.sub !== user_id) this.raise_forbidden();
+      const service = await this.groupsService;
+      return await service.patch_group(request.user.sub, group_id, req_body);
     } catch (err) {
       log_error(err);
       throw err;
@@ -146,87 +159,16 @@ export class GroupsController extends Controller {
   @Security('auth0')
   public async delete_group(@Request() request: any, @Path() user_id: string, @Path() group_id: string): Promise<void> {
     try {
-      if (request.user.sub !== user_id) raise_forbidden();
-
-      await delete_group(request.user.sub, group_id);
+      if (request.user.sub !== user_id) this.raise_forbidden();
+      const service = await this.groupsService;
+      await service.delete_group(request.user.sub, group_id);
     } catch (err) {
       log_error(err);
       throw err;
     }
   }
 
-  @Get('/users/{user_id}/groups/{group_id}')
-  @SuccessResponse('200', 'Successful')
-  @Response<HttpBadRequestError>('400', 'Bad Request')
-  @Response<HttpError>('401', 'Unauthorized')
-  @Response<HttpError>('403', 'Forbidden')
-  @Response<HttpError>('404', 'Not Found')
-  @Response<HttpError>('500', 'Internal Server Error')
-  @Security('auth0')
-  public async get_user_group(
-    @Request() request: any,
-    @Path() user_id: string,
-    @Path() group_id: string
-  ): Promise<UserGroupRes> {
-    try {
-      if (request.user.sub !== user_id) raise_forbidden();
-
-      return await get_user_group(request.user.sub, group_id);
-    } catch (err) {
-      log_error(err);
-      throw err;
-    }
+  private raise_forbidden() {
+    throw new OperationError('Forbidden.', HttpStatusCode.FORBIDDEN);
   }
-
-  @Post('/users/{user_id}/groups/{group_id}/joins')
-  @SuccessResponse('200', 'Successful')
-  @Response<HttpBadRequestError>('400', 'Bad Request')
-  @Response<HttpError>('401', 'Unauthorized')
-  @Response<HttpError>('403', 'Forbidden')
-  @Response<HttpError>('404', 'Not Found')
-  @Response<HttpError>('500', 'Internal Server Error')
-  @Security('auth0')
-  public async post_group_join(
-    @Request() request: any,
-    @Path() user_id: string,
-    @Path() group_id: string
-  ): Promise<GroupJoinRes> {
-    try {
-      if (request.user.sub !== user_id) raise_forbidden();
-
-      return await post_group_join(request.user.sub, group_id);
-    } catch (err) {
-      log_error(err);
-      throw err;
-    }
-  }
-
-  @Get('/users/{user_id}/groups/{group_id}/joins')
-  @SuccessResponse('200', 'Successful')
-  @Response<HttpBadRequestError>('400', 'Bad Request')
-  @Response<HttpError>('401', 'Unauthorized')
-  @Response<HttpError>('403', 'Forbidden')
-  @Response<HttpError>('404', 'Not Found')
-  @Response<HttpError>('500', 'Internal Server Error')
-  @Security('auth0')
-  public async get_group_join(
-    @Request() request: any,
-    @Path() user_id: string,
-    @Path() group_id: string
-  ): Promise<GroupJoinRes> {
-    try {
-      if (request.user.sub !== user_id) raise_forbidden();
-
-      return await get_group_join(request.user.sub, group_id);
-    } catch (err) {
-      log_error(err);
-      throw err;
-    }
-  }
-}
-
-// helpers
-
-function raise_forbidden() {
-  throw new OperationError('Forbidden.', HttpStatusCode.FORBIDDEN);
 }

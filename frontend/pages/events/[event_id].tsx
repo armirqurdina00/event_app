@@ -14,25 +14,18 @@ export const getServerSideProps = async (context) => {
   });
 
   const event = await backend_client.events.getEvent(event_id as string);
-  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   return {
-    props: { event, googleMapsApiKey },
+    props: { event },
   };
 };
 
-const ShowEvent = ({
-  event,
-  googleMapsApiKey,
-}: {
-  event: EventRes;
-  googleMapsApiKey: string;
-}) => {
+const ShowEvent = ({ event }: { event: EventRes }) => {
   const router = useRouter();
   const { init } = useUserConfig(router);
 
   useEffect(() => {
-    init(googleMapsApiKey);
+    init();
   }, []);
 
   return (
@@ -43,12 +36,7 @@ const ShowEvent = ({
         imageUrl={event.image_url}
       />
       <div className="mx-auto mt-3 max-w-xl">
-        <EventCard
-          event={event}
-          upvoted={false}
-          downvoted={false}
-          details={true}
-        />
+        <EventCard event={event} details={true} />
       </div>
     </Page>
   );

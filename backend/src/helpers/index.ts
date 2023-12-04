@@ -1,4 +1,4 @@
 export * from './express_handlers';
-export * from './database';
+export * from './DataSource';
 export * from './misc';
-export * from './EventManagerJob';
+export * from './EventManager';

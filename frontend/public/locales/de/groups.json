@@ -1,0 +1,10 @@
+{
+    "new": {
+        "title": "Neue Gruppe",
+        "title-label": "Titel",
+        "description-label": "Beschreibung",
+        "location-label": "Ort",
+        "go-back-btn": "Zurück",
+        "send-btn": "Senden"
+    }
+}

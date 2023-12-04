@@ -33,5 +33,5 @@ export class ScrapeUrlE {
   lastFound: Date | null;
 
   @CreateDateColumn({ type: 'timestamp', nullable: true }) // This decorator creates a new timestamp column for entity insertion time
-  createdAt: Date | null;
+  createdAt: Date;
 }

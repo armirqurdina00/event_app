@@ -13,6 +13,7 @@ export default class DummyFacebookScraper implements IFacebookScraper {
   private IS_RETURNING_IRRELEVANT_EVENTS: boolean;
   private EVENTS_ARE_MISSING_COORDINATES: boolean;
   private EVENTS_ARE_MISSING_CITY: boolean;
+  private EVENTS_ARE_IN_ETTLINGEN: boolean;
   private i = 0;
   private j = 0;
   private k = 0;
@@ -26,6 +27,7 @@ export default class DummyFacebookScraper implements IFacebookScraper {
     this.IS_RETURNING_IRRELEVANT_EVENTS = config?.IS_RETURNING_IRRELEVANT_EVENTS ?? false;
     this.EVENTS_ARE_MISSING_COORDINATES = config?.EVENTS_ARE_MISSING_COORDINATES ?? false;
     this.EVENTS_ARE_MISSING_CITY = config?.EVENTS_ARE_MISSING_CITY ?? false;
+    this.EVENTS_ARE_IN_ETTLINGEN = config?.EVENTS_ARE_IN_ETTLINGEN ?? false;
 
     const currentMoment = moment();
     const futureMoment = currentMoment.add(6, 'month');
@@ -99,6 +101,10 @@ export default class DummyFacebookScraper implements IFacebookScraper {
 
     if (this.EVENTS_ARE_MISSING_COORDINATES) this.sampleEventData.location!.coordinates = null;
     if (this.EVENTS_ARE_MISSING_CITY) this.sampleEventData.location!.city = null;
+    if (this.EVENTS_ARE_IN_ETTLINGEN) {
+      this.sampleEventData.location!.coordinates!.latitude = 48.9432;
+      this.sampleEventData.location!.coordinates!.longitude = 8.398;
+    }
   }
 
   throwErrorIfConfigured() {

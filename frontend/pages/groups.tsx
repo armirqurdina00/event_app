@@ -47,11 +47,9 @@ export const getServerSideProps = async (context) => {
 
   const { latitude, longitude, distance } = getLocationDataFromCookies(cookies);
 
-  const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
-
   if (!latitude || !longitude || !distance) {
     return {
-      props: { initialGroups: [], googleMapsApiKey },
+      props: { initialGroups: [] },
     };
   }
 
@@ -60,15 +58,13 @@ export const getServerSideProps = async (context) => {
   return {
     props: {
       initialGroups,
-      googleMapsApiKey,
     },
   };
 };
 
 const Groups: React.FC<{
   initialGroups: GroupRes[];
-  googleMapsApiKey: string;
-}> = ({ initialGroups, googleMapsApiKey }) => {
+}> = ({ initialGroups }) => {
   const router = useRouter();
   const { userConfig, init } = useUserConfig(router);
   const [page, setPage] = useState(1);
@@ -80,7 +76,7 @@ const Groups: React.FC<{
   const [isSwiped, setIsSwiped] = useState(false);
 
   useEffect(() => {
-    if (!userConfig) init(googleMapsApiKey);
+    if (!userConfig) init();
   }, []);
 
   useEffect(() => {

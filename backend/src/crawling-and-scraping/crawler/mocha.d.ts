@@ -1,7 +1,7 @@
 import 'mocha'; // Import mocha types so that we can extend them
 import TimeManager from './TimeManager';
 import FacebookCrawler from './FacebookCrawler';
-import { FacebookCrawlerConfig } from 'src/commons/enums';
+import { FacebookCrawlerConfig } from '../../commons/enums';
 import IFacebookScraper from '../scraper/IFacebookScraper';
 
 declare module 'mocha' {

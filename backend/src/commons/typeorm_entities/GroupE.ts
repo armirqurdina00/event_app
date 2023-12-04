@@ -1,5 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, Index } from 'typeorm';
-import { GroupJoinE } from './GroupJoinE';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  DeleteDateColumn,
+} from 'typeorm';
 import { Point } from 'geojson';
 
 @Entity()
@@ -47,7 +54,4 @@ export class GroupE {
 
   @DeleteDateColumn()
   deleted_at: Date;
-
-  @OneToMany(() => GroupJoinE, 'group')
-  joins: GroupJoinE[];
 }

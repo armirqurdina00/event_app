@@ -17,6 +17,7 @@ import {
   type EventReqBody,
   BackendClient,
   RecurringPattern,
+  Coordinates,
 } from '../../../utils/backend_client';
 import moment from 'moment';
 import axios from 'axios';
@@ -76,7 +77,9 @@ const EditEvent = ({ event }) => {
   const [title, setTitle] = useState(event.title);
   const [location, setLocation] = useState(event.location);
   const [locationUrl, setLocationUrl] = useState(event.locationUrl);
-  const [coordinates, setCoordinates] = useState<number[]>(event.coordinates);
+  const [coordinates, setCoordinates] = useState<Coordinates>(
+    event.coordinates
+  );
   const [description, setDescription] = useState(event.description);
   const [recurring_pattern, setRecurringPattern] = useState<RecurringPattern>(
     event.recurring_pattern
@@ -118,9 +121,9 @@ const EditEvent = ({ event }) => {
       setLocation(combinedName);
       setLocationUrl(place.url);
 
-      const lat = place.geometry.location.lat();
-      const lng = place.geometry.location.lng();
-      setCoordinates([lng, lat]);
+      const latitude = place.geometry.location.lat();
+      const longitude = place.geometry.location.lng();
+      setCoordinates({ latitude, longitude });
       setPlaceFromAutocomplete(true);
     });
   }, []);
@@ -192,7 +195,7 @@ const EditEvent = ({ event }) => {
     setValidationErrors(errors);
 
     const coordinatesError =
-      coordinates.length === 0 ? 'Coordinates are required' : null;
+      coordinates === null ? 'Coordinates are required' : null;
     console.error(coordinatesError);
 
     const locationUrlError = !locationUrl.trim()

@@ -1,5 +1,10 @@
 import { withPageAuthRequired } from '@auth0/nextjs-auth0';
-import { BackendClient, type GroupReqBody } from '../../utils/backend_client';
+import {
+  BackendClient,
+  Coordinates,
+  GroupRes,
+  type GroupReqBody,
+} from '../../utils/backend_client';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
@@ -45,7 +50,7 @@ export const getServerSideProps = withPageAuthRequired({
   },
 });
 
-const EditGroup = ({ group }) => {
+const EditGroup = ({ group }: { group: GroupRes }) => {
   const { user } = useUser();
   const router = useRouter();
 
@@ -55,10 +60,12 @@ const EditGroup = ({ group }) => {
   const [is_loading, setIsLoading] = useState(false);
   const [title, setTitle] = useState(group.title);
   const [description, setDescription] = useState(group.description);
-  const [link, setLink] = useState('');
+  const [link, setLink] = useState(group.link);
   const [location, setLocation] = useState(group.location);
   const [locationUrl, setLocationUrl] = useState(group.locationUrl);
-  const [coordinates, setCoordinates] = useState<number[]>(group.coordinates);
+  const [coordinates, setCoordinates] = useState<Coordinates>(
+    group.coordinates
+  );
   const [error, setError] = useState(false);
   const [placeFromAutocomplete, setPlaceFromAutocomplete] = useState(false);
 
@@ -77,28 +84,12 @@ const EditGroup = ({ group }) => {
       setLocation(place.name);
       setLocationUrl(place.url);
 
-      const lat = place.geometry.location.lat();
-      const lng = place.geometry.location.lng();
-      setCoordinates([lng, lat]);
+      const latitude = place.geometry.location.lat();
+      const longitude = place.geometry.location.lng();
+      setCoordinates({ latitude, longitude });
       setPlaceFromAutocomplete(true);
     });
   }, []);
-
-  useEffect(() => {
-    const fetchGroupLink = async () => {
-      try {
-        const response = await axios.get(
-          `/api/users/${user.sub}/groups/${group.group_id}`
-        );
-        setLink(response.data.link);
-      } catch (error) {
-        console.error('Error fetching the group link', error);
-        setError(true);
-      }
-    };
-
-    if (user && group) fetchGroupLink();
-  }, [user, group]);
 
   // Input Validation
 
@@ -157,7 +148,7 @@ const EditGroup = ({ group }) => {
     setValidationErrors(errors);
 
     const coordinatesError =
-      coordinates.length === 0 ? 'Coordinates are required' : null;
+      coordinates === null ? 'Coordinates are required' : null;
     console.error(coordinatesError);
 
     const locationUrlError = !locationUrl.trim()

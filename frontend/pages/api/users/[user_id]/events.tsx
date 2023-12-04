@@ -16,7 +16,7 @@ export default async function postUserEvents(
         TOKEN: access_token,
       });
 
-      const response = await backend_client.events.postEvents(
+      const response = await backend_client.events.postEvent(
         String(req.query.user_id),
         req.body
       );

@@ -34,36 +34,24 @@ import LaunchIcon from '@mui/icons-material/Launch';
 
 const EventCard = ({
   event,
-  upvoted,
-  downvoted,
   details = false,
 }: {
   event: EventRes;
-  upvoted: boolean;
-  downvoted: boolean;
   details: boolean;
 }) => {
   const { user } = useUser();
   const router = useRouter();
-  const [votesDiff, setVotesDiff] = useState(event.votes_diff);
-  const [upvoteClicked, setUpvoteClicked] = useState(upvoted);
+  const [numberOfInterests, setNumberOfInterests] = useState(null); // when setting this to event.numberOfInterests, then rerendering does not work, since only stuff gets rerendered that depends on event
   const [processing, setProcessing] = useState(false);
   const [showDescription, setShowDescription] = useState(details);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(null);
   const [openJoinDialog, setOpenJoinDialog] = useState(false);
+  const [addToCalender, setHasAddedToCalendar] = useState(false);
 
   useEffect(() => {
-    setVotesDiff(event.votes_diff);
+    if (event) setNumberOfInterests(event.numberOfInterests);
   }, [event]);
-
-  useEffect(() => {
-    setUpvoteClicked(upvoted);
-  }, [upvoted]);
-
-  useEffect(() => {
-    setUpvoteClicked(downvoted);
-  }, [downvoted]);
 
   useEffect(() => {
     const currentUrl = new URL(window.location.href);
@@ -71,6 +59,13 @@ const EventCard = ({
     const urlWithParams = `${window.location.origin}/events/${event.event_id}${currentUrl.search}`;
     setCurrentUrl(urlWithParams);
   }, [event.event_id]);
+
+  useEffect(() => {
+    if (localStorage) {
+      const sessionItem: string | null = localStorage.getItem(event.event_id);
+      if (sessionItem !== null) setHasAddedToCalendar(true);
+    }
+  }, [processing]);
 
   // Handle Events
 
@@ -96,33 +91,33 @@ const EventCard = ({
     window.open(event.locationUrl, '_blank');
   };
 
-  async function handleAddToCalendar(evt) {
-    if (!user) {
-      setOpenJoinDialog(true);
+  const handleAddToCalendar = async (evt) => {
+    const sessionItem: string | null = localStorage.getItem(event.event_id);
+
+    if (sessionItem !== null) {
+      console.error('You have already added this event to your calendar');
+      showAddToCalenderModal(evt);
       return;
+    } else {
+      localStorage.setItem(event.event_id, '1');
     }
 
+    if (processing) return;
+    setProcessing(true);
+
+    // incremet number of interests
     try {
-      if (processing) return;
-      setProcessing(true);
-      if (upvoteClicked) {
-        setUpvoteClicked(false);
-        await axios.delete(
-          `/api/users/${user.sub}/events/${event.event_id}/upvotes`
-        );
-        setVotesDiff((preValue) => preValue - 1);
-      } else {
-        setUpvoteClicked(true);
-        await axios.post(
-          `/api/users/${user.sub}/events/${event.event_id}/upvotes`
-        );
-        setVotesDiff((preValue) => preValue + 1);
-        showAddToCalenderModal(evt);
-      }
-    } finally {
-      setProcessing(false);
+      await axios.post(`/api/events/${event.event_id}/interests`);
+    } catch (err) {
+      console.error(err);
     }
-  }
+
+    showAddToCalenderModal(evt);
+
+    setNumberOfInterests((preValue) => preValue + 1);
+
+    setProcessing(false);
+  };
 
   const showAddToCalenderModal = (evt) => {
     atcb_action(
@@ -256,7 +251,7 @@ const EventCard = ({
   );
 
   const CalendarButton = () =>
-    upvoteClicked ? (
+    addToCalender ? (
       <Button
         className="mt-1 w-full !bg-blue-100 text-blue-600"
         onClick={handleAddToCalendar}
@@ -282,14 +277,14 @@ const EventCard = ({
     <div className="relative mx-5 rounded-xl border border-gray-200 bg-white shadow">
       <div className="relative w-full">
         <Image
-          className={'event-img-16-9 rounded-t-xl object-cover'}
+          className={'event-img-16-9 rounded-t-xl'}
+          style={{
+            objectFit: 'cover',
+          }}
           src={event.image_url}
           alt="Event Picture"
-          layout="responsive"
           width={16}
           height={9}
-          objectFit="cover"
-          quality={100}
           data-testid="event-picture"
           unoptimized={true}
           onClick={handleFullscreen}
@@ -353,7 +348,8 @@ const EventCard = ({
           <div />
         </div>
         <div className="w-full text-gray-500">
-          <span className="text-sm">{votesDiff} sind interessiert</span>
+          <span className="text-xl text-red-500 font-bold">{numberOfInterests}</span>
+          <span className="ml-1 text-sm">sind interessiert</span>
           <div className="flex gap-1">
             <div className="flex-grow">
               <CalendarButton />

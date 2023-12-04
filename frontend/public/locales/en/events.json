@@ -1,11 +1,15 @@
 {
+    "nav_item1": "Chronological",
+    "nav_item2": "Popular next weekend",
+    "nav_item3": "Popular in the next 30 days",
+    "nav_item4": "All time popular",
     "new-event": {
         "title": "New Event",
-        "form-date": "Date",
-        "form-time": "Time",
-        "form-title": "Title",
-        "form-location": "Location",
-        "form-details": "Enter details about tickets, music & workshops...",
+        "date-label": "Date",
+        "time-label": "Time",
+        "title-label": "Title",
+        "location-label": "Location",
+        "details-label": "Enter details about tickets, music & workshops...",
         "go-back-btn": "Go back",
         "send-btn": "Send"
     }

@@ -1,7 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, Index } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  DeleteDateColumn,
+} from 'typeorm';
 import { RecurringPattern } from '../TsoaTypes';
-import { EventUpvoteE } from './EventUpvoteE';
-import { EventDownvoteE } from './EventDownvoteE';
 import { Point } from 'geojson';
 
 @Entity()
@@ -44,12 +50,6 @@ export class EventE {
   image_url: string;
 
   @Column({ default: 0 })
-  upvotes_sum: number;
-
-  @Column({ default: 0 })
-  downvotes_sum: number;
-
-  @Column({ default: 0 })
   votes_diff: number;
 
   @Column()
@@ -66,10 +66,4 @@ export class EventE {
 
   @DeleteDateColumn()
   deleted_at: Date;
-
-  @OneToMany(() => EventUpvoteE, 'event')
-  upvotes: EventUpvoteE[];
-
-  @OneToMany(() => EventDownvoteE, 'event')
-  downvotes: EventDownvoteE[];
 }

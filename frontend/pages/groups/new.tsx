@@ -14,8 +14,20 @@ import { type GroupReqBody, Coordinates } from '@/utils/backend_client';
 import axios from 'axios';
 import Error from '@/components/error';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next';
 
-export const getServerSideProps = withPageAuthRequired();
+export async function getServerSideProps({ locale }) {
+  withPageAuthRequired();
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, [
+        'common',
+        'groups',
+      ])),
+    },
+  }
+}
 
 const CreateGroup = () => {
   const { user } = useUser();
@@ -161,11 +173,13 @@ const CreateGroup = () => {
     }
   };
 
+  const { t } = useTranslation(['common', 'groups']);
+
   return (
     <Page>
       <div className="mx-auto max-w-xl">
         <div className="mx-3 my-7 flex flex-wrap justify-center gap-5">
-          <h1 className="text-3xl">Neue Gruppe</h1>
+          <h1 className="text-3xl">{t('groups:new.title')}</h1>
           <TextField
             value={title}
             onChange={(e) => {
@@ -174,7 +188,7 @@ const CreateGroup = () => {
             error={!!validationErrors.title}
             helperText={validationErrors.title}
             name="group-title"
-            label="Titel"
+            label={t('groups:new.title-label')}
             variant="outlined"
             fullWidth
             required
@@ -187,7 +201,7 @@ const CreateGroup = () => {
             error={!!validationErrors.description}
             helperText={validationErrors.description}
             name="group-description"
-            label="Beschreibung"
+            label={t('groups:new.description-label')}
             variant="outlined"
             multiline
             fullWidth
@@ -214,7 +228,7 @@ const CreateGroup = () => {
             }}
             id="outlined-basic"
             name="group-location"
-            label="Ort"
+            label={t('groups:new.location-label')}
             variant="outlined"
             fullWidth
             required
@@ -232,7 +246,7 @@ const CreateGroup = () => {
                 });
               }}
             >
-              Zurück
+              {t('groups:new.go-back-btn')}
             </Button>
             <Button
               variant="contained"
@@ -242,7 +256,7 @@ const CreateGroup = () => {
               disabled={is_loading}
               data-testid="submit"
             >
-              Senden
+              {t('groups:new.send-btn')}
             </Button>
           </div>
         </div>

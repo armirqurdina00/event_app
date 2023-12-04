@@ -8,6 +8,7 @@ import Script from 'next/script';
 import CookieConsent from '@/components/cookie-consent';
 import { useState } from 'react';
 import UserConfigContext from '../utils/UserConfigContext';
+import { appWithTranslation } from 'next-i18next';
 
 const App = ({ Component, pageProps }: AppProps) => {
   const [userConfig, setUserConfig] = useState(null);
@@ -48,4 +49,4 @@ const App = ({ Component, pageProps }: AppProps) => {
   );
 };
 
-export default App;
+export default appWithTranslation(App);

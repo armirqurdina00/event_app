@@ -1,0 +1,10 @@
+{
+    "new": {
+        "title": "New Group",
+        "title-label": "Title",
+        "description-label": "Description",
+        "location-label": "Location",
+        "go-back-btn": "Go back",
+        "send-btn": "Send"
+    }
+}

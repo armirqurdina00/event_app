@@ -1,0 +1,10 @@
+{
+    "footer_item1": "Events",
+    "footer_item2": "Gruppen",
+    "dialog-content": {
+        "title": "Anmeldung erforderlich",
+        "description": "Um Events und Gruppen zu speichern musst du dich anmelden. Das klappt mit einem Klick via Google Anmeldung.",
+        "close-btn": "Schließen",
+        "register-btn": "Jetzt anmelden"
+    }
+}

@@ -1,5 +1,6 @@
 const withPWA = require('next-pwa');
 const runtimeCaching = require('next-pwa/cache');
+const { i18n } = require('./next-i18next.config');
 
 const withMyPWA = withPWA({
   dest: 'public',
@@ -12,6 +13,7 @@ module.exports = withMyPWA({
   images: {
     domains: ['res.cloudinary.com'],
   },
+  i18n,
   async rewrites() {
     return [
       {

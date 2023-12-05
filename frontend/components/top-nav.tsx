@@ -14,6 +14,8 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useEffect, useState, useRef } from 'react';
 import { useUserConfig } from '@/hooks/useUserConfig';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
 const LONG_SCROLL_UP = 300;
 const LONG_SCROLL_DOWN = 100;
@@ -126,12 +128,18 @@ function ResponsiveAppBar({ children }: { children?: React.ReactNode }) {
     router.push('https://wa.me/4917641952181');
   };
 
+  const [language, setLanguage] = useState(router.locale);
+
+  const handleLanguageChange = (event) => {
+    setLanguage(event.target.value);
+    router.push(router.asPath, router.asPath, { locale: event.target.value })
+  }
+
   return (
     <AppBar
-      className={`static bg-zinc-100 text-zinc-600 ${
-        sticky &&
+      className={`static bg-zinc-100 text-zinc-600 ${sticky &&
         'sticky -translate-y-0 transition-transform duration-1000 ease-in-out'
-      } ${scrollDownDistance > LONG_SCROLL_DOWN && '-translate-y-full'}`}
+        } ${scrollDownDistance > LONG_SCROLL_DOWN && '-translate-y-full'}`}
     >
       <Container maxWidth="xs">
         <Toolbar
@@ -182,6 +190,18 @@ function ResponsiveAppBar({ children }: { children?: React.ReactNode }) {
                 <MenuItem onClick={handle_logout}>Logout</MenuItem>
               )}
             </Menu>
+            <FormControl sx={{ m: 1, minWidth: 60 }} size='small'>
+              <Select
+                labelId="demo-simple-select-helper-label"
+                id="demo-simple-select-helper"
+                value={language}
+                onChange={handleLanguageChange}
+              >
+                <MenuItem value='en'>En</MenuItem>
+                <MenuItem value='de'>De</MenuItem>
+              </Select>
+            </FormControl>
+
           </Box>
         </Toolbar>
       </Container>

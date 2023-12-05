@@ -11,6 +11,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Error from '@/components/error';
 import { useUserConfig } from '@/hooks/useUserConfig';
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 const EditLocation = ({ lastRoute }) => {
   const router = useRouter();
@@ -115,14 +117,59 @@ const EditLocation = ({ lastRoute }) => {
         pathname: lastRoute,
         query: router.query,
       });
+
+
+      const city_obj = { city, latitude, longitude };
+      if (!window.localStorage.getItem('recent_cities')) {
+        const cities = [city_obj];
+        window.localStorage.setItem('recent_cities', JSON.stringify(cities));
+      }
+      else {
+        const recent_cities = JSON.parse(window.localStorage.getItem('recent_cities'));
+        if (recent_cities.length == 5) {
+          recent_cities.shift();
+        }
+        if (recent_cities.find(item => item.latitude === latitude && item.longitude === longitude)) { return; }
+        recent_cities.push(city_obj);
+        window.localStorage.setItem('recent_cities', JSON.stringify(recent_cities));
+      }
     }
+  };
+
+  const local_storage_cities = JSON.parse(window.localStorage.getItem('recent_cities'));
+
+  const handleSelectedRecentCityChange = (event, newCity) => {
+    const selected_city = local_storage_cities.find((city) => city.city == newCity);
+    setCity(selected_city.city);
+    setLatitude(selected_city.latitude);
+    setLongitude(selected_city.longitude)
+    setCityFromAutocomplete(true);
   };
 
   return (
     <Page>
       <div className="mx-auto max-w-xl">
         <div className="mx-3 my-7 flex flex-wrap justify-center gap-5">
-          <h1 className="text-3xl">Aktualisiere deinen Ort</h1>
+          <h1 className="text-3xl w-full text-center">Aktualisiere deinen Ort</h1>
+          {local_storage_cities && (
+            <div className='flex-col'>
+              <h1 className='text-center text-lg mb-2'>Select from recent cities</h1>
+              <ToggleButtonGroup
+                value={city}
+                exclusive
+                // onChange={handleAlignment}
+                aria-label="text alignment"
+                onChange={handleSelectedRecentCityChange}
+                className='flex justify-center'
+              >
+                {local_storage_cities.reverse().map((city) => (
+                  <ToggleButton value={city.city}>
+                    {city.city}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </div>
+          )}
           <TextField
             error={validationErrors.city != null}
             value={city}
@@ -189,7 +236,7 @@ const EditLocation = ({ lastRoute }) => {
           </div>
         </div>
       </div>
-    </Page>
+    </Page >
   );
 };
 
